@@ -1,7 +1,14 @@
+using AtaGreenTech.StockService.Api.Hosting;
 using AtaGreenTech.StockService.Application.Interfaces;
 using AtaGreenTech.StockService.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using OmniSync.Core.Infrastructure.Cors;
 using OmniSync.Core.Infrastructure.Hosting;
+using OmniSync.Core.Infrastructure.Persistence;
+
+// `dotnet AtaGreenTech.StockService.Api.dll healthcheck`: container sağlık kontrolü; host oluşturulmadan çalışır.
+if (args is [ContainerHealthProbe.Command])
+    return await ContainerHealthProbe.RunAsync();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +22,15 @@ builder.AddOmniSyncCore(options =>
 
 var app = builder.Build();
 
-// `dotnet AtaGreenTech.StockService.Api.dll migrate-tenants`: tüm aktif tenant veritabanlarını migrate edip çıkar.
+// `migrate-master` ve `migrate-tenants` komutları migration'ları uygulayıp çıkar; web sunucusu başlamaz ve JWT
+// ayarları gerekmez. Birden çok replikada migration'ların aynı anda uygulanmaması için API'den önce ayrı çalışırlar.
+if (args is ["migrate-master"])
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await scope.ServiceProvider.GetRequiredService<MasterDbContext>().Database.MigrateAsync();
+    return 0;
+}
+
 if (args is ["migrate-tenants"])
 {
     var summary = await app.MigrateTenantDatabasesAsync();
