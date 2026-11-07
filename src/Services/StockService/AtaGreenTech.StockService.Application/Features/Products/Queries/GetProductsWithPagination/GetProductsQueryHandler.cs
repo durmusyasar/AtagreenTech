@@ -1,12 +1,14 @@
 using AtaGreenTech.StockService.Application.Common;
 using AtaGreenTech.StockService.Application.DTOs;
 using AtaGreenTech.StockService.Application.Interfaces;
+using AtaGreenTech.StockService.Domain.Localization;
+using Microsoft.Extensions.Options;
 using OmniSync.Core.Application.Messaging;
 using OmniSync.Core.Application.Pagination;
 
 namespace AtaGreenTech.StockService.Application.Features.Products.Queries.GetProductsWithPagination;
 
-internal sealed class GetProductsQueryHandler(IStockDbContext context)
+internal sealed class GetProductsQueryHandler(IStockDbContext context, IOptions<LocalizationOptions> localization)
     : IQueryHandler<GetProductsQuery, PagedResult<ProductDto>>
 {
     public Task<PagedResult<ProductDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
@@ -32,7 +34,7 @@ internal sealed class GetProductsQueryHandler(IStockDbContext context)
         return products
             .OrderBy(p => p.Name)
             .ThenBy(p => p.Id)
-            .Select(ProductProjections.ToDto)
+            .Select(ProductProjections.ToDto(LanguageCode.Normalize(localization.Value.DefaultLanguage)))
             .ToPagedResultAsync(request.PageNumber, request.PageSize, cancellationToken);
     }
 }

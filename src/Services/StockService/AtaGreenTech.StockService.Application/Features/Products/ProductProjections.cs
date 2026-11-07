@@ -6,14 +6,18 @@ namespace AtaGreenTech.StockService.Application.Features.Products;
 
 internal static class ProductProjections
 {
-    public static readonly Expression<Func<Product, ProductDto>> ToDto = p => new ProductDto(
+    /// <param name="defaultLanguage">Kategori adının gösterileceği normalize edilmiş sistem dili.</param>
+    public static Expression<Func<Product, ProductDto>> ToDto(string defaultLanguage) => p => new ProductDto(
         p.Id,
         p.Name,
         p.Sku,
         p.Description,
         p.UnitPrice,
         p.CategoryId,
-        p.Category.Name,
+        p.Category.Translations
+            .Where(t => t.LanguageCode == defaultLanguage)
+            .Select(t => t.Name)
+            .FirstOrDefault() ?? p.Category.Code,
         p.UnitOfMeasureId,
         p.UnitOfMeasure.Code,
         p.IsActive,

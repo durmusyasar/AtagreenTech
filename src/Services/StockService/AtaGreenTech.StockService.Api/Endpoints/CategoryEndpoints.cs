@@ -1,3 +1,4 @@
+using AtaGreenTech.StockService.Application.DTOs;
 using AtaGreenTech.StockService.Application.Features.Categories.Commands.CreateCategory;
 using AtaGreenTech.StockService.Application.Features.Categories.Commands.UpdateCategory;
 using AtaGreenTech.StockService.Application.Features.Categories.Queries.GetCategoriesWithPagination;
@@ -25,9 +26,10 @@ public sealed class CategoryEndpoints : IEndpointModule
             int pageSize = BaseSearchModel.DefaultPageSize,
             string? searchTerm = null,
             Guid? parentCategoryId = null,
-            bool? isActive = null
+            bool? isActive = null,
+            string? language = null
         ) => sender.Send(
-            new GetCategoriesQuery(pageNumber, pageSize, searchTerm, parentCategoryId, isActive),
+            new GetCategoriesQuery(pageNumber, pageSize, searchTerm, parentCategoryId, isActive, language),
             cancellationToken
         ));
 
@@ -45,7 +47,7 @@ public sealed class CategoryEndpoints : IEndpointModule
         ) =>
         {
             await sender.Send(
-                new UpdateCategoryCommand(id, request.Name, request.Description, request.ParentCategoryId, request.IsActive),
+                new UpdateCategoryCommand(id, request.Code, request.Translations, request.ParentCategoryId, request.IsActive),
                 cancellationToken
             );
             return TypedResults.NoContent();
@@ -53,4 +55,9 @@ public sealed class CategoryEndpoints : IEndpointModule
     }
 }
 
-public sealed record UpdateCategoryRequest(string Name, string? Description, Guid? ParentCategoryId, bool IsActive);
+public sealed record UpdateCategoryRequest(
+    string Code,
+    IReadOnlyList<CategoryTranslationDto> Translations,
+    Guid? ParentCategoryId,
+    bool IsActive
+);

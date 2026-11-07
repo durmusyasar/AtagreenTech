@@ -1,3 +1,4 @@
+using AtaGreenTech.StockService.Domain.Localization;
 using OmniSync.Core.Domain.Common;
 
 namespace AtaGreenTech.StockService.Domain.Entities;
@@ -5,7 +6,7 @@ namespace AtaGreenTech.StockService.Domain.Entities;
 /// <summary>
 /// Ölçü biriminin bir dildeki adı ve sembolü (ör. tr: Adet / ad, en: Piece / pcs).
 /// </summary>
-public class UnitOfMeasureTranslation : BaseEntity
+public class UnitOfMeasureTranslation : BaseEntity, ITranslation
 {
     public const int NameMaxLength = 100;
     public const int SymbolMaxLength = 20;
