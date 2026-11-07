@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/StockService/">
+    <Project Path="src/Services/StockService/AtaGreenTech.StockService.Api/AtaGreenTech.StockService.Api.csproj" />
+    <Project Path="src/Services/StockService/AtaGreenTech.StockService.Application/AtaGreenTech.StockService.Application.csproj" />
+    <Project Path="src/Services/StockService/AtaGreenTech.StockService.Domain/AtaGreenTech.StockService.Domain.csproj" />
+    <Project Path="src/Services/StockService/AtaGreenTech.StockService.Infrastructure/AtaGreenTech.StockService.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/" />
+  <Folder Name="/src/Shared/SharedKernel/">
+    <Project Path="src/Shared/SharedKernel/AtaGreenTech.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/Services/" />
+  <Folder Name="/tests/Services/StockService.Tests/">
+    <Project Path="tests/Services/StockService.Tests/AtaGreenTech.StockService.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -4,16 +4,17 @@
 
 ## 🏗️ Architecture & Tech Stack
 
-- **Framework:** .NET 8+ (Modular Monolith / Clean Architecture)
+- **Framework:** .NET 10+ (Modular Monolith / Clean Architecture)
 - **Database:** PostgreSQL with EF Core Multi-Tenant Migrations
 - **Security:** JWT Authentication, Refresh Token Rotation, Dynamic CORS, PBKDF2 Hashing
+- **Package Management:** GitHub Packages (`GITHUB_USERNAME` & `GITHUB_PACKAGES_TOKEN` required)
 - **API Standards:** OpenAPI / Swagger UI, Standardized Paged Result Envelopes
 - **Containerization:** Docker & Docker Compose ready
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- .NET 8 SDK
+- .NET 10 SDK
 - Docker & Docker Compose
 - PostgreSQL
 
