@@ -1,4 +1,5 @@
 using AtaGreenTech.StockService.Infrastructure;
+using OmniSync.Core.Infrastructure.Cors;
 using OmniSync.Core.Infrastructure.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,7 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddOmniSyncCore(options =>
 {
     options.AddApplicationAssemblies(typeof(Program).Assembly)
-        .AddStockInfrastructure();
+        .AddStockInfrastructure()
+        .AddOmniSyncCors();
 });
 
 var app = builder.Build();
@@ -18,6 +20,8 @@ if (args is ["migrate-tenants"])
     return summary.HasFailures ? 1 : 0;
 }
 
+// Routing, tenant çözümlemesi, CORS, authentication ve authorization burada sırasıyla eklenir;
+// UseCors/UseAuthentication/UseAuthorization ayrıca çağrılmamalıdır.
 app.UseOmniSyncCore();
 app.MapOmniSyncEndpoints();
 
