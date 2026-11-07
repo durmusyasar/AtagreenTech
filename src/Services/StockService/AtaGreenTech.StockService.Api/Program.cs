@@ -1,3 +1,4 @@
+using AtaGreenTech.StockService.Application.Interfaces;
 using AtaGreenTech.StockService.Infrastructure;
 using OmniSync.Core.Infrastructure.Cors;
 using OmniSync.Core.Infrastructure.Hosting;
@@ -6,7 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddOmniSyncCore(options =>
 {
-    options.AddApplicationAssemblies(typeof(Program).Assembly)
+    // Endpoint modülleri Api'den, handler ve validator'lar Application'dan taranır.
+    options.AddApplicationAssemblies(typeof(Program).Assembly, typeof(IStockDbContext).Assembly)
         .AddStockInfrastructure()
         .AddOmniSyncCors();
 });
