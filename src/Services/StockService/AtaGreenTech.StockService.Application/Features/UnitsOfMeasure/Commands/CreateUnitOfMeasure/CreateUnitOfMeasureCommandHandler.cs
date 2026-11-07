@@ -1,14 +1,18 @@
+using AtaGreenTech.StockService.Application.Common;
 using AtaGreenTech.StockService.Domain.Entities;
 using AtaGreenTech.StockService.Domain.Errors;
 using AtaGreenTech.StockService.Domain.Rules;
+using Microsoft.Extensions.Options;
 using OmniSync.Core.Application.Messaging;
 using OmniSync.Core.Domain.Common;
 using OmniSync.Core.Domain.Repositories;
 
 namespace AtaGreenTech.StockService.Application.Features.UnitsOfMeasure.Commands.CreateUnitOfMeasure;
 
-internal sealed class CreateUnitOfMeasureCommandHandler(IRepository<UnitOfMeasure> unitsOfMeasure)
-    : ICommandHandler<CreateUnitOfMeasureCommand, Guid>
+internal sealed class CreateUnitOfMeasureCommandHandler(
+    IRepository<UnitOfMeasure> unitsOfMeasure,
+    IOptions<LocalizationOptions> localization
+) : ICommandHandler<CreateUnitOfMeasureCommand, Guid>
 {
     public async Task<Guid> Handle(CreateUnitOfMeasureCommand request, CancellationToken cancellationToken)
     {
@@ -20,7 +24,11 @@ internal sealed class CreateUnitOfMeasureCommandHandler(IRepository<UnitOfMeasur
             code
         );
 
-        var unitOfMeasure = await unitsOfMeasure.AddAsync(new UnitOfMeasure(code, request.Name), cancellationToken);
+        var unitOfMeasure = await unitsOfMeasure.AddAsync(
+            new UnitOfMeasure(code, request.Translations.ToEntities(), localization.Value.DefaultLanguage),
+            cancellationToken
+        );
+
         return unitOfMeasure.Id;
     }
 }
