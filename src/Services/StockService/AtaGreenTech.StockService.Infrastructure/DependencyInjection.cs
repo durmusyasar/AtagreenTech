@@ -1,4 +1,7 @@
+using System.Text.RegularExpressions;
+using AtaGreenTech.StockService.Application.Common;
 using AtaGreenTech.StockService.Application.Interfaces;
+using AtaGreenTech.StockService.Domain.Localization;
 using AtaGreenTech.StockService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,10 +26,18 @@ public static class DependencyInjection
         options.TenantMigrationsAssembly = assembly;
 
         options.ConfigureServices(
-            (services, _) =>
+            (services, configuration) =>
             {
                 services.AddScoped<IStockDbContext, StockQueryContext>();
                 services.AddScoped<IStockBalanceLocker, StockBalanceLocker>();
+
+                services.AddOptions<LocalizationOptions>()
+                    .Bind(configuration.GetSection(LocalizationOptions.SectionName))
+                    .Validate(
+                        o => o.DefaultLanguage is not null && Regex.IsMatch(o.DefaultLanguage, LanguageCode.Pattern),
+                        "Localization:DefaultLanguage must be a language code such as 'tr' or 'en-US'."
+                    )
+                    .ValidateOnStart();
             }
         );
 

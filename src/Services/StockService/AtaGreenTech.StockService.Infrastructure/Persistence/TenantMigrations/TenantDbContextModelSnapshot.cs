@@ -288,13 +288,11 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -309,6 +307,56 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
                         .HasFilter("\"IsDeleted\" = false");
 
                     b.ToTable("UnitsOfMeasure", (string)null);
+                });
+
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.UnitOfMeasureTranslation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Symbol")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UnitOfMeasureId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UnitOfMeasureId", "LanguageCode")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("UnitOfMeasureTranslations", (string)null);
                 });
 
             modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.Warehouse", b =>
@@ -434,11 +482,25 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
                     b.Navigation("TargetWarehouse");
                 });
 
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.UnitOfMeasureTranslation", b =>
+                {
+                    b.HasOne("AtaGreenTech.StockService.Domain.Entities.UnitOfMeasure", null)
+                        .WithMany("Translations")
+                        .HasForeignKey("UnitOfMeasureId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Products");
 
                     b.Navigation("SubCategories");
+                });
+
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.UnitOfMeasure", b =>
+                {
+                    b.Navigation("Translations");
                 });
 #pragma warning restore 612, 618
         }

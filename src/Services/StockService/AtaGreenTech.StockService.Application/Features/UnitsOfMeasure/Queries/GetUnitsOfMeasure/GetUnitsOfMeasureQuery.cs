@@ -6,4 +6,6 @@ namespace AtaGreenTech.StockService.Application.Features.UnitsOfMeasure.Queries.
 /// <summary>
 /// Tüm ölçü birimleri; az sayıda referans kayıt olduğu için sayfalanmaz.
 /// </summary>
-public sealed record GetUnitsOfMeasureQuery : IQuery<IReadOnlyList<UnitOfMeasureDto>>;
+/// <param name="Language">Ad ve sembolün gösterileceği dil; verilmezse sistemin varsayılan dili.</param>
+public sealed record GetUnitsOfMeasureQuery(string? Language = null, bool? IsActive = null)
+    : IQuery<IReadOnlyList<UnitOfMeasureDto>>;

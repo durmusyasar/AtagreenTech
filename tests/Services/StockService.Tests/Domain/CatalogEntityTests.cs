@@ -28,7 +28,9 @@ public class CatalogEntityTests
     [Fact]
     public void UnitOfMeasure_normalizes_code()
     {
-        Assert.Equal("KG", new UnitOfMeasure(" kg ", "Kilogram").Code);
+        UnitOfMeasureTranslation[] translations = [new("tr", "Kilogram", "kg"), new("en", "Kilogram", "kg")];
+
+        Assert.Equal("KG", new UnitOfMeasure(" kg ", translations, "tr").Code);
     }
 
     [Fact]
