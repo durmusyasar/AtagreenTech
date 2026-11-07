@@ -132,6 +132,142 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
                     b.ToTable("Products", (string)null);
                 });
 
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.StockBalance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("WarehouseId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("WarehouseId", "ProductId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("StockBalances", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_StockBalances_Quantity_NonNegative", "\"Quantity\" >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.StockMovement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ClientIpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DocumentReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<Guid?>("SourceWarehouseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TargetWarehouseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .IsDescending();
+
+                    b.HasIndex("SourceWarehouseId");
+
+                    b.HasIndex("TargetWarehouseId");
+
+                    b.HasIndex("ProductId", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.ToTable("StockMovements", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_StockMovements_Quantity_Positive", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_StockMovements_Warehouses", "(\"Type\" = 'Inbound' AND \"SourceWarehouseId\" IS NULL AND \"TargetWarehouseId\" IS NOT NULL)\nOR (\"Type\" = 'Outbound' AND \"SourceWarehouseId\" IS NOT NULL AND \"TargetWarehouseId\" IS NULL)\nOR (\"Type\" = 'Transfer' AND \"SourceWarehouseId\" IS NOT NULL AND \"TargetWarehouseId\" IS NOT NULL AND \"SourceWarehouseId\" <> \"TargetWarehouseId\")");
+                        });
+                });
+
             modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.UnitOfMeasure", b =>
                 {
                     b.Property<Guid>("Id")
@@ -175,6 +311,56 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
                     b.ToTable("UnitsOfMeasure", (string)null);
                 });
 
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.Warehouse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("Warehouses", (string)null);
+                });
+
             modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.Category", b =>
                 {
                     b.HasOne("AtaGreenTech.StockService.Domain.Entities.Category", "ParentCategory")
@@ -202,6 +388,50 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
                     b.Navigation("Category");
 
                     b.Navigation("UnitOfMeasure");
+                });
+
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.StockBalance", b =>
+                {
+                    b.HasOne("AtaGreenTech.StockService.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AtaGreenTech.StockService.Domain.Entities.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.StockMovement", b =>
+                {
+                    b.HasOne("AtaGreenTech.StockService.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AtaGreenTech.StockService.Domain.Entities.Warehouse", "SourceWarehouse")
+                        .WithMany()
+                        .HasForeignKey("SourceWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AtaGreenTech.StockService.Domain.Entities.Warehouse", "TargetWarehouse")
+                        .WithMany()
+                        .HasForeignKey("TargetWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Product");
+
+                    b.Navigation("SourceWarehouse");
+
+                    b.Navigation("TargetWarehouse");
                 });
 
             modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.Category", b =>
