@@ -1,0 +1,131 @@
+# AtaGreenTech stok servisi yığını. İlk kurulumda secret dosyalarını oluşturun:
+#
+#   deploy/generate-secrets.sh
+#   GITHUB_USERNAME=<kullanıcı> GITHUB_PACKAGES_TOKEN=$(gh auth token) docker compose up -d --build
+#
+# Başlangıç sırası: PostgreSQL sağlıklı -> master migration'ları -> tenant migration'ları -> stok servisi.
+# Veritabanı dışarıya port açmaz; stok servisi yalnızca sunucunun loopback arayüzünden, önündeki reverse proxy'ye açılır.
+
+name: atagreen
+
+x-hardening: &hardening
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  # tini PID 1 olur: sinyalleri uygulamaya iletir ve yetim süreçleri toplar.
+  init: true
+
+x-stock-service-image: &stock-service-image
+  build:
+    context: .
+    dockerfile: src/Services/StockService/AtaGreenTech.StockService.Api/Dockerfile
+    args:
+      GITHUB_USERNAME: ${GITHUB_USERNAME:-}
+    secrets: [github_packages_token]
+  image: atagreen-stock-service:${ATAGREEN_VERSION:-latest}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: atagreen_stock_master
+      POSTGRES_USER: atagreen
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atagreen -d atagreen_stock_master"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # Master veritabanı (tenant kayıtları) migration'larını uygulayıp çıkar.
+  master-migrator:
+    <<: [*hardening, *stock-service-image]
+    command: ["migrate-master"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    secrets:
+      - source: master_connection_string
+        target: ConnectionStrings__MasterDb
+    networks: [backend]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Aktif tenant veritabanlarına bekleyen migration'ları uygular; bir tenant başarısız olursa sıfırdan farklı kodla
+  # çıkar ve stok servisi başlamaz.
+  tenant-migrator:
+    <<: [*hardening, *stock-service-image]
+    command: ["migrate-tenants"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    secrets:
+      - source: master_connection_string
+        target: ConnectionStrings__MasterDb
+    networks: [backend]
+    depends_on:
+      master-migrator:
+        condition: service_completed_successfully
+
+  stock-service:
+    <<: [*hardening, *stock-service-image]
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # Proxy'den X-Forwarded-Proto: http ile gelen istekler HTTPS'e yönlendirilir.
+      ASPNETCORE_HTTPS_PORT: "443"
+      # Sunucudaki reverse proxy, yayınlanan porta edge ağının gateway adresinden bağlanır.
+      ReverseProxy__KnownProxies__0: ${ATAGREEN_TRUSTED_PROXY:-172.31.0.1}
+    secrets:
+      - source: master_connection_string
+        target: ConnectionStrings__MasterDb
+      - source: jwt_signing_key
+        target: JwtSettings__SigningKey
+    ports:
+      - "127.0.0.1:${STOCK_SERVICE_HTTP_PORT:-5001}:8080"
+    networks: [backend, edge]
+    healthcheck:
+      test: ["CMD", "dotnet", "AtaGreenTech.StockService.Api.dll", "healthcheck"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    # Uygulama SIGTERM'den sonra devam eden istekleri en fazla 30 sn (HostOptions.ShutdownTimeout) bekler;
+    # Docker bu süre dolmadan SIGKILL göndermemelidir.
+    stop_grace_period: 35s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      tenant-migrator:
+        condition: service_completed_successfully
+
+networks:
+  # Dış dünyaya çıkışı olmayan veritabanı ağı.
+  backend:
+    internal: true
+  edge:
+    ipam:
+      config:
+        - subnet: ${ATAGREEN_EDGE_SUBNET:-172.31.0.0/24}
+
+volumes:
+  postgres-data:
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
+  master_connection_string:
+    file: ./secrets/master_connection_string
+  jwt_signing_key:
+    file: ./secrets/jwt_signing_key
+  # Yalnızca imaj derlenirken NuGet restore'a verilir.
+  github_packages_token:
+    environment: GITHUB_PACKAGES_TOKEN

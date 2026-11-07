@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Docker Compose secret dosyaları (deploy/generate-secrets.sh)
+secrets/
+
 # User-specific files
 *.rsuser
 *.suo
