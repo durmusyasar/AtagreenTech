@@ -1,4 +1,6 @@
 using AtaGreenTech.StockService.Api.Hosting;
+using System.Text.Json.Serialization;
+using AtaGreenTech.StockService.Api.Services;
 using AtaGreenTech.StockService.Application.Interfaces;
 using AtaGreenTech.StockService.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +13,10 @@ if (args is [ContainerHealthProbe.Command])
     return await ContainerHealthProbe.RunAsync();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Enum'lar (ör. hareket tipi) yanıtlarda adıyla yazılır; isteklerde hem ad hem sayı kabul edilir.
+builder.Services.ConfigureHttpJsonOptions(json => json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddScoped<IRequestOriginProvider, HttpRequestOriginProvider>();
 
 builder.AddOmniSyncCore(options =>
 {
