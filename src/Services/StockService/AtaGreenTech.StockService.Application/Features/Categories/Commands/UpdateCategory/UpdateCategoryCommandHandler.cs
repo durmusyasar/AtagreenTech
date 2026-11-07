@@ -1,8 +1,10 @@
+using AtaGreenTech.StockService.Application.Common;
 using AtaGreenTech.StockService.Application.Interfaces;
 using AtaGreenTech.StockService.Domain.Entities;
 using AtaGreenTech.StockService.Domain.Errors;
 using AtaGreenTech.StockService.Domain.Rules;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OmniSync.Core.Application.Messaging;
 using OmniSync.Core.Domain.Common;
 using OmniSync.Core.Domain.Exceptions;
@@ -10,13 +12,27 @@ using OmniSync.Core.Domain.Repositories;
 
 namespace AtaGreenTech.StockService.Application.Features.Categories.Commands.UpdateCategory;
 
-internal sealed class UpdateCategoryCommandHandler(IRepository<Category> categories, IStockDbContext context)
-    : ICommandHandler<UpdateCategoryCommand>
+internal sealed class UpdateCategoryCommandHandler(
+    IRepository<Category> categories,
+    IStockDbContext context,
+    IOptions<LocalizationOptions> localization
+) : ICommandHandler<UpdateCategoryCommand>
 {
     public async Task Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
     {
+        // Çeviriler kategoriyle birlikte yüklenir (AutoInclude); silinen diller soft delete ile işaretlenir.
         var category = await categories.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(Category), request.Id);
+
+        var code = Category.NormalizeCode(request.Code);
+
+        CheckRule.ThrowIf(
+            new ValueMustBeUniqueRule(
+                await categories.ExistsAsync(c => c.Code == code && c.Id != request.Id, cancellationToken)
+            ),
+            CatalogErrors.CategoryCodeAlreadyExists,
+            code
+        );
 
         // Kategorinin kendisini üst kategori yapması, daha açık bir hatayla Category.Update içinde reddedilir.
         if (request.ParentCategoryId is { } parentId && parentId != request.Id)
@@ -34,7 +50,13 @@ internal sealed class UpdateCategoryCommandHandler(IRepository<Category> categor
             );
         }
 
-        category.Update(request.Name, request.Description, request.ParentCategoryId, request.IsActive);
+        category.Update(
+            code,
+            request.Translations.ToEntities(),
+            localization.Value.DefaultLanguage,
+            request.ParentCategoryId,
+            request.IsActive
+        );
     }
 
     /// <summary>

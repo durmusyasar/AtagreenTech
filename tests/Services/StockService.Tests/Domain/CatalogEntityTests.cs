@@ -36,10 +36,11 @@ public class CatalogEntityTests
     [Fact]
     public void Category_cannot_be_its_own_parent()
     {
-        var category = new Category("Sulama", null);
+        CategoryTranslation[] Translations() => [new("tr", "Sulama", null), new("en", "Irrigation", null)];
+        var category = new Category("IRRIGATION", Translations(), "tr");
 
         var exception = Assert.Throws<ApplicationValidationExceptionWithResourceKey>(
-            () => category.Update("Sulama", null, category.Id, isActive: true)
+            () => category.Update("IRRIGATION", Translations(), "tr", category.Id, isActive: true)
         );
 
         Assert.Equal(CatalogErrors.CategoryCannotBeItsOwnParent, exception.ResourceKey);

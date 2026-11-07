@@ -1,3 +1,4 @@
+using AtaGreenTech.StockService.Application.Common;
 using FluentValidation;
 
 namespace AtaGreenTech.StockService.Application.Features.UnitsOfMeasure.Commands.CreateUnitOfMeasure;

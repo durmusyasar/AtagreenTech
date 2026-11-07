@@ -9,5 +9,6 @@ internal sealed class GetCategoriesQueryValidator : AbstractValidator<GetCategor
     {
         RuleFor(x => x.PageNumber).ValidPageNumber();
         RuleFor(x => x.PageSize).ValidPageSize();
+        RuleFor(x => x.Language).ValidLanguageCode().When(x => x.Language is not null);
     }
 }

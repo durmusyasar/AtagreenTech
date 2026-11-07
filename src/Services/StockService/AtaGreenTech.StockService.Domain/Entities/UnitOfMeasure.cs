@@ -59,20 +59,11 @@ public class UnitOfMeasure : BaseEntity
         Code = NormalizeCode(code);
     }
 
-    private void SetTranslations(IReadOnlyCollection<UnitOfMeasureTranslation> translations, string defaultLanguage)
-    {
-        ArgumentNullException.ThrowIfNull(translations);
-        TranslationSetGuard.Ensure(translations.Select(t => t.LanguageCode).ToList(), defaultLanguage);
-
-        _translations.RemoveAll(existing => translations.All(t => t.LanguageCode != existing.LanguageCode));
-
-        foreach (var translation in translations)
-        {
-            var existing = _translations.Find(t => t.LanguageCode == translation.LanguageCode);
-            if (existing is null)
-                _translations.Add(translation);
-            else
-                existing.SetText(translation.Name, translation.Symbol);
-        }
-    }
+    private void SetTranslations(IReadOnlyCollection<UnitOfMeasureTranslation> translations, string defaultLanguage) =>
+        TranslationCollection.Replace(
+            _translations,
+            translations,
+            defaultLanguage,
+            (existing, updated) => existing.SetText(updated.Name, updated.Symbol)
+        );
 }

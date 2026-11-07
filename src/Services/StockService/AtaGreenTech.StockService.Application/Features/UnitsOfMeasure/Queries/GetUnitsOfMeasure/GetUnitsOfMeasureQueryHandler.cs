@@ -1,7 +1,6 @@
 using AtaGreenTech.StockService.Application.Common;
 using AtaGreenTech.StockService.Application.DTOs;
 using AtaGreenTech.StockService.Application.Interfaces;
-using AtaGreenTech.StockService.Domain.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using OmniSync.Core.Application.Messaging;
@@ -35,13 +34,12 @@ internal sealed class GetUnitsOfMeasureQueryHandler(IStockDbContext context, IOp
             })
             .ToListAsync(cancellationToken);
 
-        var defaultLanguage = LanguageCode.Normalize(localization.Value.DefaultLanguage);
-        var language = request.Language is null ? defaultLanguage : LanguageCode.Normalize(request.Language);
+        var resolver = TranslationResolver.For(request.Language, localization);
 
         return rows
             .Select(u =>
             {
-                var display = Resolve(u.Translations, language, defaultLanguage);
+                var display = resolver.Resolve(u.Translations);
                 return new UnitOfMeasureDto(
                     u.Id,
                     u.Code,
@@ -52,22 +50,5 @@ internal sealed class GetUnitsOfMeasureQueryHandler(IStockDbContext context, IOp
                 );
             })
             .ToList();
-    }
-
-    /// <summary>
-    /// İstenen dil, yoksa bölgesiz dil (en-US → en), yoksa varsayılan dil, yoksa ilk çeviri.
-    /// </summary>
-    private static UnitOfMeasureTranslationDto? Resolve(
-        IReadOnlyList<UnitOfMeasureTranslationDto> translations,
-        string language,
-        string defaultLanguage
-    )
-    {
-        var baseLanguage = language.Split('-')[0];
-
-        return translations.FirstOrDefault(t => t.LanguageCode == language)
-            ?? translations.FirstOrDefault(t => t.LanguageCode == baseLanguage)
-            ?? translations.FirstOrDefault(t => t.LanguageCode == defaultLanguage)
-            ?? translations.FirstOrDefault();
     }
 }

@@ -1,36 +1,49 @@
 using AtaGreenTech.StockService.Domain.Errors;
+using AtaGreenTech.StockService.Domain.Localization;
 using AtaGreenTech.StockService.Domain.Rules;
 using OmniSync.Core.Domain.Common;
 
 namespace AtaGreenTech.StockService.Domain.Entities;
 
+/// <summary>
+/// Hiyerarşik ürün kategorisi. Dilden bağımsız kodu (ör. SEED, FERT) kategoriyi tanımlar; adı ve açıklaması dillere
+/// göre <see cref="Translations"/>'da tutulur.
+/// </summary>
 public class Category : BaseEntity
 {
-    public const int NameMaxLength = 100;
-    public const int DescriptionMaxLength = 500;
+    public const int CodeMaxLength = 50;
 
+    private readonly List<CategoryTranslation> _translations = [];
     private readonly List<Category> _subCategories = [];
     private readonly List<Product> _products = [];
 
     protected Category()
     {
-        Name = null!;
+        Code = null!;
     }
 
-    public Category(string name, string? description, Guid? parentCategoryId = null)
+    /// <param name="defaultLanguage">Çeviriler arasında bulunması zorunlu olan sistem dili.</param>
+    public Category(
+        string code,
+        IReadOnlyCollection<CategoryTranslation> translations,
+        string defaultLanguage,
+        Guid? parentCategoryId = null
+    )
+        : this()
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-
-        Name = name.Trim();
-        Description = NormalizeDescription(description);
+        SetCode(code);
+        SetTranslations(translations, defaultLanguage);
         ParentCategoryId = parentCategoryId;
     }
 
-    public string Name { get; private set; }
-
-    public string? Description { get; private set; }
+    /// <summary>
+    /// Silinmemiş kategoriler arasında benzersiz kod; büyük harfe çevrilerek saklanır.
+    /// </summary>
+    public string Code { get; private set; }
 
     public bool IsActive { get; private set; } = true;
+
+    public IReadOnlyCollection<CategoryTranslation> Translations => _translations.AsReadOnly();
 
     /// <summary>
     /// Üst kategori; kök kategorilerde <see langword="null"/>.
@@ -43,25 +56,47 @@ public class Category : BaseEntity
 
     public IReadOnlyCollection<Product> Products => _products.AsReadOnly();
 
+    /// <summary>
+    /// Kodu, çevirileri, üst kategoriyi ve aktifliği günceller. Var olan dillerin metni yerinde güncellenir, yeni
+    /// diller eklenir, listede olmayan diller silinir.
+    /// </summary>
     /// <remarks>
     /// Yalnızca kategorinin kendisini üst kategori yapması engellenir; daha derin döngüler (A → B → A) hiyerarşinin
     /// okunmasını gerektirdiği için application katmanında kontrol edilir.
     /// </remarks>
-    public void Update(string name, string? description, Guid? parentCategoryId, bool isActive)
+    public void Update(
+        string code,
+        IReadOnlyCollection<CategoryTranslation> translations,
+        string defaultLanguage,
+        Guid? parentCategoryId,
+        bool isActive
+    )
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         CheckRule.ThrowIf(
             new CategoryCannotBeItsOwnParentRule(Id, parentCategoryId),
             CatalogErrors.CategoryCannotBeItsOwnParent,
             Id
         );
 
-        Name = name.Trim();
-        Description = NormalizeDescription(description);
+        SetCode(code);
+        SetTranslations(translations, defaultLanguage);
         ParentCategoryId = parentCategoryId;
         IsActive = isActive;
     }
 
-    private static string? NormalizeDescription(string? description) =>
-        string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+    public static string NormalizeCode(string code) => code.Trim().ToUpperInvariant();
+
+    private void SetCode(string code)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(code);
+        Code = NormalizeCode(code);
+    }
+
+    private void SetTranslations(IReadOnlyCollection<CategoryTranslation> translations, string defaultLanguage) =>
+        TranslationCollection.Replace(
+            _translations,
+            translations,
+            defaultLanguage,
+            (existing, updated) => existing.SetText(updated.Name, updated.Description)
+        );
 }
