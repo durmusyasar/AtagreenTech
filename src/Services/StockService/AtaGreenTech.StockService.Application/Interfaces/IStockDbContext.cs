@@ -14,4 +14,10 @@ public interface IStockDbContext
     IQueryable<Category> Categories { get; }
 
     IQueryable<UnitOfMeasure> UnitsOfMeasure { get; }
+
+    IQueryable<Warehouse> Warehouses { get; }
+
+    IQueryable<StockBalance> StockBalances { get; }
+
+    IQueryable<StockMovement> StockMovements { get; }
 }
