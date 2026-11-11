@@ -84,6 +84,8 @@ services:
       ASPNETCORE_HTTPS_PORT: "443"
       # Sunucudaki reverse proxy, yayınlanan porta edge ağının gateway adresinden bağlanır.
       ReverseProxy__KnownProxies__0: ${ATAGREEN_TRUSTED_PROXY:-172.31.0.1}
+      # Web arayüzünün nginx'i API isteklerini edge ağı üzerinden iletir; ağda yalnızca bu yığının konteynerleri var.
+      ReverseProxy__KnownNetworks__0: ${ATAGREEN_EDGE_SUBNET:-172.31.0.0/24}
     secrets:
       - source: master_connection_string
         target: ConnectionStrings__MasterDb
@@ -106,6 +108,28 @@ services:
         condition: service_healthy
       tenant-migrator:
         condition: service_completed_successfully
+
+  # React arayüzü ve /api isteklerini stok servisine ileten nginx. Tarayıcı her şeyi tek origin'den aldığı için
+  # CORS gerekmez; tenant, API'de olduğu gibi Host başlığındaki alt alan adından çözülür.
+  web:
+    <<: *hardening
+    build:
+      context: ./client
+    image: atagreen-web:${ATAGREEN_VERSION:-latest}
+    restart: unless-stopped
+    # nginx, açılışta şablondan ürettiği yapılandırmayı conf.d'ye yazar; imajın kullanıcısı uid 101'dir.
+    tmpfs:
+      - /tmp
+      - /etc/nginx/conf.d:uid=101,gid=101
+    environment:
+      ATAGREEN_TRUSTED_PROXY: ${ATAGREEN_TRUSTED_PROXY:-172.31.0.1}
+      ATAGREEN_STOCK_SERVICE_UPSTREAM: stock-service:8080
+    ports:
+      - "127.0.0.1:${ATAGREEN_WEB_PORT:-3000}:8080"
+    networks: [edge]
+    depends_on:
+      stock-service:
+        condition: service_healthy
 
 networks:
   # Dış dünyaya çıkışı olmayan veritabanı ağı.

@@ -1,0 +1,64 @@
+# Konteyner açılışında envsubst ile /etc/nginx/conf.d/default.conf'a işlenir. Yalnızca NGINX_ENVSUBST_FILTER'a
+# uyan değişkenler yerine konur; nginx'in kendi $değişkenleri olduğu gibi kalır.
+
+# Sunucudaki reverse proxy TLS'i sonlandırıp X-Forwarded-Proto gönderir. Port yalnızca loopback'e açık olduğundan
+# başlık yoksa istek sunucunun kendisinden gelmiştir ve HTTPS kabul edilir; aksi halde stok servisi her API
+# isteğini HTTPS'e yönlendirirdi.
+map $http_x_forwarded_proto $forwarded_proto {
+    default $http_x_forwarded_proto;
+    ""      https;
+}
+
+server {
+    listen 8080;
+    server_name _;
+    server_tokens off;
+
+    root /usr/share/nginx/html;
+
+    # Tenant alt alan adından çözüldüğünden Host başlığı API'ye olduğu gibi taşınır; istemci IP'si ise yalnızca
+    # güvenilen proxy'nin X-Forwarded-For değerinden alınır.
+    set_real_ip_from ${ATAGREEN_TRUSTED_PROXY};
+    real_ip_header X-Forwarded-For;
+
+    # Docker'ın DNS'i; stok servisi yeniden başlayıp IP değiştirdiğinde adres tekrar çözülür.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
+    set $stock_service ${ATAGREEN_STOCK_SERVICE_UPSTREAM};
+
+    gzip on;
+    gzip_vary on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    include /etc/nginx/security-headers.conf;
+
+    location /api/ {
+        proxy_pass http://$stock_service;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_read_timeout 60s;
+    }
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # Dosya adları içerik hash'i taşır; değişen sürüm yeni ada sahip olur.
+    location /assets/ {
+        include /etc/nginx/security-headers.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+
+    # İstemci tarafı yönlendirme: bilinmeyen yollar uygulamaya düşer. index.html her seferinde doğrulanır ki yeni
+    # sürüm yayınlandığında eski paketlere referans kalmasın.
+    location / {
+        include /etc/nginx/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri /index.html;
+    }
+}
