@@ -9,6 +9,7 @@
 - **Security:** JWT Authentication, Refresh Token Rotation, Dynamic CORS, PBKDF2 Hashing
 - **Package Management:** GitHub Packages (`GITHUB_USERNAME` & `GITHUB_PACKAGES_TOKEN` required)
 - **API Standards:** OpenAPI / Swagger UI, Standardized Paged Result Envelopes
+- **Web Client:** React 19 + Vite + TypeScript + Ant Design (`client/`)
 - **Containerization:** Docker & Docker Compose ready
 
 ## 🚀 Getting Started
@@ -28,13 +29,15 @@
 ### Running with Docker Compose
 
 The stack (`docker-compose.yml`) starts PostgreSQL, applies master and tenant migrations with one-off migrator
-containers, then starts the stock service once the database is healthy and all migrations have succeeded.
+containers, then starts the stock service once the database is healthy and all migrations have succeeded, and finally
+the web client.
 
 ```bash
 deploy/generate-secrets.sh   # creates secrets/ (database password, connection string, JWT signing key)
 GITHUB_USERNAME=<user> GITHUB_PACKAGES_TOKEN=$(gh auth token) docker compose up -d --build
-docker compose ps            # postgres and stock-service: healthy; migrators: Exited (0)
+docker compose ps            # postgres, stock-service and web: healthy; migrators: Exited (0)
 curl -s http://127.0.0.1:5001/health/ready
+open http://acme.atagreen.localhost:3000   # web client for the "acme" tenant
 ```
 
 - The image is a multi-stage build on the chiseled .NET 10 runtime: no shell or package manager, runs as the non-root
@@ -53,3 +56,29 @@ curl -s http://127.0.0.1:5001/health/ready
 - Tenant connection strings stored in the master database must use `Host=postgres` and should include
   `GSS Encryption Mode=Disable`. After adding a tenant, apply its migrations with
   `docker compose run --rm tenant-migrator`.
+- The `web` service is an unprivileged nginx (UID 101, read-only root filesystem) published on `127.0.0.1:3000`
+  (`ATAGREEN_WEB_PORT`). It serves the client and forwards `/api/` to the stock service, so the browser talks to a
+  single origin and no CORS configuration is needed. The `Host` header is passed through, so tenants are resolved from
+  the subdomain exactly as for direct API calls. Point the reverse proxy for `*.atagreen.tech` at this port.
+  Locally, `*.localhost` subdomains resolve to `127.0.0.1` in Chrome and Firefox; otherwise add an `/etc/hosts` entry.
+
+### Web Client Development
+
+```bash
+cd client
+cp .env.example .env.local   # optional: API address and development tenant
+npm install
+npm run dev                  # http://localhost:5173, /api is proxied to the stock service on :5154
+npm run lint && npm test && npm run build
+```
+
+- `src/core` holds cross-cutting code: the Axios client (`core/api`), session/tenant/language hooks (`core/context`)
+  and UI translations (`core/i18n`). `src/services` wraps API endpoints, `src/features` contains pages and
+  `src/components` shared UI.
+- Every request carries `Authorization: Bearer <token>` and `Accept-Language`. On `localhost` there is no subdomain,
+  so the tenant is sent as `X-Tenant` (the stock service honours it only in Development); on a tenant subdomain the
+  header is omitted.
+- Errors are normalised into `ApiError`: `400` keeps field errors for forms, `422` business rules are translated by
+  their `resourceKey`, and `401` signs the user out and redirects to the sign-in page.
+- Until an identity service exists, sign in by pasting an access token issued for the stock service. The token is
+  kept in `sessionStorage` and cleared when the tab closes.
