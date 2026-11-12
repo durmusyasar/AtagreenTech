@@ -1,21 +1,13 @@
 import type { FormRule } from 'antd'
-import { toFieldPath } from '../../core/api/apiError'
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '../../core/i18n/languages'
 
 /** Backend'deki `TranslationSetGuard.MinimumTranslationCount`. */
 export const MINIMUM_TRANSLATIONS = 2
 
-export type FieldPath = (string | number)[]
-
 /** Formda çeviriler dil koduna göre tutulur: `translations.en.name`. */
 export type TranslationValues<F extends string> = Record<string, Partial<Record<F, string | null>> | undefined>
 
 export type SentTranslation<F extends string> = { languageCode: string } & Record<F, string>
-
-export interface ServerFieldError {
-  name: FieldPath
-  errors: string[]
-}
 
 /**
  * Formda sekme olarak gösterilecek diller: varsayılan dil önce, ardından desteklenen diller ve kayıtta bulunan diğer
@@ -69,43 +61,4 @@ export function requiredInLanguage(language: string, otherFields: readonly strin
       return required && !value?.trim() ? Promise.reject(new Error(message)) : Promise.resolve()
     },
   })
-}
-
-/**
- * Sunucunun 400 yanıtındaki alan hatalarını form alanlarına bağlar. `Translations[i]` dizini gönderilen listedeki
- * sıradır; form ise çevirileri dil koduyla tuttuğundan dizin dile çevrilir. Bir alana bağlanamayan hatalar (ör. liste
- * düzeyindeki kurallar) `unmatched` olarak döner.
- *
- * @param rootFields Formdaki çeviri dışı alanlar (ör. `code`, `parentCategoryId`).
- * @param translationFields Çeviri başına alanlar (ör. `name`, `description`).
- */
-export function mapServerFieldErrors(
-  fieldErrors: Record<string, string[]>,
-  sent: readonly { languageCode: string }[],
-  rootFields: readonly string[],
-  translationFields: readonly string[],
-): { fields: ServerFieldError[]; unmatched: string[] } {
-  const fields: ServerFieldError[] = []
-  const unmatched: string[] = []
-
-  for (const [path, errors] of Object.entries(fieldErrors)) {
-    const [root, index, property, ...rest] = toFieldPath(path)
-    const translation = typeof index === 'number' ? sent[index] : undefined
-
-    if (typeof root === 'string' && rootFields.includes(root) && index === undefined) {
-      fields.push({ name: [root], errors })
-    } else if (
-      root === 'translations' &&
-      translation &&
-      typeof property === 'string' &&
-      translationFields.includes(property) &&
-      rest.length === 0
-    ) {
-      fields.push({ name: ['translations', translation.languageCode, property], errors })
-    } else {
-      unmatched.push(...errors)
-    }
-  }
-
-  return { fields, unmatched }
 }
