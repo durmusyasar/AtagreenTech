@@ -23,7 +23,7 @@ export function DashboardPage() {
         loading={loading && !data}
         extra={
           <Button icon={<ReloadOutlined />} onClick={reload} loading={loading}>
-            {t('dashboard.refresh')}
+            {t('common.refresh')}
           </Button>
         }
       >

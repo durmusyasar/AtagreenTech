@@ -1,6 +1,17 @@
 import { AxiosError, AxiosHeaders, type AxiosResponse } from 'axios'
 import { describe, expect, it } from 'vitest'
-import { toApiError } from './apiError'
+import { toApiError, toFieldPath } from './apiError'
+
+describe('toFieldPath', () => {
+  it.each([
+    ['Code', ['code']],
+    ['Translations[1].Name', ['translations', 1, 'name']],
+    ['translations[0].symbol', ['translations', 0, 'symbol']],
+    ['Lines[2].Items[10].Quantity', ['lines', 2, 'items', 10, 'quantity']],
+  ])('parses %s', (path, expected) => {
+    expect(toFieldPath(path)).toEqual(expected)
+  })
+})
 
 function httpError(status: number, data: unknown): AxiosError {
   const config = { headers: new AxiosHeaders() }
