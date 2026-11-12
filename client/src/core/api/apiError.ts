@@ -56,6 +56,13 @@ export function toApiError(error: unknown, language: Language): ApiError {
   })
 }
 
+/** Sunucudaki alan yolunu form alan yoluna çevirir: `Translations[1].Name` → `['translations', 1, 'name']`. */
+export function toFieldPath(path: string): (string | number)[] {
+  return (path.match(/[^.[\]]+/g) ?? []).map((part) =>
+    /^\d+$/.test(part) ? Number(part) : part.charAt(0).toLowerCase() + part.slice(1),
+  )
+}
+
 function describe(status: number, problem: ProblemDetails, language: Language): string {
   switch (status) {
     case 400: {
