@@ -171,7 +171,10 @@ function UnitOfMeasureForm({ unit, onCancel, onSaved }: Omit<UnitOfMeasureFormMo
       layout="vertical"
       initialValues={initialValues}
       onFinish={submit}
-      onFinishFailed={({ errorFields }) => revealFirstError(errorFields.map((field) => field.name))}
+      onFinishFailed={({ errorFields }) => {
+        setFormError(undefined)
+        revealFirstError(errorFields.map((field) => field.name))
+      }}
       onValuesChange={revalidateSibling}
       onFieldsChange={() => refreshInvalidLanguages()}
     >
