@@ -37,6 +37,17 @@ describe('toApiError', () => {
       .toBe('Translations must include the system default language (tr).')
   })
 
+  it('formats numeric parameters in the UI language and keeps the raw parameters', () => {
+    const problem = {
+      resourceKey: 'Inventory.InsufficientStock',
+      parameters: ['w-1', 'p-1', '1250.5000', '2000'],
+    }
+
+    expect(toApiError(httpError(422, problem), 'tr').message).toBe('Yetersiz stok: mevcut 1.250,5, istenen 2.000.')
+    expect(toApiError(httpError(422, problem), 'en').message).toBe('Insufficient stock: available 1,250.5, requested 2,000.')
+    expect(toApiError(httpError(422, problem), 'tr').parameters).toEqual(problem.parameters)
+  })
+
   it('falls back to the server detail for unknown business rules', () => {
     expect(toApiError(httpError(422, { resourceKey: 'Unknown.Rule', detail: 'Server text' }), 'tr').message).toBe('Server text')
     expect(toApiError(httpError(422, {}), 'en').message).toBe('A business rule was violated.')

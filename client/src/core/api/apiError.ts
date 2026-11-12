@@ -78,7 +78,7 @@ function describe(status: number, problem: ProblemDetails, language: Language): 
     case 422: {
       const key = `error.${problem.resourceKey ?? ''}`
       return hasMessage(key)
-        ? translate(language, key as MessageKey, problem.parameters ?? [])
+        ? translate(language, key as MessageKey, formatParameters(problem, language))
         : (problem.detail ?? translate(language, 'error.businessRule'))
     }
     case 429:
@@ -86,6 +86,25 @@ function describe(status: number, problem: ProblemDetails, language: Language): 
     default:
       return translate(language, 'error.server')
   }
+}
+
+/**
+ * Sunucu parametreleri kültürden bağımsız yazar (`10.0000`). Hangi parametrenin sayı olduğu anahtara göre bilinir;
+ * kodlar da rakam ve nokta içerebildiği için biçimlendirme yalnızca bu sıralara uygulanır.
+ */
+const NUMERIC_PARAMETERS: Readonly<Record<string, readonly number[]>> = {
+  'Inventory.InsufficientStock': [2, 3],
+}
+
+function formatParameters(problem: ProblemDetails, language: Language): string[] {
+  const parameters = problem.parameters ?? []
+  const numeric = NUMERIC_PARAMETERS[problem.resourceKey ?? ''] ?? []
+  const format = new Intl.NumberFormat(language, { maximumFractionDigits: 4 })
+
+  return parameters.map((parameter, index) => {
+    const value = Number(parameter)
+    return numeric.includes(index) && parameter.trim() !== '' && Number.isFinite(value) ? format.format(value) : parameter
+  })
 }
 
 function asProblemDetails(data: unknown): ProblemDetails {

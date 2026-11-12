@@ -1,23 +1,14 @@
 import type { FormInstance, FormProps } from 'antd'
 import { useState } from 'react'
-import { ApiError } from '../../core/api/apiError'
+import type { FieldPath } from '../forms/serverErrors'
+import { useServerErrors, type ServerErrorOptions } from '../forms/useServerErrors'
 import { useLanguage } from '../../core/context/useLanguage'
-import {
-  hasText,
-  mapServerFieldErrors,
-  MINIMUM_TRANSLATIONS,
-  type FieldPath,
-  type TranslationValues,
-} from './translationForm'
+import { hasText, MINIMUM_TRANSLATIONS, type TranslationValues } from './translationForm'
 
-interface TranslationFormOptions {
+interface TranslationFormOptions extends Omit<ServerErrorOptions, 'onFieldErrors'> {
   languages: string[]
-  /** Formdaki çeviri dışı alanlar (ör. `code`); sunucunun 400 hataları bu adlarla eşlenir. */
-  rootFields: readonly string[]
   /** Çeviri başına alanlar (ör. `name`, `description`). */
   translationFields: readonly string[]
-  /** 422 iş kuralı anahtarlarından, hatanın gösterileceği form alanına (ör. kod çakışması → `code`). */
-  businessRuleFields?: Readonly<Record<string, string>>
 }
 
 /**
@@ -27,13 +18,12 @@ interface TranslationFormOptions {
  */
 export function useTranslationForm<Values>(
   typedForm: FormInstance<Values>,
-  { languages, rootFields, translationFields, businessRuleFields = {} }: TranslationFormOptions,
+  { languages, translationFields, ...serverErrorOptions }: TranslationFormOptions,
 ) {
   const form = typedForm as FormInstance
   const { t } = useLanguage()
   const [activeLanguage, setActiveLanguage] = useState(languages[0])
   const [invalidLanguages, setInvalidLanguages] = useState<string[]>([])
-  const [formError, setFormError] = useState<string>()
 
   const refreshInvalidLanguages = (): string[] => {
     const invalid = new Set(
@@ -53,33 +43,20 @@ export function useTranslationForm<Values>(
     if (!names.some((name) => name[0] !== 'translations') && invalid.length > 0) setActiveLanguage(invalid[0])
   }
 
+  const serverErrors = useServerErrors(typedForm, {
+    ...serverErrorOptions,
+    onFieldErrors: (fields) => revealFirstError(fields.map((field) => field.name)),
+  })
+
   /** Doldurulan dil sayısı yetersizse uyarıyı gösterir, boş bir dil sekmesini açar ve `false` döner. */
   const ensureMinimumTranslations = (sentCount: number, values: TranslationValues<string> | undefined): boolean => {
     if (sentCount >= MINIMUM_TRANSLATIONS) {
-      setFormError(undefined)
+      serverErrors.clearFormError()
       return true
     }
-    setFormError(t('error.Localization.TranslationsBelowMinimum', MINIMUM_TRANSLATIONS))
+    serverErrors.setFormError(t('error.Localization.TranslationsBelowMinimum', MINIMUM_TRANSLATIONS))
     setActiveLanguage(languages.find((language) => !hasText(values?.[language])) ?? activeLanguage)
     return false
-  }
-
-  const applyServerError = (error: unknown, sent: readonly { languageCode: string }[]) => {
-    // 401'de oturum kapanır ve kullanıcı oturum açma sayfasına yönlendirilir.
-    if (!(error instanceof ApiError) || error.status === 401) return
-
-    if (error.status === 400) {
-      const { fields, unmatched } = mapServerFieldErrors(error.fieldErrors, sent, rootFields, translationFields)
-      form.setFields(fields)
-      revealFirstError(fields.map((field) => field.name))
-      if (unmatched.length > 0) setFormError(unmatched.join(' '))
-      else if (fields.length === 0) setFormError(error.message)
-      return
-    }
-
-    const field = error.resourceKey ? businessRuleFields[error.resourceKey] : undefined
-    if (field) form.setFields([{ name: field, errors: [error.message] }])
-    else setFormError(error.message)
   }
 
   // Bir dilde zorunluluk aynı dildeki diğer alanlara bağlı olduğundan, değişen alanın kardeşleri yeniden doğrulanır.
@@ -97,7 +74,7 @@ export function useTranslationForm<Values>(
 
   const formProps: Pick<FormProps<Values>, 'onFinishFailed' | 'onValuesChange' | 'onFieldsChange'> = {
     onFinishFailed: ({ errorFields }) => {
-      setFormError(undefined)
+      serverErrors.clearFormError()
       revealFirstError(errorFields.map((field) => field.name))
     },
     onValuesChange: (changed) => revalidateSiblings(changed as { translations?: TranslationValues<string> }),
@@ -108,10 +85,11 @@ export function useTranslationForm<Values>(
     activeLanguage,
     setActiveLanguage,
     invalidLanguages,
-    formError,
-    clearFormError: () => setFormError(undefined),
+    formError: serverErrors.formError,
+    clearFormError: serverErrors.clearFormError,
     ensureMinimumTranslations,
-    applyServerError,
+    applyServerError: (error: unknown, sent: readonly { languageCode: string }[]) =>
+      serverErrors.applyServerError(error, { sent, fields: translationFields }),
     formProps,
   }
 }

@@ -11,7 +11,10 @@ import type { Language } from './core/i18n/languages'
 import { LoginPage } from './features/auth/LoginPage'
 import { CategoriesPage } from './features/categories/CategoriesPage'
 import { DashboardPage } from './features/dashboard/DashboardPage'
+import { StockBalancesPage } from './features/stock/StockBalancesPage'
+import { StockMovementsPage } from './features/stock/StockMovementsPage'
 import { UnitsOfMeasurePage } from './features/units-of-measure/UnitsOfMeasurePage'
+import { WarehousesPage } from './features/warehouses/WarehousesPage'
 
 const ANTD_LOCALES = { tr: trTR, en: enUS } satisfies Record<Language, unknown>
 
@@ -31,6 +34,9 @@ const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: 'units-of-measure', element: <UnitsOfMeasurePage /> },
       { path: 'categories', element: <CategoriesPage /> },
+      { path: 'warehouses', element: <WarehousesPage /> },
+      { path: 'stock-movements', element: <StockMovementsPage /> },
+      { path: 'stock-balances', element: <StockBalancesPage /> },
       { path: '*', element: <NotFound /> },
     ],
   },

@@ -1,6 +1,6 @@
 import { App, Button, Flex, Form, Input, Modal, Switch, Typography } from 'antd'
 import { useMemo, useState } from 'react'
-import { FormErrorAlert } from '../../components/FormErrorAlert'
+import { FormErrorAlert } from '../../components/forms/FormErrorAlert'
 import {
   collectTranslations,
   formLanguages,
