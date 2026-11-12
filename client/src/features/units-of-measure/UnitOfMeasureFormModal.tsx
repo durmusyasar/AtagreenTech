@@ -1,34 +1,22 @@
-import {
-  Alert,
-  App,
-  Badge,
-  Button,
-  Flex,
-  Form,
-  Input,
-  Modal,
-  Space,
-  Switch,
-  Tabs,
-  Typography,
-  type FormRule,
-} from 'antd'
+import { App, Button, Flex, Form, Input, Modal, Switch, Typography } from 'antd'
 import { useMemo, useState } from 'react'
-import { ApiError } from '../../core/api/apiError'
-import { useLanguage } from '../../core/context/useLanguage'
-import { DEFAULT_LANGUAGE, isSupportedLanguage, LANGUAGE_LABELS } from '../../core/i18n/languages'
-import { unitOfMeasureService } from '../../services/unitOfMeasureService'
-import type { UnitOfMeasure, UnitOfMeasureTranslation } from '../../types/unitOfMeasure'
+import { FormErrorAlert } from '../../components/FormErrorAlert'
 import {
+  collectTranslations,
   formLanguages,
-  hasText,
-  mapServerFieldErrors,
   MINIMUM_TRANSLATIONS,
+  requiredInLanguage,
+} from '../../components/translations/translationForm'
+import { TranslationTabs } from '../../components/translations/TranslationTabs'
+import { useTranslationForm } from '../../components/translations/useTranslationForm'
+import { useLanguage } from '../../core/context/useLanguage'
+import { DEFAULT_LANGUAGE } from '../../core/i18n/languages'
+import { unitOfMeasureService } from '../../services/unitOfMeasureService'
+import type { UnitOfMeasure } from '../../types/unitOfMeasure'
+import {
   toFormValues,
-  toTranslations,
   UNIT_OF_MEASURE_LIMITS,
-  type FieldPath,
-  type TranslationFieldName,
+  UNIT_OF_MEASURE_TRANSLATION_FIELDS,
   type UnitOfMeasureFormValues,
 } from './unitOfMeasureForm'
 
@@ -64,44 +52,21 @@ function UnitOfMeasureForm({ unit, onCancel, onSaved }: Omit<UnitOfMeasureFormMo
   const { t } = useLanguage()
   const { message } = App.useApp()
   const [form] = Form.useForm<UnitOfMeasureFormValues>()
-  const languages = useMemo(() => formLanguages(unit), [unit])
+  const languages = useMemo(() => formLanguages(unit?.translations), [unit])
   const initialValues = useMemo(() => toFormValues(unit), [unit])
-
-  const [activeLanguage, setActiveLanguage] = useState(languages[0])
-  const [invalidLanguages, setInvalidLanguages] = useState<string[]>([])
-  const [formError, setFormError] = useState<string>()
   const [saving, setSaving] = useState(false)
-
-  // Hatalı alanlar başka bir sekmede kalabilir; sekme başlıkları işaretlenir ve gerekirse o sekmeye geçilir.
-  const refreshInvalidLanguages = (): string[] => {
-    const invalid = new Set(
-      form
-        .getFieldsError()
-        .filter((field) => field.errors.length > 0 && field.name[0] === 'translations')
-        .map((field) => String(field.name[1])),
-    )
-    const ordered = languages.filter((language) => invalid.has(language))
-    setInvalidLanguages(ordered)
-    return ordered
-  }
-
-  const revealFirstError = (fields: FieldPath[]) => {
-    const invalid = refreshInvalidLanguages()
-    const codeInvalid = fields.some((name) => name[0] === 'code')
-    if (!codeInvalid && invalid.length > 0) setActiveLanguage(invalid[0])
-  }
+  const translationForm = useTranslationForm(form, {
+    languages,
+    rootFields: ['code'],
+    translationFields: UNIT_OF_MEASURE_TRANSLATION_FIELDS,
+    businessRuleFields: { 'Catalog.UnitOfMeasureCodeAlreadyExists': 'code' },
+  })
 
   const submit = async (values: UnitOfMeasureFormValues) => {
-    const translations = toTranslations(values, languages)
-
-    if (translations.length < MINIMUM_TRANSLATIONS) {
-      setFormError(t('error.Localization.TranslationsBelowMinimum', MINIMUM_TRANSLATIONS))
-      setActiveLanguage(languages.find((language) => !hasText(values.translations?.[language])) ?? activeLanguage)
-      return
-    }
+    const translations = collectTranslations(values.translations, languages, UNIT_OF_MEASURE_TRANSLATION_FIELDS)
+    if (!translationForm.ensureMinimumTranslations(translations.length, values.translations)) return
 
     const code = values.code.trim()
-    setFormError(undefined)
     setSaving(true)
 
     try {
@@ -115,55 +80,11 @@ function UnitOfMeasureForm({ unit, onCancel, onSaved }: Omit<UnitOfMeasureFormMo
       message.success(t(unit ? 'uom.updated' : 'uom.created', code))
       onSaved()
     } catch (error) {
-      if (error instanceof ApiError) showServerError(error, translations)
+      translationForm.applyServerError(error, translations)
     } finally {
       setSaving(false)
     }
   }
-
-  const showServerError = (error: ApiError, sent: UnitOfMeasureTranslation[]) => {
-    // 401'de oturum kapanır ve kullanıcı oturum açma sayfasına yönlendirilir.
-    if (error.status === 401) return
-
-    if (error.status === 400) {
-      const { fields, unmatched } = mapServerFieldErrors(error.fieldErrors, sent)
-      form.setFields(fields)
-      revealFirstError(fields.map((field) => field.name))
-      if (unmatched.length > 0) setFormError(unmatched.join(' '))
-      else if (fields.length === 0) setFormError(error.message)
-      return
-    }
-
-    if (error.resourceKey === 'Catalog.UnitOfMeasureCodeAlreadyExists') {
-      form.setFields([{ name: 'code', errors: [error.message] }])
-      return
-    }
-
-    setFormError(error.message)
-  }
-
-  // Bir dilde ad veya sembolden biri girildiyse diğeri de zorunludur. Kardeş alan yalnızca zaten hata gösteriyorsa
-  // yeniden doğrulanır; böylece kullanıcı yazmaya başlarken diğer alan erkenden kırmızıya dönmez.
-  const revalidateSibling = (changed: Partial<UnitOfMeasureFormValues>) => {
-    for (const [language, fields] of Object.entries(changed.translations ?? {})) {
-      for (const field of Object.keys(fields ?? {})) {
-        const sibling: TranslationFieldName = ['translations', language, field === 'name' ? 'symbol' : 'name']
-        if (form.getFieldError(sibling).length > 0) void form.validateFields([sibling]).catch(() => undefined)
-      }
-    }
-  }
-
-  const translationRules = (language: string, field: 'name' | 'symbol', sibling: 'name' | 'symbol'): FormRule[] => [
-    ({ getFieldValue }) => ({
-      validator: (_, value?: string) => {
-        const required =
-          language === DEFAULT_LANGUAGE || Boolean((getFieldValue(['translations', language, sibling]) as string)?.trim())
-        return required && !value?.trim()
-          ? Promise.reject(new Error(t(field === 'name' ? 'uom.form.nameRequired' : 'uom.form.symbolRequired')))
-          : Promise.resolve()
-      },
-    }),
-  ]
 
   return (
     <Form<UnitOfMeasureFormValues>
@@ -171,23 +92,9 @@ function UnitOfMeasureForm({ unit, onCancel, onSaved }: Omit<UnitOfMeasureFormMo
       layout="vertical"
       initialValues={initialValues}
       onFinish={submit}
-      onFinishFailed={({ errorFields }) => {
-        setFormError(undefined)
-        revealFirstError(errorFields.map((field) => field.name))
-      }}
-      onValuesChange={revalidateSibling}
-      onFieldsChange={() => refreshInvalidLanguages()}
+      {...translationForm.formProps}
     >
-      {formError && (
-        <Alert
-          type="error"
-          showIcon
-          closable
-          title={formError}
-          onClose={() => setFormError(undefined)}
-          style={{ marginBottom: 16 }}
-        />
-      )}
+      <FormErrorAlert message={translationForm.formError} onClose={translationForm.clearFormError} />
 
       <Flex gap={16} align="start">
         <Form.Item
@@ -202,7 +109,7 @@ function UnitOfMeasureForm({ unit, onCancel, onSaved }: Omit<UnitOfMeasureFormMo
         </Form.Item>
 
         {unit && (
-          <Form.Item name="isActive" label={t('uom.form.isActive')} valuePropName="checked">
+          <Form.Item name="isActive" label={t('form.isActive')} valuePropName="checked">
             <Switch />
           </Form.Item>
         )}
@@ -212,50 +119,38 @@ function UnitOfMeasureForm({ unit, onCancel, onSaved }: Omit<UnitOfMeasureFormMo
         {t('uom.form.translationsHelp', DEFAULT_LANGUAGE.toUpperCase(), MINIMUM_TRANSLATIONS)}
       </Typography.Paragraph>
 
-      <Tabs
-        activeKey={activeLanguage}
-        onChange={setActiveLanguage}
-        items={languages.map((language) => ({
-          key: language,
-          forceRender: true,
-          label: (
-            <Space size={6}>
-              {invalidLanguages.includes(language) && <Badge status="error" />}
-              {isSupportedLanguage(language) ? LANGUAGE_LABELS[language] : language}
-              {language === DEFAULT_LANGUAGE && (
-                <Typography.Text type="secondary">({t('uom.form.defaultLanguage')})</Typography.Text>
-              )}
-            </Space>
-          ),
-          children: (
-            <Flex gap={16}>
-              <Form.Item
-                name={['translations', language, 'name']}
-                label={t('uom.form.name')}
-                required={language === DEFAULT_LANGUAGE}
-                rules={translationRules(language, 'name', 'symbol')}
-                style={{ flex: 2 }}
-              >
-                <Input maxLength={UNIT_OF_MEASURE_LIMITS.name} autoComplete="off" lang={language} />
-              </Form.Item>
-              <Form.Item
-                name={['translations', language, 'symbol']}
-                label={t('uom.form.symbol')}
-                required={language === DEFAULT_LANGUAGE}
-                rules={translationRules(language, 'symbol', 'name')}
-                style={{ flex: 1 }}
-              >
-                <Input maxLength={UNIT_OF_MEASURE_LIMITS.symbol} autoComplete="off" lang={language} />
-              </Form.Item>
-            </Flex>
-          ),
-        }))}
-      />
+      <TranslationTabs
+        languages={languages}
+        activeLanguage={translationForm.activeLanguage}
+        onChange={translationForm.setActiveLanguage}
+        invalidLanguages={translationForm.invalidLanguages}
+      >
+        {(language) => (
+          <Flex gap={16}>
+            <Form.Item
+              name={['translations', language, 'name']}
+              label={t('uom.form.name')}
+              required={language === DEFAULT_LANGUAGE}
+              rules={[requiredInLanguage(language, ['symbol'], t('uom.form.nameRequired'))]}
+              style={{ flex: 2 }}
+            >
+              <Input maxLength={UNIT_OF_MEASURE_LIMITS.name} autoComplete="off" lang={language} />
+            </Form.Item>
+            <Form.Item
+              name={['translations', language, 'symbol']}
+              label={t('uom.form.symbol')}
+              required={language === DEFAULT_LANGUAGE}
+              rules={[requiredInLanguage(language, ['name'], t('uom.form.symbolRequired'))]}
+              style={{ flex: 1 }}
+            >
+              <Input maxLength={UNIT_OF_MEASURE_LIMITS.symbol} autoComplete="off" lang={language} />
+            </Form.Item>
+          </Flex>
+        )}
+      </TranslationTabs>
 
       <Flex justify="end" gap={8}>
-        <Button onClick={onCancel}>
-          {t('common.cancel')}
-        </Button>
+        <Button onClick={onCancel}>{t('common.cancel')}</Button>
         <Button type="primary" htmlType="submit" loading={saving}>
           {t('common.save')}
         </Button>
