@@ -1,5 +1,5 @@
 import { DEFAULT_LANGUAGE, isSupportedLanguage, type Language } from './i18n/languages'
-import { resolveTenantFromHost } from './tenant'
+import { resolveTenantFromHost, TENANT_SELECTION_ENABLED } from './tenant'
 
 const TOKEN_KEY = 'atagreen.accessToken'
 const TENANT_KEY = 'atagreen.tenant'
@@ -8,7 +8,10 @@ const LANGUAGE_KEY = 'atagreen.language'
 export interface SessionState {
   token: string | null
   tenant: string | null
-  /** Tenant adresin alt alan adından geliyorsa değiştirilemez ve `X-Tenant` başlığı gönderilmez. */
+  /**
+   * Tenant adresin alt alan adından geliyorsa değiştirilemez ve `X-Tenant` başlığı gönderilmez. Adreste tenant yoksa
+   * tenant yalnızca geliştirmede seçilebilir; derlenmiş pakette `null` kalır.
+   */
   isTenantFromHost: boolean
   language: Language
 }
@@ -18,10 +21,12 @@ type Listener = () => void
 const hostTenant = resolveTenantFromHost(window.location.hostname)
 const listeners = new Set<Listener>()
 
-// Token sekme kapanınca silinsin diye sessionStorage'da tutulur; tenant ve dil tercihi kalıcıdır.
+// Token sekme kapanınca silinsin diye sessionStorage'da tutulur; dil tercihi ve (geliştirmede) seçilen tenant kalıcıdır.
 let state: SessionState = {
   token: read(sessionStorage, TOKEN_KEY),
-  tenant: hostTenant ?? read(localStorage, TENANT_KEY) ?? (import.meta.env.VITE_DEV_TENANT || null),
+  tenant:
+    hostTenant ??
+    (TENANT_SELECTION_ENABLED ? (read(localStorage, TENANT_KEY) ?? (import.meta.env.VITE_DEV_TENANT || null)) : null),
   isTenantFromHost: hostTenant !== null,
   language: readLanguage(),
 }
@@ -39,8 +44,9 @@ export const sessionStore = {
 
   signIn(token: string, tenant?: string): void {
     write(sessionStorage, TOKEN_KEY, token)
-    const nextTenant = state.isTenantFromHost || !tenant ? state.tenant : tenant.trim().toLowerCase()
-    if (!state.isTenantFromHost) write(localStorage, TENANT_KEY, nextTenant)
+    const canSelect = TENANT_SELECTION_ENABLED && !state.isTenantFromHost
+    const nextTenant = canSelect && tenant ? tenant.trim().toLowerCase() : state.tenant
+    if (canSelect) write(localStorage, TENANT_KEY, nextTenant)
     update({ token, tenant: nextTenant })
   },
 
