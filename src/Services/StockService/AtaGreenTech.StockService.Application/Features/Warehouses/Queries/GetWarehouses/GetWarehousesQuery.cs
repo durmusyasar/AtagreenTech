@@ -11,4 +11,4 @@ public sealed record GetWarehousesQuery(
     int PageSize = BaseSearchModel.DefaultPageSize,
     string? SearchTerm = null,
     bool? IsActive = null
-) : IQuery<PagedResult<WarehouseDto>>;
+) : IQuery<PagedResult<WarehouseDto>>, IPagedRequest;

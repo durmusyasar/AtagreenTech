@@ -12,4 +12,4 @@ public sealed record GetStockBalancesQuery(
     Guid? WarehouseId = null,
     Guid? ProductId = null,
     bool IncludeEmpty = false
-) : IQuery<PagedResult<StockBalanceDto>>;
+) : IQuery<PagedResult<StockBalanceDto>>, IPagedRequest;

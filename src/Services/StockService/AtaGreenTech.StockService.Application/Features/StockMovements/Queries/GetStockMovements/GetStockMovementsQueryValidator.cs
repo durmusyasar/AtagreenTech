@@ -1,4 +1,3 @@
-using AtaGreenTech.StockService.Application.Common;
 using FluentValidation;
 
 namespace AtaGreenTech.StockService.Application.Features.StockMovements.Queries.GetStockMovements;
@@ -7,9 +6,6 @@ internal sealed class GetStockMovementsQueryValidator : AbstractValidator<GetSto
 {
     public GetStockMovementsQueryValidator()
     {
-        RuleFor(x => x.PageNumber).ValidPageNumber();
-        RuleFor(x => x.PageSize).ValidPageSize();
-
         RuleFor(x => x.Type).IsInEnum().WithMessage("Geçersiz hareket tipi.");
 
         RuleFor(x => x.To)
