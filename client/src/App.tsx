@@ -14,6 +14,7 @@ import { sessionStore } from './core/session'
 import { LoginPage } from './features/auth/LoginPage'
 import { CategoriesPage } from './features/categories/CategoriesPage'
 import { DashboardPage } from './features/dashboard/DashboardPage'
+import { ProductsPage } from './features/products/ProductsPage'
 import { StockBalancesPage } from './features/stock/StockBalancesPage'
 import { StockMovementsPage } from './features/stock/StockMovementsPage'
 import { UnitsOfMeasurePage } from './features/units-of-measure/UnitsOfMeasurePage'
@@ -40,6 +41,7 @@ const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: 'units-of-measure', element: <UnitsOfMeasurePage /> },
       { path: 'categories', element: <CategoriesPage /> },
+      { path: 'products', element: <ProductsPage /> },
       { path: 'warehouses', element: <WarehousesPage /> },
       { path: 'stock-movements', element: <StockMovementsPage /> },
       { path: 'stock-balances', element: <StockBalancesPage /> },

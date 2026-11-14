@@ -22,7 +22,7 @@ export function StockBalancesPage() {
 
   const warehouses = useQuery(warehouseQueries.listAll())
   const balances = useQuery({
-    ...stockQueries.balances({ pageNumber, pageSize: PAGE_SIZE, warehouseId, productId, includeEmpty }),
+    ...stockQueries.balances({ language, pageNumber, pageSize: PAGE_SIZE, warehouseId, productId, includeEmpty }),
     placeholderData: keepPreviousData,
   })
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { decimalPlaces, formatPrice, formatQuantity } from './stockFormat'
+import { decimalPlaces, formatMoney, formatQuantity } from './stockFormat'
 
 describe('decimalPlaces', () => {
   it.each([
@@ -21,8 +21,9 @@ describe('formatting', () => {
     expect(formatQuantity(0.12345, 'en')).toBe('0.1235')
   })
 
-  it('always shows 2 decimals for prices', () => {
-    expect(formatPrice(12, 'tr')).toBe('12,00')
-    expect(formatPrice(1234.5, 'en')).toBe('1,234.50')
+  it('formats prices with 2 decimals and the currency symbol in the UI language', () => {
+    expect(formatMoney(1234.5, 'TRY', 'tr')).toBe('₺1.234,50')
+    expect(formatMoney(12, 'USD', 'en')).toBe('$12.00')
+    expect(formatMoney(12, 'EUR', 'tr')).toBe('€12,00')
   })
 })

@@ -1,16 +1,21 @@
 using AtaGreenTech.StockService.Application.Common;
 using AtaGreenTech.StockService.Application.DTOs;
 using AtaGreenTech.StockService.Application.Interfaces;
+using Microsoft.Extensions.Options;
 using OmniSync.Core.Application.Messaging;
 using OmniSync.Core.Application.Pagination;
 
 namespace AtaGreenTech.StockService.Application.Features.StockMovements.Queries.GetStockMovements;
 
-internal sealed class GetStockMovementsQueryHandler(IStockDbContext context)
+internal sealed class GetStockMovementsQueryHandler(IStockDbContext context, IOptions<LocalizationOptions> localization)
     : IQueryHandler<GetStockMovementsQuery, PagedResult<StockMovementDto>>
 {
-    public Task<PagedResult<StockMovementDto>> Handle(GetStockMovementsQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<StockMovementDto>> Handle(
+        GetStockMovementsQuery request,
+        CancellationToken cancellationToken
+    )
     {
+        var resolver = TranslationResolver.For(request.Language, localization);
         var movements = context.StockMovements;
 
         if (request.ProductId is { } productId)
@@ -35,19 +40,23 @@ internal sealed class GetStockMovementsQueryHandler(IStockDbContext context)
             movements = movements.Where(m => m.CreatedAt < toUtc);
         }
 
-        return movements
+        var page = await movements
             .OrderByDescending(m => m.CreatedAt)
             .ThenByDescending(m => m.Id)
-            .Select(m => new StockMovementDto(
+            .Select(m => new
+            {
                 m.Id,
                 m.Type,
                 m.ProductId,
                 m.Product.Sku,
-                m.Product.Name,
+                ProductTranslations = m.Product.Translations
+                    .Select(t => new ProductTranslationDto(t.LanguageCode, t.Name, t.Description))
+                    .ToList(),
+                m.Product.Currency,
                 m.SourceWarehouseId,
-                m.SourceWarehouse == null ? null : m.SourceWarehouse.Code,
+                SourceWarehouseCode = m.SourceWarehouse == null ? null : m.SourceWarehouse.Code,
                 m.TargetWarehouseId,
-                m.TargetWarehouse == null ? null : m.TargetWarehouse.Code,
+                TargetWarehouseCode = m.TargetWarehouse == null ? null : m.TargetWarehouse.Code,
                 m.Quantity,
                 m.UnitPrice,
                 m.DocumentReference,
@@ -55,8 +64,29 @@ internal sealed class GetStockMovementsQueryHandler(IStockDbContext context)
                 m.CreatedBy,
                 m.CreatedAt,
                 m.ClientIpAddress,
-                m.CorrelationId
-            ))
+                m.CorrelationId,
+            })
             .ToPagedResultAsync(request.PageNumber, request.PageSize, cancellationToken);
+
+        return page.Map(m => new StockMovementDto(
+            m.Id,
+            m.Type,
+            m.ProductId,
+            m.Sku,
+            resolver.Resolve(m.ProductTranslations)?.Name ?? m.Sku,
+            m.SourceWarehouseId,
+            m.SourceWarehouseCode,
+            m.TargetWarehouseId,
+            m.TargetWarehouseCode,
+            m.Quantity,
+            m.UnitPrice,
+            m.Currency,
+            m.DocumentReference,
+            m.Description,
+            m.CreatedBy,
+            m.CreatedAt,
+            m.ClientIpAddress,
+            m.CorrelationId
+        ));
     }
 }

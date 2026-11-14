@@ -1,3 +1,4 @@
+import type { Language } from '../core/i18n/languages'
 import type { PageRequest } from './api'
 
 export type MovementType = 'Inbound' | 'Outbound' | 'Transfer'
@@ -36,6 +37,8 @@ export interface StockMovement {
   targetWarehouseCode: string | null
   quantity: number
   unitPrice: number
+  /** Birim fiyatın para birimi: ürünün para birimi. */
+  currency: string
   documentReference: string | null
   description: string | null
   createdBy: string | null
@@ -51,6 +54,8 @@ export interface StockMovementQuery extends PageRequest {
   type?: MovementType
   from?: string
   to?: string
+  /** Ürün adının gösterileceği dil. */
+  language?: Language
 }
 
 export interface StockBalance {
@@ -71,4 +76,6 @@ export interface StockBalanceQuery extends PageRequest {
   productId?: string
   /** Miktarı sıfır olan bakiyeleri de listeler. */
   includeEmpty?: boolean
+  /** Ürün adının gösterileceği dil. */
+  language?: Language
 }

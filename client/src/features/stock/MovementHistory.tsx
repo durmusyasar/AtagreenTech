@@ -8,7 +8,7 @@ import type { MovementType, StockMovement } from '../../types/stock'
 import type { Warehouse } from '../../types/warehouse'
 import { MOVEMENT_TYPES } from './movementRequest'
 import { MovementTypeTag } from './MovementTypeTag'
-import { formatDateTime, formatPrice, formatQuantity } from './stockFormat'
+import { formatDateTime, formatMoney, formatQuantity } from './stockFormat'
 import { WarehouseSelect } from './WarehouseSelect'
 
 const PAGE_SIZE = 10
@@ -31,7 +31,13 @@ export function MovementHistory({ warehouses }: MovementHistoryProps) {
   const [warehouseId, setWarehouseId] = useState<string>()
 
   const { data, isFetching } = useQuery({
-    ...stockQueries.movements({ pageNumber, pageSize: PAGE_SIZE, warehouseId, type: type === 'all' ? undefined : type }),
+    ...stockQueries.movements({
+      language,
+      pageNumber,
+      pageSize: PAGE_SIZE,
+      warehouseId,
+      type: type === 'all' ? undefined : type,
+    }),
     placeholderData: keepPreviousData,
   })
 
@@ -122,8 +128,8 @@ export function MovementHistory({ warehouses }: MovementHistoryProps) {
             title: t('movement.unitPrice'),
             dataIndex: 'unitPrice',
             align: 'right',
-            width: 110,
-            render: (unitPrice: number) => formatPrice(unitPrice, language),
+            width: 130,
+            render: (_, movement) => formatMoney(movement.unitPrice, movement.currency, language),
           },
           {
             title: t('movement.document'),

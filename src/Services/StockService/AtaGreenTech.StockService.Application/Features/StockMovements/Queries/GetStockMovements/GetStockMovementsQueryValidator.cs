@@ -1,3 +1,4 @@
+using AtaGreenTech.StockService.Application.Common;
 using FluentValidation;
 
 namespace AtaGreenTech.StockService.Application.Features.StockMovements.Queries.GetStockMovements;
@@ -12,5 +13,7 @@ internal sealed class GetStockMovementsQueryValidator : AbstractValidator<GetSto
             .GreaterThan(x => x.From)
             .When(x => x.From.HasValue && x.To.HasValue)
             .WithMessage("Bitiş tarihi başlangıç tarihinden sonra olmalıdır.");
+
+        RuleFor(x => x.Language).ValidLanguageCode().When(x => x.Language is not null);
     }
 }

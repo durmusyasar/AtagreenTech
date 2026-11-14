@@ -1,4 +1,5 @@
 using AtaGreenTech.StockService.Domain.Entities;
+using AtaGreenTech.StockService.Domain.Pricing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,13 +12,14 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.ToTable("Products");
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.Name).IsRequired().HasMaxLength(Product.NameMaxLength);
         builder.Property(x => x.Sku).IsRequired().HasMaxLength(Product.SkuMaxLength);
-        builder.Property(x => x.Description).HasMaxLength(Product.DescriptionMaxLength);
+        builder.Property(x => x.Barcode).HasMaxLength(Gtin.MaxLength);
         builder.Property(x => x.UnitPrice).HasPrecision(18, 2);
+        builder.Property(x => x.Currency).IsRequired().HasMaxLength(CurrencyCode.Length).IsFixedLength();
 
-        // Uygulamadaki benzersizlik kontrolü eş zamanlı isteklerde yarışabilir; son güvence bu index'tir.
+        // Uygulamadaki benzersizlik kontrolü eş zamanlı isteklerde yarışabilir; son güvence bu index'lerdir.
         builder.HasIndex(x => x.Sku).IsUnique().HasFilter(ConfigurationConstants.NotDeletedFilter);
+        builder.HasIndex(x => x.Barcode).IsUnique().HasFilter(ConfigurationConstants.NotDeletedFilter);
 
         // Restrict yalnızca fiziksel silmeyi engeller; soft delete'te ürünü olan kategori veya birimin silinmemesi
         // application katmanında kontrol edilmelidir.
@@ -30,5 +32,14 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .WithMany()
             .HasForeignKey(x => x.UnitOfMeasureId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Çeviriler aggregate'in parçasıdır: ürün her yüklendiğinde birlikte gelir; koleksiyondan çıkarılan çeviri ve
+        // silinen ürünün çevirileri silinir (OmniSync bunu soft delete'e çevirir).
+        builder.HasMany(x => x.Translations)
+            .WithOne()
+            .HasForeignKey(x => x.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Translations).AutoInclude();
     }
 }

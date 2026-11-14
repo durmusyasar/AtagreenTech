@@ -21,11 +21,11 @@ type ProductSelectProps = Omit<
 }
 
 /**
- * Ürünler sunucuda ad veya SKU ile aranır; katalog büyük olabileceğinden tümü yüklenmez, ilk {@link RESULT_LIMIT}
+ * Ürünler sunucuda ad, SKU veya barkodla aranır; katalog büyük olabileceğinden tümü yüklenmez, ilk {@link RESULT_LIMIT}
  * sonuç gösterilir.
  */
 export function ProductSelect({ activeOnly = false, onProductChange, onChange, ...props }: ProductSelectProps) {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
   const [search, setSearch] = useState('')
   const [searchTerm, setSearchTerm] = useState<string>()
   // Seçili ürün, sonraki aramaların sonuçlarında olmasa da etiketiyle görünmeye devam etsin diye ayrıca tutulur.
@@ -38,7 +38,7 @@ export function ProductSelect({ activeOnly = false, onProductChange, onChange, .
 
   // Yeni aramanın sonucu gelene kadar önceki sonuçlar listede kalır.
   const { data, isFetching: loading } = useQuery({
-    ...productQueries.list({ searchTerm, isActive: activeOnly ? true : undefined, pageSize: RESULT_LIMIT }),
+    ...productQueries.list({ language, searchTerm, isActive: activeOnly ? true : undefined, pageSize: RESULT_LIMIT }),
     placeholderData: keepPreviousData,
   })
 

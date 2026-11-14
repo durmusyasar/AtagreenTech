@@ -2,7 +2,6 @@ using AtaGreenTech.StockService.Application.Common;
 using AtaGreenTech.StockService.Application.DTOs;
 using AtaGreenTech.StockService.Application.Interfaces;
 using AtaGreenTech.StockService.Domain.Entities;
-using AtaGreenTech.StockService.Domain.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using OmniSync.Core.Application.Messaging;
@@ -13,10 +12,14 @@ namespace AtaGreenTech.StockService.Application.Features.Products.Queries.GetPro
 internal sealed class GetProductByIdQueryHandler(IStockDbContext context, IOptions<LocalizationOptions> localization)
     : IQueryHandler<GetProductByIdQuery, ProductDto>
 {
-    public async Task<ProductDto> Handle(GetProductByIdQuery request, CancellationToken cancellationToken) =>
-        await context.Products
+    public async Task<ProductDto> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
+    {
+        var row = await context.Products
             .Where(p => p.Id == request.Id)
-            .Select(ProductProjections.ToDto(LanguageCode.Normalize(localization.Value.DefaultLanguage)))
+            .Select(ProductProjections.ToRow)
             .FirstOrDefaultAsync(cancellationToken)
-        ?? throw new NotFoundException(nameof(Product), request.Id);
+            ?? throw new NotFoundException(nameof(Product), request.Id);
+
+        return row.ToDto(TranslationResolver.For(request.Language, localization));
+    }
 }
