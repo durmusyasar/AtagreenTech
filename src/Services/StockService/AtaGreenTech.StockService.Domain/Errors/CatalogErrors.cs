@@ -12,5 +12,8 @@ public static class CatalogErrors
     public const string ParentCategoryNotFound = "Catalog.ParentCategoryNotFound";
     public const string UnitOfMeasureNotFound = "Catalog.UnitOfMeasureNotFound";
     public const string SkuAlreadyExists = "Catalog.SkuAlreadyExists";
+    public const string BarcodeAlreadyExists = "Catalog.BarcodeAlreadyExists";
+    public const string ProductHasStockHistory = "Catalog.ProductHasStockHistory";
+    public const string ProductCurrencyLocked = "Catalog.ProductCurrencyLocked";
     public const string UnitOfMeasureCodeAlreadyExists = "Catalog.UnitOfMeasureCodeAlreadyExists";
 }

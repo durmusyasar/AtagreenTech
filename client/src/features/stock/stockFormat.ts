@@ -18,10 +18,14 @@ export function formatQuantity(value: number, language: Language): string {
   return new Intl.NumberFormat(language, { maximumFractionDigits: QUANTITY_SCALE }).format(value)
 }
 
-export function formatPrice(value: number, language: Language): string {
-  return new Intl.NumberFormat(language, { minimumFractionDigits: PRICE_SCALE, maximumFractionDigits: PRICE_SCALE }).format(
-    value,
-  )
+/** Para birimi simgesiyle tutar (ör. `₺12,50`, `$12.50`); `currency` ISO 4217 kodudur. */
+export function formatMoney(value: number, currency: string, language: Language): string {
+  return new Intl.NumberFormat(language, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: PRICE_SCALE,
+    maximumFractionDigits: PRICE_SCALE,
+  }).format(value)
 }
 
 export function formatDateTime(value: string, language: Language): string {

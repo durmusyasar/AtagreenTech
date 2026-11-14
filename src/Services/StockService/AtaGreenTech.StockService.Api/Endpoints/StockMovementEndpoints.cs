@@ -27,9 +27,10 @@ public sealed class StockMovementEndpoints : IEndpointModule
             Guid? warehouseId = null,
             MovementType? type = null,
             DateTimeOffset? from = null,
-            DateTimeOffset? to = null
+            DateTimeOffset? to = null,
+            string? language = null
         ) => sender.Send(
-            new GetStockMovementsQuery(pageNumber, pageSize, productId, warehouseId, type, from, to),
+            new GetStockMovementsQuery(pageNumber, pageSize, productId, warehouseId, type, from, to, language),
             cancellationToken
         ));
 

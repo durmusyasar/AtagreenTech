@@ -5,6 +5,7 @@ import {
   DashboardOutlined,
   ShopOutlined,
   SwapOutlined,
+  TagsOutlined,
 } from '@ant-design/icons'
 import { Layout, Menu, theme, Typography } from 'antd'
 import { useState, type ReactNode } from 'react'
@@ -17,6 +18,7 @@ const NAVIGATION: { path: string; label: MessageKey; icon: ReactNode }[] = [
   { path: '/', label: 'menu.dashboard', icon: <DashboardOutlined /> },
   { path: '/units-of-measure', label: 'menu.unitsOfMeasure', icon: <ColumnWidthOutlined /> },
   { path: '/categories', label: 'menu.categories', icon: <AppstoreOutlined /> },
+  { path: '/products', label: 'menu.products', icon: <TagsOutlined /> },
   { path: '/warehouses', label: 'menu.warehouses', icon: <ShopOutlined /> },
   { path: '/stock-movements', label: 'menu.stockMovements', icon: <SwapOutlined /> },
   { path: '/stock-balances', label: 'menu.stockBalances', icon: <BarChartOutlined /> },

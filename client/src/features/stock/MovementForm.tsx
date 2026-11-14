@@ -238,7 +238,13 @@ export function MovementForm({ warehouses }: MovementFormProps) {
               true,
             )}
           >
-            <InputNumber min={0} decimalSeparator={decimalSeparator} style={{ width: '100%' }} placeholder="0" />
+            <InputNumber
+              min={0}
+              decimalSeparator={decimalSeparator}
+              suffix={product?.currency}
+              style={{ width: '100%' }}
+              placeholder="0"
+            />
           </Form.Item>
         </Col>
 

@@ -1,4 +1,6 @@
+using AtaGreenTech.StockService.Application.DTOs;
 using AtaGreenTech.StockService.Application.Features.Products.Commands.CreateProduct;
+using AtaGreenTech.StockService.Application.Features.Products.Commands.DeleteProduct;
 using AtaGreenTech.StockService.Application.Features.Products.Commands.UpdateProduct;
 using AtaGreenTech.StockService.Application.Features.Products.Queries.GetProductById;
 using AtaGreenTech.StockService.Application.Features.Products.Queries.GetProductsWithPagination;
@@ -9,7 +11,7 @@ using OmniSync.Core.Infrastructure.Endpoints;
 namespace AtaGreenTech.StockService.Api.Endpoints;
 
 /// <summary>
-/// <c>/api/v1/products</c>: ürün kataloğu.
+/// <c>/api/v1/products</c>: çok dilli ürün kataloğu.
 /// </summary>
 public sealed class ProductEndpoints : IEndpointModule
 {
@@ -26,11 +28,15 @@ public sealed class ProductEndpoints : IEndpointModule
             int pageSize = BaseSearchModel.DefaultPageSize,
             string? searchTerm = null,
             Guid? categoryId = null,
-            bool? isActive = null
-        ) => sender.Send(new GetProductsQuery(pageNumber, pageSize, searchTerm, categoryId, isActive), cancellationToken));
+            bool? isActive = null,
+            string? language = null
+        ) => sender.Send(
+            new GetProductsQuery(pageNumber, pageSize, searchTerm, categoryId, isActive, language),
+            cancellationToken
+        ));
 
-        group.MapGet("/{id:guid}", (Guid id, ISender sender, CancellationToken cancellationToken) =>
-            sender.Send(new GetProductByIdQuery(id), cancellationToken));
+        group.MapGet("/{id:guid}", (Guid id, ISender sender, CancellationToken cancellationToken, string? language = null) =>
+            sender.Send(new GetProductByIdQuery(id, language), cancellationToken));
 
         group.MapPost("", async (CreateProductCommand command, ISender sender, CancellationToken cancellationToken) =>
         {
@@ -48,27 +54,35 @@ public sealed class ProductEndpoints : IEndpointModule
             await sender.Send(
                 new UpdateProductCommand(
                     id,
-                    request.Name,
                     request.Sku,
-                    request.Description,
+                    request.Barcode,
                     request.UnitPrice,
+                    request.Currency,
                     request.CategoryId,
                     request.UnitOfMeasureId,
+                    request.Translations,
                     request.IsActive
                 ),
                 cancellationToken
             );
             return TypedResults.NoContent();
         });
+
+        group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+        {
+            await sender.Send(new DeleteProductCommand(id), cancellationToken);
+            return TypedResults.NoContent();
+        });
     }
 }
 
 public sealed record UpdateProductRequest(
-    string Name,
     string Sku,
-    string? Description,
+    string? Barcode,
     decimal UnitPrice,
+    string Currency,
     Guid CategoryId,
     Guid UnitOfMeasureId,
+    IReadOnlyList<ProductTranslationDto> Translations,
     bool IsActive
 );

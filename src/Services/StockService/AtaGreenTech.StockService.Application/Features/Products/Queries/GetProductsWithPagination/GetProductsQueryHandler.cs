@@ -1,7 +1,6 @@
 using AtaGreenTech.StockService.Application.Common;
 using AtaGreenTech.StockService.Application.DTOs;
 using AtaGreenTech.StockService.Application.Interfaces;
-using AtaGreenTech.StockService.Domain.Localization;
 using Microsoft.Extensions.Options;
 using OmniSync.Core.Application.Messaging;
 using OmniSync.Core.Application.Pagination;
@@ -11,8 +10,10 @@ namespace AtaGreenTech.StockService.Application.Features.Products.Queries.GetPro
 internal sealed class GetProductsQueryHandler(IStockDbContext context, IOptions<LocalizationOptions> localization)
     : IQueryHandler<GetProductsQuery, PagedResult<ProductDto>>
 {
-    public Task<PagedResult<ProductDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<ProductDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
+        var resolver = TranslationResolver.For(request.Language, localization);
+        var defaultLanguage = resolver.DefaultLanguage;
         var products = context.Products;
 
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -21,8 +22,12 @@ internal sealed class GetProductsQueryHandler(IStockDbContext context, IOptions<
             var lowerTerm = term.ToLowerInvariant();
             var upperTerm = term.ToUpperInvariant();
 
-            // SKU büyük harfle saklandığı için doğrudan, ad ise küçük harfe çevrilerek karşılaştırılır.
-            products = products.Where(p => p.Name.ToLower().Contains(lowerTerm) || p.Sku.Contains(upperTerm));
+            // SKU büyük harfle saklandığı için doğrudan, adlar ise küçük harfe çevrilerek karşılaştırılır.
+            products = products.Where(p =>
+                p.Sku.Contains(upperTerm)
+                || (p.Barcode != null && p.Barcode.Contains(term))
+                || p.Translations.Any(t => t.Name.ToLower().Contains(lowerTerm))
+            );
         }
 
         if (request.CategoryId is { } categoryId)
@@ -31,10 +36,12 @@ internal sealed class GetProductsQueryHandler(IStockDbContext context, IOptions<
         if (request.IsActive is { } isActive)
             products = products.Where(p => p.IsActive == isActive);
 
-        return products
-            .OrderBy(p => p.Name)
+        var page = await products
+            .OrderBy(p => p.Translations.Where(t => t.LanguageCode == defaultLanguage).Select(t => t.Name).FirstOrDefault())
             .ThenBy(p => p.Id)
-            .Select(ProductProjections.ToDto(LanguageCode.Normalize(localization.Value.DefaultLanguage)))
+            .Select(ProductProjections.ToRow)
             .ToPagedResultAsync(request.PageNumber, request.PageSize, cancellationToken);
+
+        return page.Map(row => row.ToDto(resolver));
     }
 }

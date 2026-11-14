@@ -2,6 +2,8 @@ using AtaGreenTech.StockService.Domain.Entities;
 
 namespace AtaGreenTech.StockService.Application.DTOs;
 
+/// <param name="ProductName">Ürünün istenen dile göre çözümlenen adı.</param>
+/// <param name="Currency">Birim fiyatın para birimi: ürünün para birimi.</param>
 /// <param name="CreatedBy">Hareketi yapan kullanıcının kimliği (JWT <c>sub</c>).</param>
 public sealed record StockMovementDto(
     Guid Id,
@@ -15,6 +17,7 @@ public sealed record StockMovementDto(
     string? TargetWarehouseCode,
     decimal Quantity,
     decimal UnitPrice,
+    string Currency,
     string? DocumentReference,
     string? Description,
     string? CreatedBy,

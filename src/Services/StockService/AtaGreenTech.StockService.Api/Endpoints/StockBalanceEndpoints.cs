@@ -21,9 +21,10 @@ public sealed class StockBalanceEndpoints : IEndpointModule
             int pageSize = BaseSearchModel.DefaultPageSize,
             Guid? warehouseId = null,
             Guid? productId = null,
-            bool includeEmpty = false
+            bool includeEmpty = false,
+            string? language = null
         ) => sender.Send(
-            new GetStockBalancesQuery(pageNumber, pageSize, warehouseId, productId, includeEmpty),
+            new GetStockBalancesQuery(pageNumber, pageSize, warehouseId, productId, includeEmpty, language),
             cancellationToken
         ));
     }

@@ -123,6 +123,10 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Barcode")
+                        .HasMaxLength(14)
+                        .HasColumnType("character varying(14)");
+
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid");
 
@@ -132,23 +136,20 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .IsFixedLength();
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Sku")
                         .IsRequired()
@@ -170,6 +171,10 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Barcode")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("Sku")
@@ -179,6 +184,55 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
                     b.HasIndex("UnitOfMeasureId");
 
                     b.ToTable("Products", (string)null);
+                });
+
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.ProductTranslation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId", "LanguageCode")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("ProductTranslations", (string)null);
                 });
 
             modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.StockBalance", b =>
@@ -496,6 +550,15 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
                     b.Navigation("UnitOfMeasure");
                 });
 
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.ProductTranslation", b =>
+                {
+                    b.HasOne("AtaGreenTech.StockService.Domain.Entities.Product", null)
+                        .WithMany("Translations")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.StockBalance", b =>
                 {
                     b.HasOne("AtaGreenTech.StockService.Domain.Entities.Product", "Product")
@@ -555,6 +618,11 @@ namespace AtaGreenTech.StockService.Infrastructure.Persistence.TenantMigrations
 
                     b.Navigation("SubCategories");
 
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("AtaGreenTech.StockService.Domain.Entities.Product", b =>
+                {
                     b.Navigation("Translations");
                 });
 
