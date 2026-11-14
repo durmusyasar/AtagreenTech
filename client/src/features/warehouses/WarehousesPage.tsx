@@ -1,10 +1,10 @@
 import { EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Button, Flex, Input, Segmented, Space, Table, Tag, Typography } from 'antd'
 import { useState } from 'react'
 import { StatusTag } from '../../components/StatusTag'
-import { useApiQuery } from '../../core/api/useApiQuery'
 import { useLanguage } from '../../core/context/useLanguage'
-import { warehouseService } from '../../services/warehouseService'
+import { warehouseQueries } from '../../services/warehouseService'
 import type { Warehouse } from '../../types/warehouse'
 import { WarehouseFormModal } from './WarehouseFormModal'
 
@@ -20,14 +20,15 @@ export function WarehousesPage() {
   // Kapanış animasyonu bitene kadar başlık ve form değişmesin diye düzenlenen depo modal kapanınca da tutulur.
   const [editor, setEditor] = useState<{ open: boolean; warehouse: Warehouse | null }>({ open: false, warehouse: null })
 
-  const { data, loading, reload } = useApiQuery(
-    (signal) =>
-      warehouseService.list(
-        { pageNumber, pageSize: PAGE_SIZE, searchTerm, isActive: status === 'all' ? undefined : status === 'active' },
-        signal,
-      ),
-    [pageNumber, searchTerm, status],
-  )
+  const { data, isFetching, refetch } = useQuery({
+    ...warehouseQueries.list({
+      pageNumber,
+      pageSize: PAGE_SIZE,
+      searchTerm,
+      isActive: status === 'all' ? undefined : status === 'active',
+    }),
+    placeholderData: keepPreviousData,
+  })
 
   const openEditor = (warehouse: Warehouse | null) => setEditor({ open: true, warehouse })
   const closeEditor = () => setEditor((current) => ({ ...current, open: false }))
@@ -39,7 +40,7 @@ export function WarehousesPage() {
           {t('menu.warehouses')}
         </Typography.Title>
         <Space wrap>
-          <Button icon={<ReloadOutlined />} onClick={reload}>
+          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
             {t('common.refresh')}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => openEditor(null)}>
@@ -74,7 +75,7 @@ export function WarehousesPage() {
 
       <Table<Warehouse>
         rowKey="id"
-        loading={loading}
+        loading={isFetching}
         dataSource={data?.items}
         pagination={{
           current: pageNumber,
@@ -115,10 +116,7 @@ export function WarehousesPage() {
         open={editor.open}
         warehouse={editor.warehouse}
         onClose={closeEditor}
-        onSaved={() => {
-          closeEditor()
-          reload()
-        }}
+        onSaved={closeEditor}
       />
     </Space>
   )

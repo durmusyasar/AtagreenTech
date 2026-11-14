@@ -1,3 +1,4 @@
+import { queryOptions } from '@tanstack/react-query'
 import type { AxiosRequestConfig } from 'axios'
 import { axiosClient } from '../core/api/axiosClient'
 import type { PagedResult } from '../types/api'
@@ -10,6 +11,7 @@ import type {
   StockMovementQuery,
   TransferMovementRequest,
 } from '../types/stock'
+import { queryKeys } from './queryKeys'
 
 const MOVEMENTS = '/stock-movements'
 const BALANCES = '/stock-balances'
@@ -40,4 +42,18 @@ export const stockService = {
     const { data } = await axiosClient.get<PagedResult<StockBalance>>(BALANCES, { params: query, signal })
     return data
   },
+}
+
+export const stockQueries = {
+  movements: (query: StockMovementQuery) =>
+    queryOptions({
+      queryKey: [...queryKeys.stock, 'movements', query],
+      queryFn: ({ signal }) => stockService.listMovements(query, signal),
+    }),
+
+  balances: (query: StockBalanceQuery) =>
+    queryOptions({
+      queryKey: [...queryKeys.stock, 'balances', query],
+      queryFn: ({ signal }) => stockService.listBalances(query, signal),
+    }),
 }

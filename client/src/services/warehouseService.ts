@@ -1,8 +1,10 @@
+import { queryOptions } from '@tanstack/react-query'
 import type { AxiosRequestConfig } from 'axios'
 import { axiosClient } from '../core/api/axiosClient'
 import type { PagedResult } from '../types/api'
 import type { CreateWarehouseRequest, UpdateWarehouseRequest, Warehouse, WarehouseQuery } from '../types/warehouse'
 import { fetchAllPages } from './paging'
+import { queryKeys } from './queryKeys'
 
 const BASE = '/warehouses'
 
@@ -27,4 +29,18 @@ export const warehouseService = {
   async update(id: string, request: UpdateWarehouseRequest, config?: AxiosRequestConfig): Promise<void> {
     await axiosClient.put(`${BASE}/${id}`, request, config)
   },
+}
+
+export const warehouseQueries = {
+  list: (query: WarehouseQuery) =>
+    queryOptions({
+      queryKey: [...queryKeys.warehouses, 'list', query],
+      queryFn: ({ signal }) => warehouseService.list(query, signal),
+    }),
+
+  listAll: (query: Pick<WarehouseQuery, 'isActive'> = {}) =>
+    queryOptions({
+      queryKey: [...queryKeys.warehouses, 'all', query],
+      queryFn: ({ signal }) => warehouseService.listAll(query, signal),
+    }),
 }

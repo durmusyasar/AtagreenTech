@@ -1,9 +1,9 @@
 import { ArrowRightOutlined } from '@ant-design/icons'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Flex, Segmented, Space, Table, Tag, Typography } from 'antd'
 import { useState } from 'react'
-import { useApiQuery } from '../../core/api/useApiQuery'
 import { useLanguage } from '../../core/context/useLanguage'
-import { stockService } from '../../services/stockService'
+import { stockQueries } from '../../services/stockService'
 import type { MovementType, StockMovement } from '../../types/stock'
 import type { Warehouse } from '../../types/warehouse'
 import { MOVEMENT_TYPES } from './movementRequest'
@@ -18,25 +18,22 @@ type TypeFilter = MovementType | 'all'
 interface MovementHistoryProps {
   /** Filtre için tüm depolar (pasifler dahil). */
   warehouses: Warehouse[]
-  /** Değiştikçe liste yeniden yüklenir (ör. yeni hareket kaydedildiğinde). */
-  refreshKey: number
 }
 
-/** En yeni hareket en üstte; depo filtresi kaynağı veya hedefi o depo olan hareketleri getirir. */
-export function MovementHistory({ warehouses, refreshKey }: MovementHistoryProps) {
+/**
+ * En yeni hareket en üstte; depo filtresi kaynağı veya hedefi o depo olan hareketleri getirir. Yeni hareket
+ * kaydedilince stok sorguları bayatlatıldığından liste kendiliğinden yenilenir.
+ */
+export function MovementHistory({ warehouses }: MovementHistoryProps) {
   const { language, t } = useLanguage()
   const [pageNumber, setPageNumber] = useState(1)
   const [type, setType] = useState<TypeFilter>('all')
   const [warehouseId, setWarehouseId] = useState<string>()
 
-  const { data, loading } = useApiQuery(
-    (signal) =>
-      stockService.listMovements(
-        { pageNumber, pageSize: PAGE_SIZE, warehouseId, type: type === 'all' ? undefined : type },
-        signal,
-      ),
-    [pageNumber, warehouseId, type, refreshKey],
-  )
+  const { data, isFetching } = useQuery({
+    ...stockQueries.movements({ pageNumber, pageSize: PAGE_SIZE, warehouseId, type: type === 'all' ? undefined : type }),
+    placeholderData: keepPreviousData,
+  })
 
   return (
     <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
@@ -68,7 +65,7 @@ export function MovementHistory({ warehouses, refreshKey }: MovementHistoryProps
       <Table<StockMovement>
         rowKey="id"
         size="middle"
-        loading={loading}
+        loading={isFetching}
         dataSource={data?.items}
         scroll={{ x: 960 }}
         pagination={{

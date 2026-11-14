@@ -1,12 +1,12 @@
 import { EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Button, Flex, Segmented, Space, Table, Typography } from 'antd'
 import { useState } from 'react'
 import { StatusTag } from '../../components/StatusTag'
 import { TranslationTags } from '../../components/TranslationTags'
-import { useApiQuery } from '../../core/api/useApiQuery'
 import { useLanguage } from '../../core/context/useLanguage'
 import { DEFAULT_LANGUAGE } from '../../core/i18n/languages'
-import { unitOfMeasureService } from '../../services/unitOfMeasureService'
+import { unitOfMeasureQueries } from '../../services/unitOfMeasureService'
 import type { UnitOfMeasure } from '../../types/unitOfMeasure'
 import { UnitOfMeasureFormModal } from './UnitOfMeasureFormModal'
 
@@ -18,11 +18,10 @@ export function UnitsOfMeasurePage() {
   // Kapanış animasyonu bitene kadar başlık ve form değişmesin diye düzenlenen birim modal kapanınca da tutulur.
   const [editor, setEditor] = useState<{ open: boolean; unit: UnitOfMeasure | null }>({ open: false, unit: null })
 
-  const { data, loading, reload } = useApiQuery(
-    (signal) =>
-      unitOfMeasureService.list({ language, isActive: status === 'all' ? undefined : status === 'active' }, signal),
-    [language, status],
-  )
+  const { data, isFetching, refetch } = useQuery({
+    ...unitOfMeasureQueries.list({ language, isActive: status === 'all' ? undefined : status === 'active' }),
+    placeholderData: keepPreviousData,
+  })
 
   const openEditor = (unit: UnitOfMeasure | null) => setEditor({ open: true, unit })
   const closeEditor = () => setEditor((current) => ({ ...current, open: false }))
@@ -43,7 +42,7 @@ export function UnitsOfMeasurePage() {
               { value: 'inactive', label: t('list.inactive') },
             ]}
           />
-          <Button icon={<ReloadOutlined />} onClick={reload}>
+          <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
             {t('common.refresh')}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => openEditor(null)}>
@@ -54,7 +53,7 @@ export function UnitsOfMeasurePage() {
 
       <Table<UnitOfMeasure>
         rowKey="id"
-        loading={loading}
+        loading={isFetching}
         dataSource={data}
         pagination={false}
         columns={[
@@ -94,10 +93,7 @@ export function UnitsOfMeasurePage() {
         open={editor.open}
         unit={editor.unit}
         onClose={closeEditor}
-        onSaved={() => {
-          closeEditor()
-          reload()
-        }}
+        onSaved={closeEditor}
       />
     </Space>
   )

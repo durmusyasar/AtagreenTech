@@ -1,10 +1,13 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { App, Button, Flex, Form, Input, Modal, Switch } from 'antd'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { FormErrorAlert } from '../../components/forms/FormErrorAlert'
 import { useServerErrors } from '../../components/forms/useServerErrors'
+import { invalidate } from '../../core/api/queryClient'
 import { useLanguage } from '../../core/context/useLanguage'
+import { queryKeys } from '../../services/queryKeys'
 import { warehouseService } from '../../services/warehouseService'
-import type { Warehouse } from '../../types/warehouse'
+import type { UpdateWarehouseRequest, Warehouse } from '../../types/warehouse'
 import { toFormValues, toRequest, WAREHOUSE_CODE_PATTERN, WAREHOUSE_LIMITS, type WarehouseFormValues } from './warehouseForm'
 
 interface WarehouseFormModalProps {
@@ -40,7 +43,16 @@ function WarehouseForm({ warehouse, onCancel, onSaved }: Omit<WarehouseFormModal
   const { message } = App.useApp()
   const [form] = Form.useForm<WarehouseFormValues>()
   const initialValues = useMemo(() => toFormValues(warehouse), [warehouse])
-  const [saving, setSaving] = useState(false)
+  const queryClient = useQueryClient()
+  const save = useMutation({
+    // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
+    mutationFn: ({ isActive, ...request }: UpdateWarehouseRequest): Promise<unknown> =>
+      warehouse
+        ? warehouseService.update(warehouse.id, { ...request, isActive }, { skipErrorNotification: true })
+        : warehouseService.create(request, { skipErrorNotification: true }),
+    // Hareketler ve bakiyeler depo kodunu ve adını gösterir.
+    onSuccess: () => invalidate(queryClient, queryKeys.warehouses, queryKeys.stock),
+  })
   const serverErrors = useServerErrors(form, {
     rootFields: ['code', 'name', 'address'],
     businessRuleFields: { 'Inventory.WarehouseCodeAlreadyExists': 'code' },
@@ -49,19 +61,13 @@ function WarehouseForm({ warehouse, onCancel, onSaved }: Omit<WarehouseFormModal
   const submit = async (values: WarehouseFormValues) => {
     const request = toRequest(values)
     serverErrors.clearFormError()
-    setSaving(true)
 
     try {
-      // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
-      const config = { skipErrorNotification: true }
-      if (warehouse) await warehouseService.update(warehouse.id, { ...request, isActive: values.isActive }, config)
-      else await warehouseService.create(request, config)
+      await save.mutateAsync({ ...request, isActive: values.isActive })
       message.success(t(warehouse ? 'warehouse.updated' : 'warehouse.created', request.code.toUpperCase()))
       onSaved()
     } catch (error) {
       serverErrors.applyServerError(error)
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -111,7 +117,7 @@ function WarehouseForm({ warehouse, onCancel, onSaved }: Omit<WarehouseFormModal
 
       <Flex justify="end" gap={8}>
         <Button onClick={onCancel}>{t('common.cancel')}</Button>
-        <Button type="primary" htmlType="submit" loading={saving}>
+        <Button type="primary" htmlType="submit" loading={save.isPending}>
           {t('common.save')}
         </Button>
       </Flex>

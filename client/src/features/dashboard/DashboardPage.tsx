@@ -1,14 +1,14 @@
 import { CheckCircleTwoTone, ReloadOutlined } from '@ant-design/icons'
+import { useQuery } from '@tanstack/react-query'
 import { Button, Card, Descriptions, Space, Tag, Typography } from 'antd'
-import { useApiQuery } from '../../core/api/useApiQuery'
 import { useAuth } from '../../core/context/useAuth'
 import { useLanguage } from '../../core/context/useLanguage'
-import { sessionService } from '../../services/sessionService'
+import { sessionQueries } from '../../services/sessionService'
 
 export function DashboardPage() {
   const { language, t } = useLanguage()
   const { claims } = useAuth()
-  const { data, loading, reload } = useApiQuery((signal) => sessionService.getCurrent(signal), [])
+  const { data, isPending, isFetching, refetch } = useQuery(sessionQueries.current())
 
   const expiresAt = claims?.expiresAt ? new Date(claims.expiresAt * 1000).toLocaleString(language) : '—'
 
@@ -20,9 +20,9 @@ export function DashboardPage() {
 
       <Card
         title={t('dashboard.connection')}
-        loading={loading && !data}
+        loading={isPending}
         extra={
-          <Button icon={<ReloadOutlined />} onClick={reload} loading={loading}>
+          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
             {t('common.refresh')}
           </Button>
         }

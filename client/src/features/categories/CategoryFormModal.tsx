@@ -1,13 +1,16 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { App, Button, Flex, Form, Input, Modal, Switch, Typography } from 'antd'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { FormErrorAlert } from '../../components/forms/FormErrorAlert'
 import { formLanguages, MINIMUM_TRANSLATIONS, requiredInLanguage } from '../../components/translations/translationForm'
 import { TranslationTabs } from '../../components/translations/TranslationTabs'
 import { useTranslationForm } from '../../components/translations/useTranslationForm'
+import { invalidate } from '../../core/api/queryClient'
 import { useLanguage } from '../../core/context/useLanguage'
 import { DEFAULT_LANGUAGE } from '../../core/i18n/languages'
 import { categoryService } from '../../services/categoryService'
-import type { Category } from '../../types/category'
+import { queryKeys } from '../../services/queryKeys'
+import type { Category, UpdateCategoryRequest } from '../../types/category'
 import {
   CATEGORY_LIMITS,
   CATEGORY_TRANSLATION_FIELDS,
@@ -73,7 +76,16 @@ function CategoryForm({
       ? [{ value: parentId, label: category.parentCategoryName ?? parentId, code: '', isActive: true }, ...available]
       : available
   }, [categories, category])
-  const [saving, setSaving] = useState(false)
+  const queryClient = useQueryClient()
+  const save = useMutation({
+    // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
+    mutationFn: ({ isActive, ...request }: UpdateCategoryRequest): Promise<unknown> =>
+      category
+        ? categoryService.update(category.id, { ...request, isActive }, { skipErrorNotification: true })
+        : categoryService.create(request, { skipErrorNotification: true }),
+    // Ürünler kategori adını gösterir.
+    onSuccess: () => invalidate(queryClient, queryKeys.categories, queryKeys.products),
+  })
   const translationForm = useTranslationForm(form, {
     languages,
     rootFields: ['code', 'parentCategoryId'],
@@ -90,26 +102,13 @@ function CategoryForm({
 
     const code = values.code.trim()
     const parentCategoryId = values.parentCategoryId ?? null
-    setSaving(true)
 
     try {
-      // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
-      const config = { skipErrorNotification: true }
-      if (category) {
-        await categoryService.update(
-          category.id,
-          { code, translations, parentCategoryId, isActive: values.isActive },
-          config,
-        )
-      } else {
-        await categoryService.create({ code, translations, parentCategoryId }, config)
-      }
+      await save.mutateAsync({ code, translations, parentCategoryId, isActive: values.isActive })
       message.success(t(category ? 'category.updated' : 'category.created', code))
       onSaved()
     } catch (error) {
       translationForm.applyServerError(error, translations)
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -188,7 +187,7 @@ function CategoryForm({
 
       <Flex justify="end" gap={8}>
         <Button onClick={onCancel}>{t('common.cancel')}</Button>
-        <Button type="primary" htmlType="submit" loading={saving}>
+        <Button type="primary" htmlType="submit" loading={save.isPending}>
           {t('common.save')}
         </Button>
       </Flex>

@@ -1,12 +1,14 @@
 import { ExportOutlined, ImportOutlined, SwapOutlined } from '@ant-design/icons'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Alert, App, Button, Col, Flex, Form, Input, InputNumber, Row, Segmented, type FormRule } from 'antd'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FormErrorAlert } from '../../components/forms/FormErrorAlert'
 import { useServerErrors } from '../../components/forms/useServerErrors'
-import { useApiQuery } from '../../core/api/useApiQuery'
+import { invalidate } from '../../core/api/queryClient'
 import { useLanguage } from '../../core/context/useLanguage'
-import { stockService } from '../../services/stockService'
+import { queryKeys } from '../../services/queryKeys'
+import { stockQueries, stockService } from '../../services/stockService'
 import type { Product } from '../../types/product'
 import type { MovementType } from '../../types/stock'
 import type { Warehouse } from '../../types/warehouse'
@@ -18,6 +20,7 @@ import {
   sourceWarehouseField,
   toMovementRequest,
   type MovementFormValues,
+  type MovementRequest,
 } from './movementRequest'
 import { ProductSelect } from './ProductSelect'
 import { decimalPlaces, formatQuantity, PRICE_SCALE, QUANTITY_SCALE } from './stockFormat'
@@ -28,17 +31,15 @@ const TYPE_ICONS = { Inbound: <ImportOutlined />, Outbound: <ExportOutlined />, 
 interface MovementFormProps {
   /** Hareket yalnızca aktif depolarla yapılabilir. */
   warehouses: Warehouse[]
-  onSaved: () => void
 }
 
-export function MovementForm({ warehouses, onSaved }: MovementFormProps) {
+export function MovementForm({ warehouses }: MovementFormProps) {
   const { language, t } = useLanguage()
   const { message } = App.useApp()
+  const queryClient = useQueryClient()
   const [form] = Form.useForm<MovementFormValues>()
   const [type, setType] = useState<MovementType>('Inbound')
   const [product, setProduct] = useState<Product>()
-  const [saving, setSaving] = useState(false)
-  const [savedCount, setSavedCount] = useState(0)
 
   const sourceField = sourceWarehouseField(type)
   const productId = Form.useWatch('productId', form)
@@ -47,15 +48,23 @@ export function MovementForm({ warehouses, onSaved }: MovementFormProps) {
   const stockWarehouseId = sourceField ? watchedSource : undefined
 
   // Çıkış ve transferde kaynak depodaki mevcut stok, kullanıcı miktarı girerken görebilsin diye gösterilir.
-  const available = useApiQuery(
-    (signal) =>
-      productId && stockWarehouseId
-        ? stockService
-            .listBalances({ productId, warehouseId: stockWarehouseId, includeEmpty: true, pageSize: 1 }, signal)
-            .then((page) => page.items[0]?.quantity ?? 0)
-        : Promise.resolve(undefined),
-    [productId, stockWarehouseId, savedCount],
-  )
+  const available = useQuery({
+    ...stockQueries.balances({ productId, warehouseId: stockWarehouseId, includeEmpty: true, pageSize: 1 }),
+    enabled: Boolean(productId && stockWarehouseId),
+    select: (page) => page.items[0]?.quantity ?? 0,
+  })
+
+  // Hareketler ve bakiyeler birlikte değiştiğinden kayıttan sonra tüm stok sorguları (mevcut stok dahil) tazelenir.
+  const save = useMutation({
+    mutationFn: (movement: MovementRequest) => {
+      // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
+      const config = { skipErrorNotification: true }
+      if (movement.type === 'Transfer') return stockService.transfer(movement.request, config)
+      if (movement.type === 'Inbound') return stockService.inbound(movement.request, config)
+      return stockService.outbound(movement.request, config)
+    },
+    onSuccess: () => invalidate(queryClient, queryKeys.stock),
+  })
 
   const serverErrors = useServerErrors(form, {
     rootFields: MOVEMENT_FIELDS,
@@ -74,26 +83,16 @@ export function MovementForm({ warehouses, onSaved }: MovementFormProps) {
   const submit = async (values: MovementFormValues) => {
     const movement = toMovementRequest(type, values)
     serverErrors.clearFormError()
-    setSaving(true)
 
     try {
-      // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
-      const config = { skipErrorNotification: true }
-      if (movement.type === 'Transfer') await stockService.transfer(movement.request, config)
-      else if (movement.type === 'Inbound') await stockService.inbound(movement.request, config)
-      else await stockService.outbound(movement.request, config)
-
+      await save.mutateAsync(movement)
       message.success(
         t(`movement.saved.${type}`, formatQuantity(movement.request.quantity, language), unit ?? '', product?.name ?? ''),
       )
       // Ürün ve depolar art arda yapılan hareketler için korunur.
       form.resetFields(['quantity', 'documentReference', 'description'])
-      setSavedCount((count) => count + 1)
-      onSaved()
     } catch (error) {
       serverErrors.applyServerError(error)
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -260,7 +259,7 @@ export function MovementForm({ warehouses, onSaved }: MovementFormProps) {
       </Row>
 
       <Flex justify="end">
-        <Button type="primary" htmlType="submit" loading={saving} icon={TYPE_ICONS[type]}>
+        <Button type="primary" htmlType="submit" loading={save.isPending} icon={TYPE_ICONS[type]}>
           {t(`movement.submit.${type}`)}
         </Button>
       </Flex>

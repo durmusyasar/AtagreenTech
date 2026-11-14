@@ -1,12 +1,14 @@
 import { EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Flex, Input, Segmented, Space, Table, Tag, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { StatusTag } from '../../components/StatusTag'
 import { TranslationTags } from '../../components/TranslationTags'
-import { useApiQuery } from '../../core/api/useApiQuery'
+import { invalidate } from '../../core/api/queryClient'
 import { useLanguage } from '../../core/context/useLanguage'
 import { DEFAULT_LANGUAGE } from '../../core/i18n/languages'
-import { categoryService } from '../../services/categoryService'
+import { categoryQueries } from '../../services/categoryService'
+import { queryKeys } from '../../services/queryKeys'
 import type { Category } from '../../types/category'
 import { parentOptions } from './categoryForm'
 import { CategoryFormModal } from './CategoryFormModal'
@@ -25,23 +27,20 @@ export function CategoriesPage() {
   // Kapanış animasyonu bitene kadar başlık ve form değişmesin diye düzenlenen kategori modal kapanınca da tutulur.
   const [editor, setEditor] = useState<{ open: boolean; category: Category | null }>({ open: false, category: null })
 
-  const page = useApiQuery(
-    (signal) =>
-      categoryService.list(
-        {
-          language,
-          pageNumber,
-          pageSize: PAGE_SIZE,
-          searchTerm,
-          parentCategoryId,
-          isActive: status === 'all' ? undefined : status === 'active',
-        },
-        signal,
-      ),
-    [language, pageNumber, searchTerm, parentCategoryId, status],
-  )
+  const queryClient = useQueryClient()
+  const page = useQuery({
+    ...categoryQueries.list({
+      language,
+      pageNumber,
+      pageSize: PAGE_SIZE,
+      searchTerm,
+      parentCategoryId,
+      isActive: status === 'all' ? undefined : status === 'active',
+    }),
+    placeholderData: keepPreviousData,
+  })
   // Üst kategori filtresi ve formdaki seçim için tüm kategoriler; adlar arayüz diline göre çözümlenir.
-  const all = useApiQuery((signal) => categoryService.listAll(language, signal), [language])
+  const all = useQuery(categoryQueries.listAll(language))
   const allOptions = useMemo(() => parentOptions(all.data ?? []), [all.data])
 
   // Filtre değişince ilk sayfaya dönülür; aksi halde sonuç az olduğunda boş bir sayfada kalınabilir.
@@ -51,11 +50,6 @@ export function CategoriesPage() {
       setPageNumber(1)
       set(value)
     }
-
-  const reload = () => {
-    page.reload()
-    all.reload()
-  }
 
   const openEditor = (category: Category | null) => setEditor({ open: true, category })
   const closeEditor = () => setEditor((current) => ({ ...current, open: false }))
@@ -67,7 +61,7 @@ export function CategoriesPage() {
           {t('menu.categories')}
         </Typography.Title>
         <Space wrap>
-          <Button icon={<ReloadOutlined />} onClick={reload}>
+          <Button icon={<ReloadOutlined />} onClick={() => invalidate(queryClient, queryKeys.categories)}>
             {t('common.refresh')}
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => openEditor(null)}>
@@ -85,7 +79,7 @@ export function CategoriesPage() {
         />
         <ParentCategorySelect
           options={allOptions}
-          loading={all.loading}
+          loading={all.isFetching}
           value={parentCategoryId}
           onChange={filter(setParentCategoryId)}
           placeholder={t('category.filterByParent')}
@@ -105,7 +99,7 @@ export function CategoriesPage() {
 
       <Table<Category>
         rowKey="id"
-        loading={page.loading}
+        loading={page.isFetching}
         dataSource={page.data?.items}
         pagination={{
           current: pageNumber,
@@ -157,12 +151,9 @@ export function CategoriesPage() {
         open={editor.open}
         category={editor.category}
         categories={all.data ?? []}
-        categoriesLoading={all.loading}
+        categoriesLoading={all.isFetching}
         onClose={closeEditor}
-        onSaved={() => {
-          closeEditor()
-          reload()
-        }}
+        onSaved={closeEditor}
       />
     </Space>
   )

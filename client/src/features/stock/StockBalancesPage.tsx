@@ -1,10 +1,10 @@
 import { ReloadOutlined } from '@ant-design/icons'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Button, Flex, Space, Switch, Table, Tag, Typography } from 'antd'
 import { useState } from 'react'
-import { useApiQuery } from '../../core/api/useApiQuery'
 import { useLanguage } from '../../core/context/useLanguage'
-import { stockService } from '../../services/stockService'
-import { warehouseService } from '../../services/warehouseService'
+import { stockQueries } from '../../services/stockService'
+import { warehouseQueries } from '../../services/warehouseService'
 import type { StockBalance } from '../../types/stock'
 import { ProductSelect } from './ProductSelect'
 import { formatDateTime, formatQuantity } from './stockFormat'
@@ -20,12 +20,11 @@ export function StockBalancesPage() {
   const [productId, setProductId] = useState<string>()
   const [includeEmpty, setIncludeEmpty] = useState(false)
 
-  const warehouses = useApiQuery((signal) => warehouseService.listAll({}, signal), [])
-  const balances = useApiQuery(
-    (signal) =>
-      stockService.listBalances({ pageNumber, pageSize: PAGE_SIZE, warehouseId, productId, includeEmpty }, signal),
-    [pageNumber, warehouseId, productId, includeEmpty],
-  )
+  const warehouses = useQuery(warehouseQueries.listAll())
+  const balances = useQuery({
+    ...stockQueries.balances({ pageNumber, pageSize: PAGE_SIZE, warehouseId, productId, includeEmpty }),
+    placeholderData: keepPreviousData,
+  })
 
   // Filtre değişince ilk sayfaya dönülür; aksi halde sonuç az olduğunda boş bir sayfada kalınabilir.
   const filter =
@@ -41,7 +40,7 @@ export function StockBalancesPage() {
         <Typography.Title level={3} style={{ margin: 0 }}>
           {t('menu.stockBalances')}
         </Typography.Title>
-        <Button icon={<ReloadOutlined />} onClick={balances.reload}>
+        <Button icon={<ReloadOutlined />} onClick={() => balances.refetch()}>
           {t('common.refresh')}
         </Button>
       </Flex>
@@ -49,7 +48,7 @@ export function StockBalancesPage() {
       <Flex wrap gap={12} align="center">
         <WarehouseSelect
           warehouses={warehouses.data ?? []}
-          loading={warehouses.loading}
+          loading={warehouses.isFetching}
           value={warehouseId}
           onChange={filter(setWarehouseId)}
           placeholder={t('movement.filterByWarehouse')}
@@ -71,7 +70,7 @@ export function StockBalancesPage() {
 
       <Table<StockBalance>
         rowKey={(balance) => `${balance.warehouseId}:${balance.productId}`}
-        loading={balances.loading}
+        loading={balances.isFetching}
         dataSource={balances.data?.items}
         pagination={{
           current: pageNumber,

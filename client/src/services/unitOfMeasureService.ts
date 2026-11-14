@@ -1,3 +1,4 @@
+import { queryOptions } from '@tanstack/react-query'
 import type { AxiosRequestConfig } from 'axios'
 import { axiosClient } from '../core/api/axiosClient'
 import type { Language } from '../core/i18n/languages'
@@ -6,11 +7,14 @@ import type {
   UnitOfMeasure,
   UpdateUnitOfMeasureRequest,
 } from '../types/unitOfMeasure'
+import { queryKeys } from './queryKeys'
 
 const BASE = '/units-of-measure'
 
+type UnitOfMeasureQuery = { language: Language; isActive?: boolean }
+
 export const unitOfMeasureService = {
-  async list(params: { language: Language; isActive?: boolean }, signal?: AbortSignal): Promise<UnitOfMeasure[]> {
+  async list(params: UnitOfMeasureQuery, signal?: AbortSignal): Promise<UnitOfMeasure[]> {
     const { data } = await axiosClient.get<UnitOfMeasure[]>(BASE, { params, signal })
     return data
   },
@@ -24,4 +28,13 @@ export const unitOfMeasureService = {
   async update(id: string, request: UpdateUnitOfMeasureRequest, config?: AxiosRequestConfig): Promise<void> {
     await axiosClient.put(`${BASE}/${id}`, request, config)
   },
+}
+
+/** Birim adları istenen dile göre çözümlendiğinden dil anahtarın parçasıdır. */
+export const unitOfMeasureQueries = {
+  list: (query: UnitOfMeasureQuery) =>
+    queryOptions({
+      queryKey: [...queryKeys.unitsOfMeasure, 'list', query],
+      queryFn: ({ signal }) => unitOfMeasureService.list(query, signal),
+    }),
 }
