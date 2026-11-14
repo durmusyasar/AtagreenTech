@@ -1,23 +1,20 @@
 import { ReloadOutlined } from '@ant-design/icons'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Card, Flex, Space, Typography } from 'antd'
-import { useMemo, useState } from 'react'
-import { useApiQuery } from '../../core/api/useApiQuery'
+import { useMemo } from 'react'
+import { invalidate } from '../../core/api/queryClient'
 import { useLanguage } from '../../core/context/useLanguage'
-import { warehouseService } from '../../services/warehouseService'
+import { queryKeys } from '../../services/queryKeys'
+import { warehouseQueries } from '../../services/warehouseService'
 import { MovementForm } from './MovementForm'
 import { MovementHistory } from './MovementHistory'
 
 /** Stok giriş, çıkış ve transfer konsolu; altında hareket geçmişi. */
 export function StockMovementsPage() {
   const { t } = useLanguage()
-  const [refreshKey, setRefreshKey] = useState(0)
-  const warehouses = useApiQuery((signal) => warehouseService.listAll({}, signal), [])
+  const queryClient = useQueryClient()
+  const warehouses = useQuery(warehouseQueries.listAll())
   const activeWarehouses = useMemo(() => (warehouses.data ?? []).filter((warehouse) => warehouse.isActive), [warehouses.data])
-
-  const refresh = () => {
-    warehouses.reload()
-    setRefreshKey((key) => key + 1)
-  }
 
   return (
     <Space orientation="vertical" size="large" style={{ width: '100%' }}>
@@ -25,17 +22,17 @@ export function StockMovementsPage() {
         <Typography.Title level={3} style={{ margin: 0 }}>
           {t('menu.stockMovements')}
         </Typography.Title>
-        <Button icon={<ReloadOutlined />} onClick={refresh}>
+        <Button icon={<ReloadOutlined />} onClick={() => invalidate(queryClient, queryKeys.warehouses, queryKeys.stock)}>
           {t('common.refresh')}
         </Button>
       </Flex>
 
-      <Card title={t('movement.newTitle')} loading={warehouses.loading && !warehouses.data}>
-        <MovementForm warehouses={activeWarehouses} onSaved={() => setRefreshKey((key) => key + 1)} />
+      <Card title={t('movement.newTitle')} loading={warehouses.isPending}>
+        <MovementForm warehouses={activeWarehouses} />
       </Card>
 
       <Card title={t('movement.historyTitle')}>
-        <MovementHistory warehouses={warehouses.data ?? []} refreshKey={refreshKey} />
+        <MovementHistory warehouses={warehouses.data ?? []} />
       </Card>
     </Space>
   )

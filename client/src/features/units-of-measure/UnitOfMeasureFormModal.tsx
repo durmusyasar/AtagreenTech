@@ -1,5 +1,6 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { App, Button, Flex, Form, Input, Modal, Switch, Typography } from 'antd'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { FormErrorAlert } from '../../components/forms/FormErrorAlert'
 import {
   collectTranslations,
@@ -9,10 +10,12 @@ import {
 } from '../../components/translations/translationForm'
 import { TranslationTabs } from '../../components/translations/TranslationTabs'
 import { useTranslationForm } from '../../components/translations/useTranslationForm'
+import { invalidate } from '../../core/api/queryClient'
 import { useLanguage } from '../../core/context/useLanguage'
 import { DEFAULT_LANGUAGE } from '../../core/i18n/languages'
+import { queryKeys } from '../../services/queryKeys'
 import { unitOfMeasureService } from '../../services/unitOfMeasureService'
-import type { UnitOfMeasure } from '../../types/unitOfMeasure'
+import type { UnitOfMeasure, UpdateUnitOfMeasureRequest } from '../../types/unitOfMeasure'
 import {
   toFormValues,
   UNIT_OF_MEASURE_LIMITS,
@@ -54,7 +57,16 @@ function UnitOfMeasureForm({ unit, onCancel, onSaved }: Omit<UnitOfMeasureFormMo
   const [form] = Form.useForm<UnitOfMeasureFormValues>()
   const languages = useMemo(() => formLanguages(unit?.translations), [unit])
   const initialValues = useMemo(() => toFormValues(unit), [unit])
-  const [saving, setSaving] = useState(false)
+  const queryClient = useQueryClient()
+  const save = useMutation({
+    // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
+    mutationFn: ({ code, translations, isActive }: UpdateUnitOfMeasureRequest): Promise<unknown> =>
+      unit
+        ? unitOfMeasureService.update(unit.id, { code, translations, isActive }, { skipErrorNotification: true })
+        : unitOfMeasureService.create({ code, translations }, { skipErrorNotification: true }),
+    // Ürünler ve bakiyeler birim kodunu gösterir.
+    onSuccess: () => invalidate(queryClient, queryKeys.unitsOfMeasure, queryKeys.products, queryKeys.stock),
+  })
   const translationForm = useTranslationForm(form, {
     languages,
     rootFields: ['code'],
@@ -67,22 +79,13 @@ function UnitOfMeasureForm({ unit, onCancel, onSaved }: Omit<UnitOfMeasureFormMo
     if (!translationForm.ensureMinimumTranslations(translations.length, values.translations)) return
 
     const code = values.code.trim()
-    setSaving(true)
 
     try {
-      // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
-      const config = { skipErrorNotification: true }
-      if (unit) {
-        await unitOfMeasureService.update(unit.id, { code, translations, isActive: values.isActive }, config)
-      } else {
-        await unitOfMeasureService.create({ code, translations }, config)
-      }
+      await save.mutateAsync({ code, translations, isActive: values.isActive })
       message.success(t(unit ? 'uom.updated' : 'uom.created', code))
       onSaved()
     } catch (error) {
       translationForm.applyServerError(error, translations)
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -151,7 +154,7 @@ function UnitOfMeasureForm({ unit, onCancel, onSaved }: Omit<UnitOfMeasureFormMo
 
       <Flex justify="end" gap={8}>
         <Button onClick={onCancel}>{t('common.cancel')}</Button>
-        <Button type="primary" htmlType="submit" loading={saving}>
+        <Button type="primary" htmlType="submit" loading={save.isPending}>
           {t('common.save')}
         </Button>
       </Flex>

@@ -1,9 +1,11 @@
+import { queryOptions } from '@tanstack/react-query'
 import type { AxiosRequestConfig } from 'axios'
 import { axiosClient } from '../core/api/axiosClient'
 import type { Language } from '../core/i18n/languages'
 import type { PagedResult } from '../types/api'
 import type { Category, CategoryQuery, CreateCategoryRequest, UpdateCategoryRequest } from '../types/category'
 import { fetchAllPages } from './paging'
+import { queryKeys } from './queryKeys'
 
 const BASE = '/categories'
 
@@ -27,4 +29,19 @@ export const categoryService = {
   async update(id: string, request: UpdateCategoryRequest, config?: AxiosRequestConfig): Promise<void> {
     await axiosClient.put(`${BASE}/${id}`, request, config)
   },
+}
+
+/** Kategori adları istenen dile göre çözümlendiğinden dil anahtarın parçasıdır. */
+export const categoryQueries = {
+  list: (query: CategoryQuery & { language: Language }) =>
+    queryOptions({
+      queryKey: [...queryKeys.categories, 'list', query],
+      queryFn: ({ signal }) => categoryService.list(query, signal),
+    }),
+
+  listAll: (language: Language) =>
+    queryOptions({
+      queryKey: [...queryKeys.categories, 'all', language],
+      queryFn: ({ signal }) => categoryService.listAll(language, signal),
+    }),
 }

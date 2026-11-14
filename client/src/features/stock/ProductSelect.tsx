@@ -1,8 +1,8 @@
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Flex, Select, Spin, Tag, Typography, type SelectProps } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
-import { useApiQuery } from '../../core/api/useApiQuery'
 import { useLanguage } from '../../core/context/useLanguage'
-import { productService } from '../../services/productService'
+import { productQueries } from '../../services/productService'
 import type { Product } from '../../types/product'
 
 const SEARCH_DELAY_MS = 300
@@ -36,11 +36,11 @@ export function ProductSelect({ activeOnly = false, onProductChange, onChange, .
     return () => clearTimeout(timer)
   }, [search])
 
-  const { data, loading } = useApiQuery(
-    (signal) =>
-      productService.list({ searchTerm, isActive: activeOnly ? true : undefined, pageSize: RESULT_LIMIT }, signal),
-    [searchTerm, activeOnly],
-  )
+  // Yeni aramanın sonucu gelene kadar önceki sonuçlar listede kalır.
+  const { data, isFetching: loading } = useQuery({
+    ...productQueries.list({ searchTerm, isActive: activeOnly ? true : undefined, pageSize: RESULT_LIMIT }),
+    placeholderData: keepPreviousData,
+  })
 
   const options = useMemo(() => {
     const products = data?.items ?? []
