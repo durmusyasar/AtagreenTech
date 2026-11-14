@@ -126,6 +126,8 @@ services:
     environment:
       ATAGREEN_TRUSTED_PROXY: ${ATAGREEN_TRUSTED_PROXY:-172.31.0.1}
       ATAGREEN_STOCK_SERVICE_UPSTREAM: stock-service:8080
+      # Uygulamanın sunulduğu domain'ler (stok servisinin RootDomains listesiyle aynı); diğer host'lar 404 alır.
+      ATAGREEN_SERVER_NAMES: .omnisync.com .omnisync.com.tr .${ATAGREEN_LOCAL_ROOT_DOMAIN:-omnisync.localhost}
     ports:
       - "127.0.0.1:${ATAGREEN_WEB_PORT:-3000}:8080"
     networks: [edge]

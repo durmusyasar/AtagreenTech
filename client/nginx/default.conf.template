@@ -9,9 +9,29 @@ map $http_x_forwarded_proto $forwarded_proto {
     ""      https;
 }
 
+# Tanımlı domain'lere ait olmayan host'lar (IP adresi, bilinmeyen alan adı): yalnızca container sağlık kontrolü yanıt
+# verir, uygulama ve API sunulmaz.
+server {
+    listen 8080 default_server;
+    server_name _;
+    server_tokens off;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location / {
+        return 404;
+    }
+}
+
+# Tenant'ların kök domain'leri ve tüm alt alan adları (`.omnisync.com` hem `omnisync.com`'u hem `*.omnisync.com`'u
+# kapsar). Kök domain'in kendisi de buraya düşer; arayüz tenant'sız adreste kullanıcıyı tenant adresine yönlendirir.
 server {
     listen 8080;
-    server_name _;
+    server_name ${ATAGREEN_SERVER_NAMES};
     server_tokens off;
 
     root /usr/share/nginx/html;

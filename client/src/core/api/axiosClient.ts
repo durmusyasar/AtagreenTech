@@ -26,7 +26,8 @@ axiosClient.interceptors.request.use((config) => {
 
   if (token) config.headers.Authorization = `Bearer ${token}`
 
-  // Alt alan adı olan adreslerde tenant'ı API host'tan çözer; başlık yalnızca geliştirmede (localhost) gerekir.
+  // Tenant'ın alt alan adı API'ye Host başlığıyla ulaşır. Adreste tenant yoksa yalnızca geliştirmede seçilen tenant
+  // X-Tenant ile gönderilir; derlenmiş pakette bu durumda tenant hiç olmaz (bkz. TENANT_SELECTION_ENABLED).
   if (tenant && !isTenantFromHost) config.headers['X-Tenant'] = tenant
 
   config.headers['Accept-Language'] = language

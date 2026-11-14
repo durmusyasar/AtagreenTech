@@ -67,9 +67,13 @@ open http://acme.omnisync.localhost:3000   # web client for the "acme" tenant
 - The `web` service is an unprivileged nginx (UID 101, read-only root filesystem) published on `127.0.0.1:3000`
   (`ATAGREEN_WEB_PORT`). It serves the client and forwards `/api/` to the stock service, so the browser talks to a
   single origin and no CORS configuration is needed. The `Host` header is passed through, so tenants are resolved from
-  the subdomain exactly as for direct API calls. Point the reverse proxy for `*.omnisync.com` and `*.omnisync.com.tr` at
-  this port.
+  the subdomain exactly as for direct API calls. Its `server_name` (`ATAGREEN_SERVER_NAMES`) covers `omnisync.com`,
+  `omnisync.com.tr`, the local root domain and all their subdomains; any other host (IP address, unknown domain,
+  `localhost`) gets `404`, only `/healthz` answers there for the container health check.
   Locally, `*.localhost` subdomains resolve to `127.0.0.1` in Chrome and Firefox; otherwise add an `/etc/hosts` entry.
+- In production, point the server's reverse proxy for `*.omnisync.com` and `*.omnisync.com.tr` at this port:
+  `deploy/nginx/omnisync.conf.example` (with `deploy/nginx/atagreen-proxy.conf`) terminates TLS with wildcard
+  certificates, redirects HTTP to HTTPS and forwards `Host`, `X-Forwarded-For` and `X-Forwarded-Proto`.
 
 ### Web Client Development
 
@@ -84,9 +88,12 @@ npm run lint && npm test && npm run build
 - `src/core` holds cross-cutting code: the Axios client (`core/api`), session/tenant/language hooks (`core/context`)
   and UI translations (`core/i18n`). `src/services` wraps API endpoints, `src/features` contains pages and
   `src/components` shared UI.
-- Every request carries `Authorization: Bearer <token>` and `Accept-Language`. On `localhost` there is no subdomain,
-  so the tenant is sent as `X-Tenant` (the stock service honours it only in Development); on a tenant subdomain the
-  header is omitted.
+- Every request carries `Authorization: Bearer <token>` and `Accept-Language`. The tenant comes from the address
+  (`window.location.hostname`, e.g. `acme.omnisync.com` → `acme`) and reaches the API through the `Host` header, so
+  no tenant header is sent. Only the development server (`npm run dev`) lets you pick a tenant on an address without
+  one (`localhost:5173`, defaulting to `VITE_DEV_TENANT`) and sends it as `X-Tenant`, which the stock service honours
+  only in Development. A built client never does: on an address without a tenant the sign-in page asks you to open
+  your tenant address (e.g. `<tenant>.omnisync.localhost:3000`).
 - Errors are normalised into `ApiError`: `400` keeps field errors for forms, `422` business rules are translated by
   their `resourceKey`, and `401` signs the user out and redirects to the sign-in page.
 - Until an identity service exists, sign in by pasting an access token issued for the stock service. The token is

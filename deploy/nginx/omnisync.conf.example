@@ -1,0 +1,42 @@
+# Sunucudaki (Docker dışındaki) reverse proxy için örnek: TLS'i sonlandırır ve tenant alt alan adlarını
+# 127.0.0.1:${ATAGREEN_WEB_PORT:-3000}'de yayınlanan web servisine iletir. /etc/nginx/conf.d/'ye kopyalayıp sertifika
+# yollarını düzenleyin. Wildcard sertifikalar (*.omnisync.com ve omnisync.com) DNS-01 doğrulamasıyla alınır.
+#
+# Host başlığı olduğu gibi iletilmelidir: tenant hem arayüzde hem stok servisinde alt alan adından çözülür.
+
+upstream atagreen_web {
+    server 127.0.0.1:3000;
+    keepalive 16;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name .omnisync.com .omnisync.com.tr;
+
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name .omnisync.com;
+
+    ssl_certificate     /etc/letsencrypt/live/omnisync.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/omnisync.com/privkey.pem;
+
+    include /etc/nginx/snippets/atagreen-proxy.conf;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name .omnisync.com.tr;
+
+    ssl_certificate     /etc/letsencrypt/live/omnisync.com.tr/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/omnisync.com.tr/privkey.pem;
+
+    include /etc/nginx/snippets/atagreen-proxy.conf;
+}
