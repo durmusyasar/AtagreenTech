@@ -86,6 +86,8 @@ services:
       ReverseProxy__KnownProxies__0: ${ATAGREEN_TRUSTED_PROXY:-172.31.0.1}
       # Web arayüzünün nginx'i API isteklerini edge ağı üzerinden iletir; ağda yalnızca bu yığının konteynerleri var.
       ReverseProxy__KnownNetworks__0: ${ATAGREEN_EDGE_SUBNET:-172.31.0.0/24}
+      # appsettings.json'daki omnisync.com ve omnisync.com.tr'ye eklenir; yığın yerelde *.omnisync.localhost ile denenir.
+      TenantResolution__RootDomains__2: ${ATAGREEN_LOCAL_ROOT_DOMAIN:-omnisync.localhost}
     secrets:
       - source: master_connection_string
         target: ConnectionStrings__MasterDb

@@ -37,7 +37,7 @@ deploy/generate-secrets.sh   # creates secrets/ (database password, connection s
 GITHUB_USERNAME=<user> GITHUB_PACKAGES_TOKEN=$(gh auth token) docker compose up -d --build
 docker compose ps            # postgres, stock-service and web: healthy; migrators: Exited (0)
 curl -s http://127.0.0.1:5001/health/ready
-open http://acme.atagreen.localhost:3000   # web client for the "acme" tenant
+open http://acme.omnisync.localhost:3000   # web client for the "acme" tenant
 ```
 
 - The image is a multi-stage build on the chiseled .NET 10 runtime: no shell or package manager, runs as the non-root
@@ -52,14 +52,23 @@ open http://acme.atagreen.localhost:3000   # web client for the "acme" tenant
   (master and tenant database connectivity). `/health/live` only reports that the process responds.
 - PostgreSQL is reachable only on the internal `backend` network; the stock service is published on
   `127.0.0.1:5001` for a reverse proxy that terminates TLS. In Production, tenants are resolved from the subdomain
-  (e.g. `acme.atagreen.tech`) and plain HTTP requests are redirected to HTTPS.
-- Tenant connection strings stored in the master database must use `Host=postgres` and should include
-  `GSS Encryption Mode=Disable`. After adding a tenant, apply its migrations with
-  `docker compose run --rm tenant-migrator`.
+  (e.g. `acme.omnisync.com`) and plain HTTP requests are redirected to HTTPS.
+- Tenants are the single label directly below a root domain listed in `TenantResolution:RootDomains`:
+  `omnisync.com` and `omnisync.com.tr` (`appsettings.json`), plus `omnisync.localhost` locally (Development settings
+  and `ATAGREEN_LOCAL_ROOT_DOMAIN` in Compose). Root domains themselves, `www`, deeper subdomains
+  (`api.acme.omnisync.com`) and other hosts carry no tenant. The client applies the same rule in
+  `client/src/core/tenant.ts`, so a new root domain must be added in both places.
+- Add a tenant with `deploy/add-tenant.sh <subdomain> "<Name>"` (e.g. `deploy/add-tenant.sh atagreen "Atagreen"`, then
+  open `http://atagreen.omnisync.localhost:3000`). It registers the tenant in the master database with its own
+  database (`atagreen_stock_<subdomain>`), runs `tenant-migrator` to create and migrate that database, and prints the
+  tenant ID that access tokens must carry as `tenant_id`. Re-running it for an existing tenant only applies pending
+  migrations. Tenant connection strings use `Host=postgres` and `GSS Encryption Mode=Disable`; after deploying new
+  tenant migrations, apply them to all tenants with `docker compose run --rm tenant-migrator`.
 - The `web` service is an unprivileged nginx (UID 101, read-only root filesystem) published on `127.0.0.1:3000`
   (`ATAGREEN_WEB_PORT`). It serves the client and forwards `/api/` to the stock service, so the browser talks to a
   single origin and no CORS configuration is needed. The `Host` header is passed through, so tenants are resolved from
-  the subdomain exactly as for direct API calls. Point the reverse proxy for `*.atagreen.tech` at this port.
+  the subdomain exactly as for direct API calls. Point the reverse proxy for `*.omnisync.com` and `*.omnisync.com.tr` at
+  this port.
   Locally, `*.localhost` subdomains resolve to `127.0.0.1` in Chrome and Firefox; otherwise add an `/etc/hosts` entry.
 
 ### Web Client Development

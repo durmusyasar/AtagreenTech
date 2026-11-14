@@ -1,19 +1,22 @@
-const MINIMUM_HOST_PARTS_WITH_SUBDOMAIN = 3
+/**
+ * Stok servisinin `TenantResolution:RootDomains` listesinin tüm ortamlardaki birleşimi; tek arayüz paketi hem canlıda
+ * hem yerel Docker'da sunulduğu için yerel domain de listededir.
+ */
+const ROOT_DOMAINS = ['omnisync.com', 'omnisync.com.tr', 'omnisync.localhost'] as const
+
 const RESERVED_SUBDOMAINS = new Set(['www'])
-const IPV4_PATTERN = /^\d{1,3}(\.\d{1,3}){3}$/
 
 /**
- * Stok servisinin tenant çözümlemesiyle aynı kural: `acme.atagreen.tech` → `acme`. `localhost`, IP adresleri, iki
- * parçalı adresler ve `www` tenant içermez.
+ * Stok servisinin tenant çözümlemesiyle aynı kural: `acme.omnisync.com` → `acme`. Tenant, kök domain'in hemen
+ * altındaki tek etikettir; kök domain'in kendisi, `www`, çok seviyeli alt alan adları (`api.acme.omnisync.com`) ve
+ * listede olmayan adresler (`localhost`, IP adresleri) tenant içermez.
  */
 export function resolveTenantFromHost(hostname: string): string | null {
-  const host = hostname.toLowerCase()
+  const host = hostname.toLowerCase().replace(/\.$/, '')
 
-  if (host === 'localhost' || IPV4_PATTERN.test(host) || host.includes(':')) return null
+  const rootDomain = ROOT_DOMAINS.filter((domain) => host.endsWith(`.${domain}`)).sort((a, b) => b.length - a.length)[0]
+  if (!rootDomain) return null
 
-  const parts = host.split('.')
-  if (parts.length < MINIMUM_HOST_PARTS_WITH_SUBDOMAIN) return null
-
-  const subdomain = parts[0]
-  return subdomain && !RESERVED_SUBDOMAINS.has(subdomain) ? subdomain : null
+  const subdomain = host.slice(0, -(rootDomain.length + 1))
+  return subdomain.includes('.') || RESERVED_SUBDOMAINS.has(subdomain) ? null : subdomain
 }
