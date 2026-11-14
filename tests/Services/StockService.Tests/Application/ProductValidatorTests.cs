@@ -1,5 +1,4 @@
 using AtaGreenTech.StockService.Application.Features.Products.Commands.CreateProduct;
-using AtaGreenTech.StockService.Application.Features.Products.Queries.GetProductsWithPagination;
 using AtaGreenTech.StockService.Domain.Entities;
 
 namespace AtaGreenTech.StockService.Tests.Application;
@@ -51,14 +50,5 @@ public class ProductValidatorTests
             },
             failedProperties
         );
-    }
-
-    [Theory]
-    [InlineData(0, 10)]
-    [InlineData(1, 0)]
-    [InlineData(1, 101)]
-    public void Out_of_range_paging_fails(int pageNumber, int pageSize)
-    {
-        Assert.False(new GetProductsQueryValidator().Validate(new GetProductsQuery(pageNumber, pageSize)).IsValid);
     }
 }

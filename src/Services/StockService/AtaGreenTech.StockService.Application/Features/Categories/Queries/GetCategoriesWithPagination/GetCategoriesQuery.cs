@@ -15,4 +15,4 @@ public sealed record GetCategoriesQuery(
     Guid? ParentCategoryId = null,
     bool? IsActive = null,
     string? Language = null
-) : IQuery<PagedResult<CategoryDto>>;
+) : IQuery<PagedResult<CategoryDto>>, IPagedRequest;

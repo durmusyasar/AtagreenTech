@@ -12,4 +12,4 @@ public sealed record GetProductsQuery(
     string? SearchTerm = null,
     Guid? CategoryId = null,
     bool? IsActive = null
-) : IQuery<PagedResult<ProductDto>>;
+) : IQuery<PagedResult<ProductDto>>, IPagedRequest;

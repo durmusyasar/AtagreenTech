@@ -17,4 +17,4 @@ public sealed record GetStockMovementsQuery(
     MovementType? Type = null,
     DateTimeOffset? From = null,
     DateTimeOffset? To = null
-) : IQuery<PagedResult<StockMovementDto>>;
+) : IQuery<PagedResult<StockMovementDto>>, IPagedRequest;
