@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Application.Common;
 using AtaGreenTech.StockService.Application.Interfaces;
 using AtaGreenTech.StockService.Domain.Localization;
@@ -32,6 +33,12 @@ public static class DependencyInjection
                 services.AddScoped<IStockDbContext, StockQueryContext>();
                 services.AddScoped<IStockBalanceLocker, StockBalanceLocker>();
                 services.AddScoped<ITenantBrandingReader, TenantBrandingReader>();
+
+                services.AddAuthorization(options =>
+                {
+                    foreach (var (policy, permission) in AuthorizationPolicies.Bindings)
+                        options.AddPolicy(policy, p => p.RequireClaim(JwtContract.Claims.Permission, permission));
+                });
 
                 services.AddOptions<LocalizationOptions>()
                     .Bind(configuration.GetSection(LocalizationOptions.SectionName))

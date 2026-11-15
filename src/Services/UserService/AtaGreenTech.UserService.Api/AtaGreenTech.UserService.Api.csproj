@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AtaGreenTech.UserService.Infrastructure\AtaGreenTech.UserService.Infrastructure.csproj" />
     <ProjectReference Include="..\AtaGreenTech.UserService.Application\AtaGreenTech.UserService.Application.csproj" />
+    <ProjectReference Include="..\..\..\Shared\SharedKernel\AtaGreenTech.SharedKernel.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,7 +5,13 @@ namespace AtaGreenTech.UserService.Application.Interfaces;
 /// </summary>
 public interface IAccessTokenIssuer
 {
-    AccessTokenResult Create(Guid userId, string email, Guid tenantId, IReadOnlyCollection<string> roles);
+    AccessTokenResult Create(
+        Guid userId,
+        string email,
+        Guid tenantId,
+        IReadOnlyCollection<string> roles,
+        IReadOnlyCollection<string> permissions
+    );
 }
 
 /// <param name="AccessToken">İmzalı JWT.</param>

@@ -15,5 +15,10 @@ public interface IUserDbContext
 
     IQueryable<UserRole> UserRoles { get; }
 
+    IQueryable<Permission> Permissions { get; }
+
+    IQueryable<RolePermission> RolePermissions { get; }
+
     IQueryable<RefreshToken> RefreshTokens { get; }
 }
+

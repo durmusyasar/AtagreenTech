@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Application.DTOs;
 using AtaGreenTech.StockService.Application.Features.Products.Commands.CreateProduct;
 using AtaGreenTech.StockService.Application.Features.Products.Commands.DeleteProduct;
@@ -33,16 +34,17 @@ public sealed class ProductEndpoints : IEndpointModule
         ) => sender.Send(
             new GetProductsQuery(pageNumber, pageSize, searchTerm, categoryId, isActive, language),
             cancellationToken
-        ));
+        )).RequireAuthorization(AuthorizationPolicies.StockRead);
 
         group.MapGet("/{id:guid}", (Guid id, ISender sender, CancellationToken cancellationToken, string? language = null) =>
-            sender.Send(new GetProductByIdQuery(id, language), cancellationToken));
+            sender.Send(new GetProductByIdQuery(id, language), cancellationToken))
+            .RequireAuthorization(AuthorizationPolicies.StockRead);
 
         group.MapPost("", async (CreateProductCommand command, ISender sender, CancellationToken cancellationToken) =>
         {
             var id = await sender.Send(command, cancellationToken);
             return TypedResults.Created($"{EndpointRoutes.For(ModuleName)}/{id}", id);
-        });
+        }).RequireAuthorization(AuthorizationPolicies.StockWrite);
 
         group.MapPut("/{id:guid}", async (
             Guid id,
@@ -66,15 +68,16 @@ public sealed class ProductEndpoints : IEndpointModule
                 cancellationToken
             );
             return TypedResults.NoContent();
-        });
+        }).RequireAuthorization(AuthorizationPolicies.StockWrite);
 
         group.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
         {
             await sender.Send(new DeleteProductCommand(id), cancellationToken);
             return TypedResults.NoContent();
-        });
+        }).RequireAuthorization(AuthorizationPolicies.StockDelete);
     }
 }
+
 
 public sealed record UpdateProductRequest(
     string Sku,

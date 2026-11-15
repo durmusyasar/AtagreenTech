@@ -62,7 +62,15 @@ internal sealed class RefreshTokenCommandHandler(
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        var access = accessTokenIssuer.Create(user.Id, user.Email, currentTenant.Id.Value, roleNames);
+        var permissionNames = await UserPermissionResolver.ResolveAsync(db, user.Id, cancellationToken);
+
+        var access = accessTokenIssuer.Create(
+            user.Id,
+            user.Email,
+            currentTenant.Id.Value,
+            roleNames,
+            permissionNames
+        );
         var (refreshPlaintext, refreshEntity) = RefreshTokenFactory.Create(
             user.Id,
             existing.FamilyId,

@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Application.Features.StockMovements.Commands.CreateInboundMovement;
 using AtaGreenTech.StockService.Application.Features.StockMovements.Commands.CreateOutboundMovement;
 using AtaGreenTech.StockService.Application.Features.StockMovements.Commands.CreateTransferMovement;
@@ -32,24 +33,28 @@ public sealed class StockMovementEndpoints : IEndpointModule
         ) => sender.Send(
             new GetStockMovementsQuery(pageNumber, pageSize, productId, warehouseId, type, from, to, language),
             cancellationToken
-        ));
+        )).RequireAuthorization(AuthorizationPolicies.StockRead);
 
         group.MapPost("/inbound", async (
             CreateInboundMovementCommand command,
             ISender sender,
             CancellationToken cancellationToken
-        ) => TypedResults.Created((string?)null, await sender.Send(command, cancellationToken)));
+        ) => TypedResults.Created((string?)null, await sender.Send(command, cancellationToken)))
+            .RequireAuthorization(AuthorizationPolicies.StockWrite);
 
         group.MapPost("/outbound", async (
             CreateOutboundMovementCommand command,
             ISender sender,
             CancellationToken cancellationToken
-        ) => TypedResults.Created((string?)null, await sender.Send(command, cancellationToken)));
+        ) => TypedResults.Created((string?)null, await sender.Send(command, cancellationToken)))
+            .RequireAuthorization(AuthorizationPolicies.StockWrite);
 
         group.MapPost("/transfer", async (
             CreateTransferMovementCommand command,
             ISender sender,
             CancellationToken cancellationToken
-        ) => TypedResults.Created((string?)null, await sender.Send(command, cancellationToken)));
+        ) => TypedResults.Created((string?)null, await sender.Send(command, cancellationToken)))
+            .RequireAuthorization(AuthorizationPolicies.StockWrite);
     }
 }
+

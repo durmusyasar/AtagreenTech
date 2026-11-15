@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Application.DTOs;
 using AtaGreenTech.StockService.Application.Features.Categories.Commands.CreateCategory;
 using AtaGreenTech.StockService.Application.Features.Categories.Commands.UpdateCategory;
@@ -31,13 +32,13 @@ public sealed class CategoryEndpoints : IEndpointModule
         ) => sender.Send(
             new GetCategoriesQuery(pageNumber, pageSize, searchTerm, parentCategoryId, isActive, language),
             cancellationToken
-        ));
+        )).RequireAuthorization(AuthorizationPolicies.StockRead);
 
         group.MapPost("", async (CreateCategoryCommand command, ISender sender, CancellationToken cancellationToken) =>
         {
             var id = await sender.Send(command, cancellationToken);
             return TypedResults.Created((string?)null, id);
-        });
+        }).RequireAuthorization(AuthorizationPolicies.StockWrite);
 
         group.MapPut("/{id:guid}", async (
             Guid id,
@@ -51,9 +52,10 @@ public sealed class CategoryEndpoints : IEndpointModule
                 cancellationToken
             );
             return TypedResults.NoContent();
-        });
+        }).RequireAuthorization(AuthorizationPolicies.StockWrite);
     }
 }
+
 
 public sealed record UpdateCategoryRequest(
     string Code,

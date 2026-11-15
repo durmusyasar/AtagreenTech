@@ -16,12 +16,14 @@ public sealed class UserMeResponseTests
             "System",
             "Admin",
             tenantId.ToString(),
-            ["Admin"]
+            ["Admin"],
+            ["users.read", "stock.read"]
         );
 
         Assert.Equal("admin@omnisync.com", me.Email);
         Assert.Equal(tenantId.ToString(), me.TenantId);
         Assert.Equal(["Admin"], me.Roles);
+        Assert.Equal(["users.read", "stock.read"], me.Permissions);
         Assert.DoesNotContain("TenantId", typeof(User).GetProperties().Select(p => p.Name));
     }
 }

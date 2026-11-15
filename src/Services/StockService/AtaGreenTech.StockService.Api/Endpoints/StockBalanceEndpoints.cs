@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Application.Features.StockBalances.Queries.GetStockBalances;
 using MediatR;
 using OmniSync.Core.Domain.Common;
@@ -26,6 +27,6 @@ public sealed class StockBalanceEndpoints : IEndpointModule
         ) => sender.Send(
             new GetStockBalancesQuery(pageNumber, pageSize, warehouseId, productId, includeEmpty, language),
             cancellationToken
-        ));
+        )).RequireAuthorization(AuthorizationPolicies.StockRead);
     }
 }

@@ -17,5 +17,10 @@ internal sealed class UserQueryContext(TenantDbContext context) : IUserDbContext
 
     public IQueryable<UserRole> UserRoles => context.Set<UserRole>().AsNoTracking();
 
+    public IQueryable<Permission> Permissions => context.Set<Permission>().AsNoTracking();
+
+    public IQueryable<RolePermission> RolePermissions => context.Set<RolePermission>().AsNoTracking();
+
     public IQueryable<RefreshToken> RefreshTokens => context.Set<RefreshToken>().AsNoTracking();
 }
+

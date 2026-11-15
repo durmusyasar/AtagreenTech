@@ -15,5 +15,7 @@ public sealed class JwtContractTests
         Assert.Equal("email", JwtContract.Claims.Email);
         Assert.Equal("role", JwtContract.Claims.Role);
         Assert.Equal("tenant_id", JwtContract.Claims.TenantId);
+        Assert.Equal("permission", JwtContract.Claims.Permission);
     }
 }
+

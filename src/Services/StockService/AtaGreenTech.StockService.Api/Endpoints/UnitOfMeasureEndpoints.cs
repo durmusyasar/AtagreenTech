@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Application.DTOs;
 using AtaGreenTech.StockService.Application.Features.UnitsOfMeasure.Commands.CreateUnitOfMeasure;
 using AtaGreenTech.StockService.Application.Features.UnitsOfMeasure.Commands.UpdateUnitOfMeasure;
@@ -23,13 +24,14 @@ public sealed class UnitOfMeasureEndpoints : IEndpointModule
             CancellationToken cancellationToken,
             string? language = null,
             bool? isActive = null
-        ) => sender.Send(new GetUnitsOfMeasureQuery(language, isActive), cancellationToken));
+        ) => sender.Send(new GetUnitsOfMeasureQuery(language, isActive), cancellationToken))
+            .RequireAuthorization(AuthorizationPolicies.StockRead);
 
         group.MapPost("", async (CreateUnitOfMeasureCommand command, ISender sender, CancellationToken cancellationToken) =>
         {
             var id = await sender.Send(command, cancellationToken);
             return TypedResults.Created((string?)null, id);
-        });
+        }).RequireAuthorization(AuthorizationPolicies.StockWrite);
 
         group.MapPut("/{id:guid}", async (
             Guid id,
@@ -43,9 +45,10 @@ public sealed class UnitOfMeasureEndpoints : IEndpointModule
                 cancellationToken
             );
             return TypedResults.NoContent();
-        });
+        }).RequireAuthorization(AuthorizationPolicies.StockWrite);
     }
 }
+
 
 public sealed record UpdateUnitOfMeasureRequest(
     string Code,
