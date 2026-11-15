@@ -1,0 +1,35 @@
+using AtaGreenTech.UserService.Application.Features.Auth;
+using AtaGreenTech.UserService.Application.Interfaces;
+using AtaGreenTech.UserService.Domain.Entities;
+using OmniSync.Core.Application.Messaging;
+using OmniSync.Core.Domain.Repositories;
+using OmniSync.Core.Domain.Users;
+
+namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.ChangePassword;
+
+internal sealed class ChangePasswordCommandHandler(
+    IRepository<User> users,
+    IRepository<RefreshToken> refreshTokens,
+    IPasswordHasher passwordHasher,
+    ICurrentUser currentUser
+) : ICommandHandler<ChangePasswordCommand, MessageResult>
+{
+    public async Task<MessageResult> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
+    {
+        if (!currentUser.IsAuthenticated
+            || string.IsNullOrWhiteSpace(currentUser.UserId)
+            || !Guid.TryParse(currentUser.UserId, out var userId))
+            throw new UnauthorizedAccessException("Geçerli bir oturum bulunamadı.");
+
+        var user = await users.GetByIdAsync(userId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("Kullanıcı bulunamadı.");
+
+        if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+            throw new UnauthorizedAccessException("Mevcut şifreniz hatalı.");
+
+        user.ChangePassword(passwordHasher.Hash(request.NewPassword));
+        await SessionRevocation.RevokeAllRefreshTokensAsync(refreshTokens, user.Id, cancellationToken);
+
+        return MessageResult.Ok("Şifreniz başarıyla değiştirildi. Lütfen tekrar giriş yapın.");
+    }
+}

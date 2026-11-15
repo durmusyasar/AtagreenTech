@@ -14,6 +14,7 @@ public class User : BaseEntity
     public const int NameMaxLength = 100;
     public const int SecurityStampMaxLength = 64;
     public const int EmailVerificationTokenHashMaxLength = 128;
+    public const int PasswordResetTokenHashMaxLength = 128;
 
     private readonly List<UserRole> _userRoles = [];
     private readonly List<RefreshToken> _refreshTokens = [];
@@ -65,6 +66,11 @@ public class User : BaseEntity
 
     public DateTime? EmailVerificationTokenExpiresAt { get; private set; }
 
+    /// <summary>Şifre sıfırlama token'ının SHA-256 özeti; düz metin saklanmaz.</summary>
+    public string? PasswordResetTokenHash { get; private set; }
+
+    public DateTime? PasswordResetTokenExpiresAt { get; private set; }
+
     /// <summary>
     /// Parola veya kritik kimlik değişiminde yenilenir; eski oturumların geçersiz kılınmasında kullanılır.
     /// </summary>
@@ -84,6 +90,30 @@ public class User : BaseEntity
     {
         SetPasswordHash(passwordHash);
         RotateSecurityStamp();
+        ClearPasswordResetChallenge();
+    }
+
+    /// <summary>Yeni şifre sıfırlama challenge'ı atar (önceki token geçersizleşir).</summary>
+    public void SetPasswordResetChallenge(string tokenHash, DateTime expiresAtUtc)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+        if (expiresAtUtc <= DateTime.UtcNow)
+            throw new ArgumentException("Expiry must be in the future.", nameof(expiresAtUtc));
+
+        PasswordResetTokenHash = tokenHash;
+        PasswordResetTokenExpiresAt = expiresAtUtc;
+    }
+
+    public bool IsPasswordResetChallengeValid(string tokenHash, DateTime utcNow) =>
+        PasswordResetTokenHash is not null
+        && PasswordResetTokenExpiresAt is not null
+        && PasswordResetTokenExpiresAt > utcNow
+        && string.Equals(PasswordResetTokenHash, tokenHash, StringComparison.Ordinal);
+
+    public void ClearPasswordResetChallenge()
+    {
+        PasswordResetTokenHash = null;
+        PasswordResetTokenExpiresAt = null;
     }
 
     /// <summary>Yeni e-posta doğrulama challenge'ı atar (önceki token geçersizleşir).</summary>

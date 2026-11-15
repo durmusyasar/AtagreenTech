@@ -31,6 +31,7 @@ public static class DependencyInjection
                 services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
                 services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
                 services.AddSingleton<IEmailVerificationSender, LoggingEmailVerificationSender>();
+                services.AddSingleton<IPasswordResetSender, LoggingPasswordResetSender>();
 
                 services.AddOptions<AuthOptions>()
                     .Bind(configuration.GetSection(AuthOptions.SectionName))
@@ -45,6 +46,10 @@ public static class DependencyInjection
                     .Validate(
                         o => o.EmailVerificationHours > 0,
                         "Auth:EmailVerificationHours must be greater than zero."
+                    )
+                    .Validate(
+                        o => o.PasswordResetHours > 0,
+                        "Auth:PasswordResetHours must be greater than zero."
                     )
                     .Validate(
                         o => Uri.TryCreate(o.PublicAppBaseUrl, UriKind.Absolute, out var uri)
