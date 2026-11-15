@@ -35,11 +35,7 @@ public static class DependencyInjection
                 services.AddSingleton<IPasswordResetSender, LoggingPasswordResetSender>();
                 services.AddSingleton<IUserInvitationSender, LoggingUserInvitationSender>();
 
-                services.AddAuthorization(options =>
-                {
-                    foreach (var (policy, permission) in AuthorizationPolicies.Bindings)
-                        options.AddPolicy(policy, p => p.RequireClaim(JwtContract.Claims.Permission, permission));
-                });
+                services.AddAuthorization(options => options.AddAtaGreenPermissionPolicies());
 
                 services.AddOptions<AuthOptions>()
                     .Bind(configuration.GetSection(AuthOptions.SectionName))

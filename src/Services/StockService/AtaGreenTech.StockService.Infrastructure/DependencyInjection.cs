@@ -7,6 +7,7 @@ using AtaGreenTech.StockService.Infrastructure.Persistence;
 using AtaGreenTech.StockService.Infrastructure.Persistence.Master;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using OmniSync.Core.Infrastructure.Authentication;
 using OmniSync.Core.Infrastructure.Hosting;
 
 namespace AtaGreenTech.StockService.Infrastructure;
@@ -34,11 +35,20 @@ public static class DependencyInjection
                 services.AddScoped<IStockBalanceLocker, StockBalanceLocker>();
                 services.AddScoped<ITenantBrandingReader, TenantBrandingReader>();
 
-                services.AddAuthorization(options =>
-                {
-                    foreach (var (policy, permission) in AuthorizationPolicies.Bindings)
-                        options.AddPolicy(policy, p => p.RequireClaim(JwtContract.Claims.Permission, permission));
-                });
+                // UserService JWT sözleşmesi: Issuer/Audience JwtContract ile birebir aynı olmalı.
+                services.AddOptions<JwtOptions>()
+                    .Bind(configuration.GetSection(JwtContract.SettingsSection))
+                    .Validate(
+                        o => string.Equals(o.Issuer, JwtContract.Issuer, StringComparison.Ordinal),
+                        $"JwtSettings:Issuer must be '{JwtContract.Issuer}' (UserService token issuer)."
+                    )
+                    .Validate(
+                        o => string.Equals(o.Audience, JwtContract.Audience, StringComparison.Ordinal),
+                        $"JwtSettings:Audience must be '{JwtContract.Audience}'."
+                    )
+                    .ValidateOnStart();
+
+                services.AddAuthorization(options => options.AddAtaGreenPermissionPolicies());
 
                 services.AddOptions<LocalizationOptions>()
                     .Bind(configuration.GetSection(LocalizationOptions.SectionName))
