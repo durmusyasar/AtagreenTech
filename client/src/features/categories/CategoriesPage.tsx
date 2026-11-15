@@ -1,11 +1,12 @@
 import { EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useQueryClient } from '@tanstack/react-query'
 import { Button, Flex, Input, Segmented, Space, Table, Tag, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { StatusTag } from '../../components/StatusTag'
 import { TranslationTags } from '../../components/TranslationTags'
 import { invalidate } from '../../core/api/queryClient'
 import { useLanguage } from '../../core/context/useLanguage'
+import { useAppQuery } from '../../core/hooks/useAppQuery'
 import { DEFAULT_LANGUAGE } from '../../core/i18n/languages'
 import { categoryQueries } from '../../services/categoryService'
 import { queryKeys } from '../../services/queryKeys'
@@ -28,7 +29,7 @@ export function CategoriesPage() {
   const [editor, setEditor] = useState<{ open: boolean; category: Category | null }>({ open: false, category: null })
 
   const queryClient = useQueryClient()
-  const page = useQuery({
+  const page = useAppQuery({
     ...categoryQueries.list({
       language,
       pageNumber,
@@ -40,7 +41,7 @@ export function CategoriesPage() {
     placeholderData: keepPreviousData,
   })
   // Üst kategori filtresi ve formdaki seçim için tüm kategoriler; adlar arayüz diline göre çözümlenir.
-  const all = useQuery(categoryQueries.listAll(language))
+  const all = useAppQuery(categoryQueries.listAll(language))
   const allOptions = useMemo(() => parentOptions(all.data ?? []), [all.data])
 
   // Filtre değişince ilk sayfaya dönülür; aksi halde sonuç az olduğunda boş bir sayfada kalınabilir.

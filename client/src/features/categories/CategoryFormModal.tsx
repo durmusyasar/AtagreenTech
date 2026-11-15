@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { App, Button, Flex, Form, Input, Modal, Switch, Typography } from 'antd'
 import { useMemo } from 'react'
 import { FormErrorAlert } from '../../components/forms/FormErrorAlert'
@@ -7,8 +7,8 @@ import { TranslationTabs } from '../../components/translations/TranslationTabs'
 import { useTranslationForm } from '../../components/translations/useTranslationForm'
 import { invalidate } from '../../core/api/queryClient'
 import { useLanguage } from '../../core/context/useLanguage'
+import { useAppMutation } from '../../core/hooks/useAppMutation'
 import { DEFAULT_LANGUAGE } from '../../core/i18n/languages'
-import { categoryService } from '../../services/categoryService'
 import { queryKeys } from '../../services/queryKeys'
 import type { Category, UpdateCategoryRequest } from '../../types/category'
 import {
@@ -77,12 +77,12 @@ function CategoryForm({
       : available
   }, [categories, category])
   const queryClient = useQueryClient()
-  const save = useMutation({
-    // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
-    mutationFn: ({ isActive, ...request }: UpdateCategoryRequest): Promise<unknown> =>
-      category
-        ? categoryService.update(category.id, { ...request, isActive }, { skipErrorNotification: true })
-        : categoryService.create(request, { skipErrorNotification: true }),
+  // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
+  const save = useAppMutation<string | void, UpdateCategoryRequest>({
+    url: category ? `/categories/${category.id}` : '/categories',
+    method: category ? 'put' : 'post',
+    skipErrorNotification: true,
+    body: ({ isActive, ...request }) => (category ? { ...request, isActive } : request),
     // Ürünler kategori adını gösterir.
     onSuccess: () => invalidate(queryClient, queryKeys.categories, queryKeys.products),
   })
