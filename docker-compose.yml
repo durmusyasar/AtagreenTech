@@ -1,10 +1,11 @@
-# AtaGreenTech stok servisi yığını. İlk kurulumda secret dosyalarını oluşturun:
+# AtaGreenTech stok + kullanıcı servisi yığını. İlk kurulumda secret dosyalarını oluşturun:
 #
 #   deploy/generate-secrets.sh
 #   GITHUB_USERNAME=<kullanıcı> GITHUB_PACKAGES_TOKEN=$(gh auth token) docker compose up -d --build
 #
-# Başlangıç sırası: PostgreSQL sağlıklı -> master migration'ları -> tenant migration'ları -> stok servisi.
-# Veritabanı dışarıya port açmaz; stok servisi yalnızca sunucunun loopback arayüzünden, önündeki reverse proxy'ye açılır.
+# Başlangıç sırası: PostgreSQL sağlıklı -> master migration'ları (stock, user) -> tenant migration'ları
+# (stock, user) -> stock-service + user-service -> web.
+# Veritabanı dışarıya port açmaz; API'ler yalnızca sunucunun loopback arayüzünden, önündeki reverse proxy'ye açılır.
 
 name: atagreen
 
@@ -24,6 +25,26 @@ x-stock-service-image: &stock-service-image
       GITHUB_USERNAME: ${GITHUB_USERNAME:-}
     secrets: [github_packages_token]
   image: atagreen-stock-service:${ATAGREEN_VERSION:-latest}
+
+x-user-service-image: &user-service-image
+  build:
+    context: .
+    dockerfile: src/Services/UserService/AtaGreenTech.UserService.Api/Dockerfile
+    args:
+      GITHUB_USERNAME: ${GITHUB_USERNAME:-}
+    secrets: [github_packages_token]
+  image: atagreen-user-service:${ATAGREEN_VERSION:-latest}
+
+x-api-runtime: &api-runtime
+  ASPNETCORE_ENVIRONMENT: Production
+  # Proxy'den X-Forwarded-Proto: http ile gelen istekler HTTPS'e yönlendirilir.
+  ASPNETCORE_HTTPS_PORT: "443"
+  # Sunucudaki reverse proxy, yayınlanan porta edge ağının gateway adresinden bağlanır.
+  ReverseProxy__KnownProxies__0: ${ATAGREEN_TRUSTED_PROXY:-172.31.0.1}
+  # Web arayüzünün nginx'i API isteklerini edge ağı üzerinden iletir; ağda yalnızca bu yığının konteynerleri var.
+  ReverseProxy__KnownNetworks__0: ${ATAGREEN_EDGE_SUBNET:-172.31.0.0/24}
+  # appsettings.json'daki omnisync.com ve omnisync.com.tr'ye eklenir; yığın yerelde *.omnisync.localhost ile denenir.
+  TenantResolution__RootDomains__2: ${ATAGREEN_LOCAL_ROOT_DOMAIN:-omnisync.localhost}
 
 services:
   postgres:
@@ -59,6 +80,21 @@ services:
       postgres:
         condition: service_healthy
 
+  # UserService master migration'ları (OmniSync Tenants); stock master-migrator'dan sonra, idempotent.
+  user-master-migrator:
+    <<: [*hardening, *user-service-image]
+    command: ["migrate-master"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    secrets:
+      - source: master_connection_string
+        target: ConnectionStrings__MasterDb
+    networks: [backend]
+    depends_on:
+      master-migrator:
+        condition: service_completed_successfully
+
   # Aktif tenant veritabanlarına bekleyen migration'ları uygular; bir tenant başarısız olursa sıfırdan farklı kodla
   # çıkar ve stok servisi başlamaz.
   tenant-migrator:
@@ -75,19 +111,28 @@ services:
       master-migrator:
         condition: service_completed_successfully
 
+  # UserService tenant migration'ları (Identity tabloları sonraki issue'larda); stock tenant-migrator'dan sonra.
+  user-tenant-migrator:
+    <<: [*hardening, *user-service-image]
+    command: ["migrate-tenants"]
+    restart: "no"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    secrets:
+      - source: master_connection_string
+        target: ConnectionStrings__MasterDb
+    networks: [backend]
+    depends_on:
+      user-master-migrator:
+        condition: service_completed_successfully
+      tenant-migrator:
+        condition: service_completed_successfully
+
   stock-service:
     <<: [*hardening, *stock-service-image]
     restart: unless-stopped
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      # Proxy'den X-Forwarded-Proto: http ile gelen istekler HTTPS'e yönlendirilir.
-      ASPNETCORE_HTTPS_PORT: "443"
-      # Sunucudaki reverse proxy, yayınlanan porta edge ağının gateway adresinden bağlanır.
-      ReverseProxy__KnownProxies__0: ${ATAGREEN_TRUSTED_PROXY:-172.31.0.1}
-      # Web arayüzünün nginx'i API isteklerini edge ağı üzerinden iletir; ağda yalnızca bu yığının konteynerleri var.
-      ReverseProxy__KnownNetworks__0: ${ATAGREEN_EDGE_SUBNET:-172.31.0.0/24}
-      # appsettings.json'daki omnisync.com ve omnisync.com.tr'ye eklenir; yığın yerelde *.omnisync.localhost ile denenir.
-      TenantResolution__RootDomains__2: ${ATAGREEN_LOCAL_ROOT_DOMAIN:-omnisync.localhost}
+      <<: *api-runtime
     secrets:
       - source: master_connection_string
         target: ConnectionStrings__MasterDb
@@ -111,8 +156,34 @@ services:
       tenant-migrator:
         condition: service_completed_successfully
 
-  # React arayüzü ve /api isteklerini stok servisine ileten nginx. Tarayıcı her şeyi tek origin'den aldığı için
-  # CORS gerekmez; tenant, API'de olduğu gibi Host başlığındaki alt alan adından çözülür.
+  user-service:
+    <<: [*hardening, *user-service-image]
+    restart: unless-stopped
+    environment:
+      <<: *api-runtime
+    secrets:
+      - source: master_connection_string
+        target: ConnectionStrings__MasterDb
+      - source: jwt_signing_key
+        target: JwtSettings__SigningKey
+    ports:
+      - "127.0.0.1:${USER_SERVICE_HTTP_PORT:-5002}:8080"
+    networks: [backend, edge]
+    healthcheck:
+      test: ["CMD", "dotnet", "AtaGreenTech.UserService.Api.dll", "healthcheck"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    stop_grace_period: 35s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      user-tenant-migrator:
+        condition: service_completed_successfully
+
+  # React arayüzü ve /api isteklerini path'e göre user veya stock servisine ileten nginx.
+  # Tarayıcı her şeyi tek origin'den aldığı için CORS gerekmez; tenant Host başlığından çözülür.
   web:
     <<: *hardening
     build:
@@ -129,13 +200,16 @@ services:
     environment:
       ATAGREEN_TRUSTED_PROXY: ${ATAGREEN_TRUSTED_PROXY:-172.31.0.1}
       ATAGREEN_STOCK_SERVICE_UPSTREAM: stock-service:8080
-      # Uygulamanın sunulduğu domain'ler (stok servisinin RootDomains listesiyle aynı); diğer host'lar 404 alır.
+      ATAGREEN_USER_SERVICE_UPSTREAM: user-service:8080
+      # Uygulamanın sunulduğu domain'ler (API RootDomains listesiyle aynı); diğer host'lar 404 alır.
       ATAGREEN_SERVER_NAMES: .omnisync.com .omnisync.com.tr .${ATAGREEN_LOCAL_ROOT_DOMAIN:-omnisync.localhost}
     ports:
       - "127.0.0.1:${ATAGREEN_WEB_PORT:-3000}:8080"
     networks: [edge]
     depends_on:
       stock-service:
+        condition: service_healthy
+      user-service:
         condition: service_healthy
 
 networks:

@@ -21,6 +21,7 @@ FROM nginxinc/nginx-unprivileged:1.30-alpine
 ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
     NGINX_ENVSUBST_FILTER="^(ATAGREEN_|NGINX_LOCAL_RESOLVERS)" \
     ATAGREEN_STOCK_SERVICE_UPSTREAM=stock-service:8080 \
+    ATAGREEN_USER_SERVICE_UPSTREAM=user-service:8080 \
     ATAGREEN_SERVER_NAMES=".omnisync.com .omnisync.com.tr .omnisync.localhost" \
     ATAGREEN_TRUSTED_PROXY=127.0.0.1
 
