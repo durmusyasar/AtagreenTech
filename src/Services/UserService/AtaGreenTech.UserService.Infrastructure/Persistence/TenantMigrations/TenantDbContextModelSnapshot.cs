@@ -146,6 +146,13 @@ namespace AtaGreenTech.UserService.Infrastructure.Persistence.TenantMigrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<DateTime?>("EmailVerificationTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmailVerificationTokenHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -191,6 +198,10 @@ namespace AtaGreenTech.UserService.Infrastructure.Persistence.TenantMigrations
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
+
+                    b.HasIndex("EmailVerificationTokenHash")
+                        .IsUnique()
+                        .HasFilter("\"EmailVerificationTokenHash\" IS NOT NULL");
 
                     b.HasIndex("Username")
                         .IsUnique()

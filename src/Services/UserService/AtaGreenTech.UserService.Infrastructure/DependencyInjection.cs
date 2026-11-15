@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
+using AtaGreenTech.UserService.Infrastructure.Email;
 using AtaGreenTech.UserService.Infrastructure.Persistence;
 using AtaGreenTech.UserService.Infrastructure.Security;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,7 @@ public static class DependencyInjection
                 services.AddScoped<IUserDbContext, UserQueryContext>();
                 services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
                 services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
+                services.AddSingleton<IEmailVerificationSender, LoggingEmailVerificationSender>();
 
                 services.AddOptions<AuthOptions>()
                     .Bind(configuration.GetSection(AuthOptions.SectionName))
@@ -39,6 +41,15 @@ public static class DependencyInjection
                     .Validate(
                         o => o.RefreshTokenDays > 0,
                         "Auth:RefreshTokenDays must be greater than zero."
+                    )
+                    .Validate(
+                        o => o.EmailVerificationHours > 0,
+                        "Auth:EmailVerificationHours must be greater than zero."
+                    )
+                    .Validate(
+                        o => Uri.TryCreate(o.PublicAppBaseUrl, UriKind.Absolute, out var uri)
+                            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps),
+                        "Auth:PublicAppBaseUrl must be an absolute http(s) URL."
                     )
                     .Validate(
                         o => string.IsNullOrWhiteSpace(o.Bootstrap.Email)

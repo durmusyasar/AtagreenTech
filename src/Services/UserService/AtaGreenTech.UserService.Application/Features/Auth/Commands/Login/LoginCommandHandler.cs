@@ -42,6 +42,9 @@ internal sealed class LoginCommandHandler(
         if (!user.IsActive)
             throw new UnauthorizedAccessException("Hesabınız devre dışı bırakılmıştır.");
 
+        if (!user.IsEmailVerified)
+            throw new UnauthorizedAccessException("Lütfen önce e-posta adresinizi doğrulayın.");
+
         var roleNames = user.UserRoles
             .Where(ur => !ur.IsDeleted && ur.Role is { IsDeleted: false })
             .Select(ur => ur.Role.Name)
