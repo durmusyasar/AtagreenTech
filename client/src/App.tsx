@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { App as AntApp } from 'antd'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { OfflineBanner } from './components/OfflineBanner'
 import { AppLayout } from './components/layout/AppLayout'
 import { NotFound } from './components/NotFound'
 import { NotificationBridge } from './components/NotificationBridge'
@@ -48,6 +49,7 @@ export function App() {
       <TenantThemeProvider>
         <AntApp>
           <NotificationBridge />
+          <OfflineBanner />
           <RouterProvider router={router} />
         </AntApp>
       </TenantThemeProvider>
