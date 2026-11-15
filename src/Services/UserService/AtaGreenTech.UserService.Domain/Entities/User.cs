@@ -13,6 +13,7 @@ public class User : BaseEntity
     public const int PasswordHashMaxLength = 512;
     public const int NameMaxLength = 100;
     public const int SecurityStampMaxLength = 64;
+    public const int EmailVerificationTokenHashMaxLength = 128;
 
     private readonly List<UserRole> _userRoles = [];
     private readonly List<RefreshToken> _refreshTokens = [];
@@ -59,6 +60,11 @@ public class User : BaseEntity
 
     public bool IsEmailVerified { get; private set; }
 
+    /// <summary>E-posta doğrulama token'ının SHA-256 özeti; düz metin saklanmaz.</summary>
+    public string? EmailVerificationTokenHash { get; private set; }
+
+    public DateTime? EmailVerificationTokenExpiresAt { get; private set; }
+
     /// <summary>
     /// Parola veya kritik kimlik değişiminde yenilenir; eski oturumların geçersiz kılınmasında kullanılır.
     /// </summary>
@@ -80,7 +86,37 @@ public class User : BaseEntity
         RotateSecurityStamp();
     }
 
-    public void MarkEmailVerified() => IsEmailVerified = true;
+    /// <summary>Yeni e-posta doğrulama challenge'ı atar (önceki token geçersizleşir).</summary>
+    public void SetEmailVerificationChallenge(string tokenHash, DateTime expiresAtUtc)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+        if (expiresAtUtc <= DateTime.UtcNow)
+            throw new ArgumentException("Expiry must be in the future.", nameof(expiresAtUtc));
+
+        EmailVerificationTokenHash = tokenHash;
+        EmailVerificationTokenExpiresAt = expiresAtUtc;
+        IsEmailVerified = false;
+    }
+
+    public bool IsEmailVerificationChallengeValid(string tokenHash, DateTime utcNow) =>
+        !IsEmailVerified
+        && EmailVerificationTokenHash is not null
+        && EmailVerificationTokenExpiresAt is not null
+        && EmailVerificationTokenExpiresAt > utcNow
+        && string.Equals(EmailVerificationTokenHash, tokenHash, StringComparison.Ordinal);
+
+    /// <summary>E-postayı doğrulanmış işaretler ve challenge alanlarını temizler.</summary>
+    public void MarkEmailVerified()
+    {
+        IsEmailVerified = true;
+        ClearEmailVerificationChallenge();
+    }
+
+    public void ClearEmailVerificationChallenge()
+    {
+        EmailVerificationTokenHash = null;
+        EmailVerificationTokenExpiresAt = null;
+    }
 
     public void Deactivate() => IsActive = false;
 

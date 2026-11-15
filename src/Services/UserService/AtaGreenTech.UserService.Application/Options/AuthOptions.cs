@@ -15,6 +15,14 @@ public sealed class AuthOptions
     /// <summary>Refresh token geçerlilik süresi (gün).</summary>
     public int RefreshTokenDays { get; set; } = 14;
 
+    /// <summary>E-posta doğrulama token'ının geçerlilik süresi (saat).</summary>
+    public int EmailVerificationHours { get; set; } = 24;
+
+    /// <summary>
+    /// Doğrulama linkinin host'u (ör. <c>https://omnisync.com</c>). Tenant subdomain'i gönderimde eklenir.
+    /// </summary>
+    public string PublicAppBaseUrl { get; set; } = "https://omnisync.com";
+
     public BootstrapAdminOptions Bootstrap { get; set; } = new();
 }
 
