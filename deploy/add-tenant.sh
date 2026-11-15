@@ -51,6 +51,12 @@ VALUES (
 )
 ON CONFLICT ("Subdomain") WHERE "IsDeleted" = false DO NOTHING;
 
+INSERT INTO "TenantBrandings" ("TenantId", "DisplayName", "LogoUrl", "FaviconUrl", "PrimaryColor", "UpdatedAt")
+SELECT t."Id", t."Name", '/favicon.svg', '/favicon.svg', '#2e7d32', now()
+FROM "Tenants" t
+WHERE t."Subdomain" = :'subdomain' AND NOT t."IsDeleted"
+ON CONFLICT ("TenantId") DO NOTHING;
+
 SELECT "Id" FROM "Tenants" WHERE "Subdomain" = :'subdomain' AND NOT "IsDeleted";
 SQL
 )

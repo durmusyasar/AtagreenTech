@@ -2,6 +2,7 @@ import { LoginOutlined } from '@ant-design/icons'
 import { Alert, App, Button, Card, Flex, Form, Input, Typography } from 'antd'
 import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { BrandMark } from '../../components/BrandMark'
 import { ApiError } from '../../core/api/apiError'
 import { useAuth } from '../../core/context/useAuth'
 import { useLanguage } from '../../core/context/useLanguage'
@@ -61,12 +62,7 @@ export function LoginPage() {
     <Flex align="center" justify="center" style={{ minHeight: '100vh', padding: 24 }}>
       <Card style={{ width: '100%', maxWidth: 480 }}>
         <Flex vertical gap={8} style={{ marginBottom: 24 }}>
-          <Flex align="center" gap={12}>
-            <img src="/favicon.svg" alt="" width={32} height={32} />
-            <Typography.Title level={3} style={{ margin: 0 }}>
-              {t('app.title')}
-            </Typography.Title>
-          </Flex>
+          <BrandMark size={32} nameStyle={{ fontSize: 20, margin: 0 }} />
           <Typography.Text type="secondary">{t('login.description')}</Typography.Text>
         </Flex>
 

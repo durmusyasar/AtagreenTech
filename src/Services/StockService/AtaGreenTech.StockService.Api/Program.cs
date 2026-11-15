@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AtaGreenTech.StockService.Api.Services;
 using AtaGreenTech.StockService.Application.Interfaces;
 using AtaGreenTech.StockService.Infrastructure;
+using AtaGreenTech.StockService.Infrastructure.Persistence.Master;
 using Microsoft.EntityFrameworkCore;
 using OmniSync.Core.Infrastructure.Cors;
 using OmniSync.Core.Infrastructure.Hosting;
@@ -33,7 +34,10 @@ var app = builder.Build();
 if (args is ["migrate-master"])
 {
     await using var scope = app.Services.CreateAsyncScope();
-    await scope.ServiceProvider.GetRequiredService<MasterDbContext>().Database.MigrateAsync();
+    var master = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+    await master.Database.MigrateAsync();
+    // OmniSync Tenant modeline dokunmadan marka tablosunu master'a ekler.
+    await MasterBrandingSchema.EnsureAsync(master);
     return 0;
 }
 
