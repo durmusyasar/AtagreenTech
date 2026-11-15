@@ -22,3 +22,13 @@ body {
   overflow: hidden;
   white-space: nowrap;
 }
+
+.command-palette-modal .ant-modal-content {
+  padding: 0;
+  overflow: hidden;
+}
+
+.command-palette-item:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 1px;
+}

@@ -8,9 +8,10 @@ import {
   TagsOutlined,
 } from '@ant-design/icons'
 import { Layout, Menu, theme } from 'antd'
-import { useState, type ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BrandMark } from '../BrandMark'
+import { CommandPalette } from '../command-palette/CommandPalette'
 import { useLanguage } from '../../core/context/useLanguage'
 import type { MessageKey } from '../../core/i18n/messages'
 import { Footer } from './Footer'
@@ -32,10 +33,12 @@ const NAVIGATION: { path: string; label: MessageKey; icon: ReactNode }[] = [
  */
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const [commandOpen, setCommandOpen] = useState(false)
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { t } = useLanguage()
   const { token } = theme.useToken()
+  const openCommandPalette = useCallback(() => setCommandOpen(true), [])
 
   const selected = NAVIGATION.filter((item) => (item.path === '/' ? pathname === '/' : pathname.startsWith(item.path)))
 
@@ -65,13 +68,15 @@ export function AppLayout() {
             alignItems: 'center',
           }}
         >
-          <Navbar />
+          <Navbar onOpenCommandPalette={openCommandPalette} />
         </Layout.Header>
         <Layout.Content style={{ margin: 24, minHeight: 280 }}>
           <Outlet />
         </Layout.Content>
         <Footer />
       </Layout>
+
+      <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
     </Layout>
   )
 }

@@ -1,20 +1,26 @@
-import { GlobalOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons'
+import { GlobalOutlined, LogoutOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons'
 import { Button, Dropdown, Flex, Select, Tag, Tooltip, Typography } from 'antd'
 import { Link } from 'react-router-dom'
 import { BrandMark } from '../BrandMark'
+import { commandPaletteShortcutLabel } from '../command-palette/commandPaletteSearch'
 import { useAuth } from '../../core/context/useAuth'
 import { useLanguage } from '../../core/context/useLanguage'
 import { useTenant } from '../../core/context/useTenant'
 import { LANGUAGE_LABELS, SUPPORTED_LANGUAGES, type Language } from '../../core/i18n/languages'
 
+interface NavbarProps {
+  onOpenCommandPalette?: () => void
+}
+
 /**
- * Üst çubuk: tenant markası, aktif tenant, dil seçici (TR/EN) ve kullanıcı / çıkış.
+ * Üst çubuk: tenant markası, komut paleti, dil seçici (TR/EN) ve kullanıcı / çıkış.
  * Modül linkleri sol menüdedir (`AppLayout` sider); burada yalnızca oturum ve bağlam kontrolleri vardır.
  */
-export function Navbar() {
+export function Navbar({ onOpenCommandPalette }: NavbarProps) {
   const { claims, signOut } = useAuth()
   const { tenant } = useTenant()
   const { language, setLanguage, t } = useLanguage()
+  const shortcut = commandPaletteShortcutLabel()
 
   return (
     <Flex align="center" justify="space-between" gap={16} style={{ height: '100%', width: '100%' }}>
@@ -32,6 +38,21 @@ export function Navbar() {
       </Flex>
 
       <Flex align="center" gap={12} style={{ flexShrink: 0 }}>
+        {onOpenCommandPalette && (
+          <Tooltip title={`${t('header.commandPalette')} (${shortcut})`}>
+            <Button
+              type="text"
+              icon={<SearchOutlined />}
+              onClick={onOpenCommandPalette}
+              aria-label={t('header.commandPalette')}
+            >
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {shortcut}
+              </Typography.Text>
+            </Button>
+          </Tooltip>
+        )}
+
         <Select<Language>
           aria-label={t('header.language')}
           value={language}
