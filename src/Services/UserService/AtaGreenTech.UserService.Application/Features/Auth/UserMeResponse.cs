@@ -11,5 +11,6 @@ public sealed record UserMeResponse(
     string FirstName,
     string LastName,
     string TenantId,
-    IReadOnlyList<string> Roles
+    IReadOnlyList<string> Roles,
+    IReadOnlyList<string> Permissions
 );

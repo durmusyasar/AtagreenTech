@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Features.Users.Commands.CreateUser;
 using AtaGreenTech.UserService.Application.Features.Users.Commands.DeleteUser;
@@ -6,16 +7,14 @@ using AtaGreenTech.UserService.Application.Features.Users.Commands.SetUserActive
 using AtaGreenTech.UserService.Application.Features.Users.Commands.UpdateUser;
 using AtaGreenTech.UserService.Application.Features.Users.Queries.GetUserById;
 using AtaGreenTech.UserService.Application.Features.Users.Queries.GetUsers;
-using AtaGreenTech.UserService.Domain.Entities;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using OmniSync.Core.Domain.Common;
 using OmniSync.Core.Infrastructure.Endpoints;
 
 namespace AtaGreenTech.UserService.Api.Endpoints;
 
 /// <summary>
-/// <c>/api/v1/users</c>: tenant kullanıcı yönetimi (liste, CRUD, davet, aktiflik). Admin rolü gerektirir.
+/// <c>/api/v1/users</c>: tenant kullanıcı yönetimi (liste, CRUD, davet, aktiflik). Permission claim politikaları.
 /// </summary>
 public sealed class UserEndpoints : IEndpointModule
 {
@@ -23,8 +22,6 @@ public sealed class UserEndpoints : IEndpointModule
 
     public void MapEndpoints(RouteGroupBuilder group)
     {
-        var admin = new AuthorizeAttribute { Roles = Role.Names.Admin };
-
         group.MapGet("", (
             ISender sender,
             CancellationToken cancellationToken,
@@ -33,20 +30,20 @@ public sealed class UserEndpoints : IEndpointModule
             string? searchTerm = null,
             bool? isActive = null
         ) => sender.Send(new GetUsersQuery(pageNumber, pageSize, searchTerm, isActive), cancellationToken))
-            .RequireAuthorization(admin);
+            .RequireAuthorization(AuthorizationPolicies.UsersRead);
 
         group.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
             TypedResults.Ok(await sender.Send(new GetUserByIdQuery(id), cancellationToken)))
-            .RequireAuthorization(admin);
+            .RequireAuthorization(AuthorizationPolicies.UsersRead);
 
-        group.MapPost("", CreateAsync).RequireAuthorization(admin);
-        group.MapPost("/invite", InviteAsync).RequireAuthorization(admin);
-        group.MapPut("/{id:guid}", UpdateAsync).RequireAuthorization(admin);
+        group.MapPost("", CreateAsync).RequireAuthorization(AuthorizationPolicies.UsersWrite);
+        group.MapPost("/invite", InviteAsync).RequireAuthorization(AuthorizationPolicies.UsersWrite);
+        group.MapPut("/{id:guid}", UpdateAsync).RequireAuthorization(AuthorizationPolicies.UsersWrite);
         group.MapPatch("/{id:guid}/activate", (Guid id, ISender sender, CancellationToken ct) =>
-            SetActiveAsync(id, true, sender, ct)).RequireAuthorization(admin);
+            SetActiveAsync(id, true, sender, ct)).RequireAuthorization(AuthorizationPolicies.UsersDelete);
         group.MapPatch("/{id:guid}/deactivate", (Guid id, ISender sender, CancellationToken ct) =>
-            SetActiveAsync(id, false, sender, ct)).RequireAuthorization(admin);
-        group.MapDelete("/{id:guid}", DeleteAsync).RequireAuthorization(admin);
+            SetActiveAsync(id, false, sender, ct)).RequireAuthorization(AuthorizationPolicies.UsersDelete);
+        group.MapDelete("/{id:guid}", DeleteAsync).RequireAuthorization(AuthorizationPolicies.UsersDelete);
     }
 
     private static async Task<IResult> CreateAsync(

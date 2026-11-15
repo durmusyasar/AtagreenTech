@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Application.Features.Warehouses.Commands.CreateWarehouse;
 using AtaGreenTech.StockService.Application.Features.Warehouses.Commands.UpdateWarehouse;
 using AtaGreenTech.StockService.Application.Features.Warehouses.Queries.GetWarehouses;
@@ -23,13 +24,14 @@ public sealed class WarehouseEndpoints : IEndpointModule
             int pageSize = BaseSearchModel.DefaultPageSize,
             string? searchTerm = null,
             bool? isActive = null
-        ) => sender.Send(new GetWarehousesQuery(pageNumber, pageSize, searchTerm, isActive), cancellationToken));
+        ) => sender.Send(new GetWarehousesQuery(pageNumber, pageSize, searchTerm, isActive), cancellationToken))
+            .RequireAuthorization(AuthorizationPolicies.StockRead);
 
         group.MapPost("", async (CreateWarehouseCommand command, ISender sender, CancellationToken cancellationToken) =>
         {
             var id = await sender.Send(command, cancellationToken);
             return TypedResults.Created((string?)null, id);
-        });
+        }).RequireAuthorization(AuthorizationPolicies.StockWrite);
 
         group.MapPut("/{id:guid}", async (
             Guid id,
@@ -43,8 +45,9 @@ public sealed class WarehouseEndpoints : IEndpointModule
                 cancellationToken
             );
             return TypedResults.NoContent();
-        });
+        }).RequireAuthorization(AuthorizationPolicies.StockWrite);
     }
 }
+
 
 public sealed record UpdateWarehouseRequest(string Name, string Code, string? Address, bool IsActive);

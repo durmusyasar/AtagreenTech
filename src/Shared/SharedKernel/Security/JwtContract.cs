@@ -25,5 +25,9 @@ public static class JwtContract
         public const string Email = "email";
         public const string Role = "role";
         public const string TenantId = "tenant_id";
+
+        /// <summary>Granüler RBAC izni (ör. <c>users.read</c>). OmniSync TokenClaimTypes'ta yoktur; yerel sözleşmedir.</summary>
+        public const string Permission = "permission";
     }
 }
+

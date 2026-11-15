@@ -38,6 +38,8 @@ internal sealed class GetMeQueryHandler(
             .OrderBy(r => r, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
+        var permissions = await UserPermissionResolver.ResolveAsync(db, user.Id, cancellationToken);
+
         return new UserMeResponse(
             user.Id,
             user.Email,
@@ -45,7 +47,8 @@ internal sealed class GetMeQueryHandler(
             user.FirstName,
             user.LastName,
             currentTenant.Id.Value.ToString(),
-            roles
+            roles,
+            permissions
         );
     }
 }

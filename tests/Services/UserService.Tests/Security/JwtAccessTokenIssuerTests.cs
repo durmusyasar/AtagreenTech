@@ -24,7 +24,13 @@ public sealed class JwtAccessTokenIssuerTests
 
         var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var tenantId = Guid.Parse("22222222-2222-2222-2222-222222222222");
-        var result = issuer.Create(userId, "admin@omnisync.com", tenantId, [RoleNameAdmin]);
+        var result = issuer.Create(
+            userId,
+            "admin@omnisync.com",
+            tenantId,
+            [RoleNameAdmin],
+            [Permissions.Users.Read, Permissions.Stock.Write]
+        );
 
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(result.AccessToken);
 
@@ -34,8 +40,17 @@ public sealed class JwtAccessTokenIssuerTests
         Assert.Equal("admin@omnisync.com", jwt.Claims.First(c => c.Type == JwtContract.Claims.Email).Value);
         Assert.Equal(tenantId.ToString(), jwt.Claims.First(c => c.Type == JwtContract.Claims.TenantId).Value);
         Assert.Equal(RoleNameAdmin, jwt.Claims.First(c => c.Type == JwtContract.Claims.Role).Value);
+        Assert.Contains(
+            Permissions.Users.Read,
+            jwt.Claims.Where(c => c.Type == JwtContract.Claims.Permission).Select(c => c.Value)
+        );
+        Assert.Contains(
+            Permissions.Stock.Write,
+            jwt.Claims.Where(c => c.Type == JwtContract.Claims.Permission).Select(c => c.Value)
+        );
         Assert.True(result.ExpiresAt > DateTime.UtcNow);
     }
 
     private const string RoleNameAdmin = "Admin";
 }
+

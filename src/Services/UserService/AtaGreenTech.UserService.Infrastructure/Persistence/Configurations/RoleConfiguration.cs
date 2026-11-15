@@ -21,6 +21,15 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
             .HasForeignKey(x => x.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasMany(x => x.RolePermissions)
+            .WithOne(x => x.Role)
+            .HasForeignKey(x => x.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Navigation(x => x.UserRoles).HasField("_userRoles").UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Navigation(x => x.RolePermissions)
+            .HasField("_rolePermissions")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
+

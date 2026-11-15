@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
 using AtaGreenTech.UserService.Infrastructure.Email;
@@ -33,6 +34,12 @@ public static class DependencyInjection
                 services.AddSingleton<IEmailVerificationSender, LoggingEmailVerificationSender>();
                 services.AddSingleton<IPasswordResetSender, LoggingPasswordResetSender>();
                 services.AddSingleton<IUserInvitationSender, LoggingUserInvitationSender>();
+
+                services.AddAuthorization(options =>
+                {
+                    foreach (var (policy, permission) in AuthorizationPolicies.Bindings)
+                        options.AddPolicy(policy, p => p.RequireClaim(JwtContract.Claims.Permission, permission));
+                });
 
                 services.AddOptions<AuthOptions>()
                     .Bind(configuration.GetSection(AuthOptions.SectionName))

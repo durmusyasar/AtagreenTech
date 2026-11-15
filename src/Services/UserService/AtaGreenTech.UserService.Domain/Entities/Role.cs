@@ -19,6 +19,7 @@ public class Role : BaseEntity
     }
 
     private readonly List<UserRole> _userRoles = [];
+    private readonly List<RolePermission> _rolePermissions = [];
 
     protected Role()
     {
@@ -37,6 +38,8 @@ public class Role : BaseEntity
     public string Description { get; private set; }
 
     public IReadOnlyCollection<UserRole> UserRoles => _userRoles.AsReadOnly();
+
+    public IReadOnlyCollection<RolePermission> RolePermissions => _rolePermissions.AsReadOnly();
 
     public void Update(string name, string? description)
     {

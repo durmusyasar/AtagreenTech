@@ -15,6 +15,8 @@ internal sealed class LoginCommandHandler(
     IRepository<User> users,
     IRepository<Role> roles,
     IRepository<UserRole> userRoles,
+    IRepository<Permission> permissions,
+    IRepository<RolePermission> rolePermissions,
     IRepository<RefreshToken> refreshTokens,
     IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
@@ -28,6 +30,7 @@ internal sealed class LoginCommandHandler(
         if (!currentTenant.IsAvailable || currentTenant.Id is null)
             throw new InvalidOperationException("Tenant could not be resolved from the host.");
 
+        await RbacCatalog.EnsureAsync(roles, permissions, rolePermissions, unitOfWork, cancellationToken);
         await BootstrapAdminIfNeededAsync(cancellationToken);
 
         var email = User.NormalizeEmail(request.Email);
@@ -51,7 +54,15 @@ internal sealed class LoginCommandHandler(
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        var access = accessTokenIssuer.Create(user.Id, user.Email, currentTenant.Id.Value, roleNames);
+        var permissionNames = await UserPermissionResolver.ResolveAsync(db, user.Id, cancellationToken);
+
+        var access = accessTokenIssuer.Create(
+            user.Id,
+            user.Email,
+            currentTenant.Id.Value,
+            roleNames,
+            permissionNames
+        );
         var (refreshPlaintext, refreshEntity) = RefreshTokenFactory.Create(
             user.Id,
             Guid.NewGuid(),
@@ -77,9 +88,10 @@ internal sealed class LoginCommandHandler(
             );
         }
 
-        var adminRole = await EnsureRoleAsync(Role.Names.Admin, "System Administrator", cancellationToken);
-        await EnsureRoleAsync(Role.Names.Manager, "Tenant manager", cancellationToken);
-        await EnsureRoleAsync(Role.Names.Viewer, "Read-only viewer", cancellationToken);
+        // Roller RbacCatalog ile oluşmuş olmalı; Admin rolünü bağla.
+        var adminRole = (await roles.GetAllByFilterAsync(r => r.Name == Role.Names.Admin, cancellationToken))
+            .FirstOrDefault()
+            ?? throw new InvalidOperationException("Admin role was not seeded.");
 
         var admin = await users.AddAsync(
             CreateBootstrapAdmin(bootstrap, passwordHasher),
@@ -89,15 +101,6 @@ internal sealed class LoginCommandHandler(
 
         // Login sorgusu AsNoTracking olduğu için bootstrap kayıtlarının DB'de görünmesi gerekir.
         await unitOfWork.SaveChangesAsync(cancellationToken);
-    }
-
-    private async Task<Role> EnsureRoleAsync(string name, string description, CancellationToken cancellationToken)
-    {
-        var existing = (await roles.GetAllByFilterAsync(r => r.Name == name, cancellationToken)).FirstOrDefault();
-        if (existing is not null)
-            return existing;
-
-        return await roles.AddAsync(new Role(name, description), cancellationToken);
     }
 
     private static User CreateBootstrapAdmin(BootstrapAdminOptions bootstrap, IPasswordHasher passwordHasher)
@@ -112,5 +115,4 @@ internal sealed class LoginCommandHandler(
         admin.MarkEmailVerified();
         return admin;
     }
-
 }

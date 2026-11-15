@@ -17,7 +17,13 @@ internal sealed class JwtAccessTokenIssuer(
     IOptions<AuthOptions> authOptions
 ) : IAccessTokenIssuer
 {
-    public AccessTokenResult Create(Guid userId, string email, Guid tenantId, IReadOnlyCollection<string> roles)
+    public AccessTokenResult Create(
+        Guid userId,
+        string email,
+        Guid tenantId,
+        IReadOnlyCollection<string> roles,
+        IReadOnlyCollection<string> permissions
+    )
     {
         var jwt = jwtOptions.Value;
         var minutes = authOptions.Value.AccessTokenMinutes;
@@ -35,6 +41,9 @@ internal sealed class JwtAccessTokenIssuer(
 
         foreach (var role in roles)
             claims.Add(new Claim(JwtContract.Claims.Role, role));
+
+        foreach (var permission in permissions.Distinct(StringComparer.OrdinalIgnoreCase))
+            claims.Add(new Claim(JwtContract.Claims.Permission, permission));
 
         var credentials = JwtTokenSigning.CreateSigningCredentials(jwt);
         var token = new JwtSecurityToken(
