@@ -1,5 +1,4 @@
-using System.Security.Cryptography;
-using System.Text;
+using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -50,8 +49,9 @@ internal sealed class LoginCommandHandler(
             .ToArray();
 
         var access = accessTokenIssuer.Create(user.Id, user.Email, currentTenant.Id.Value, roleNames);
-        var (refreshPlaintext, refreshEntity) = CreateRefreshToken(
+        var (refreshPlaintext, refreshEntity) = RefreshTokenFactory.Create(
             user.Id,
+            Guid.NewGuid(),
             authOptions.Value.RefreshTokenDays,
             request.ClientIp
         );
@@ -110,21 +110,4 @@ internal sealed class LoginCommandHandler(
         return admin;
     }
 
-    private static (string Plaintext, RefreshToken Entity) CreateRefreshToken(
-        Guid userId,
-        int refreshTokenDays,
-        string? clientIp
-    )
-    {
-        var plaintext = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(plaintext)));
-        var entity = new RefreshToken(
-            userId,
-            hash,
-            Guid.NewGuid(),
-            DateTime.UtcNow.AddDays(refreshTokenDays),
-            clientIp
-        );
-        return (plaintext, entity);
-    }
 }
