@@ -1,13 +1,14 @@
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.Login;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.Logout;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.Refresh;
+using AtaGreenTech.UserService.Application.Features.Auth.Queries.GetMe;
 using MediatR;
 using OmniSync.Core.Infrastructure.Endpoints;
 
 namespace AtaGreenTech.UserService.Api.Endpoints;
 
 /// <summary>
-/// <c>/api/v1/auth</c>: login, refresh (rotation + reuse detection) ve logout. Tenant host'tan çözülür.
+/// <c>/api/v1/auth</c>: login, refresh, logout ve oturum profili (<c>/me</c>). Tenant host'tan çözülür.
 /// </summary>
 public sealed class AuthEndpoints : IEndpointModule
 {
@@ -18,6 +19,7 @@ public sealed class AuthEndpoints : IEndpointModule
         group.MapPost("/login", LoginAsync).AllowAnonymous();
         group.MapPost("/refresh", RefreshAsync).AllowAnonymous();
         group.MapPost("/logout", LogoutAsync).AllowAnonymous();
+        group.MapGet("/me", MeAsync).RequireAuthorization();
     }
 
     private static async Task<IResult> LoginAsync(
@@ -66,6 +68,14 @@ public sealed class AuthEndpoints : IEndpointModule
     {
         await sender.Send(new LogoutCommand(request.RefreshToken), cancellationToken);
         return TypedResults.Ok(new { message = "Başarıyla çıkış yapıldı." });
+    }
+
+    private static async Task<IResult> MeAsync(ISender sender, CancellationToken cancellationToken)
+    {
+        var me = await sender.Send(new GetMeQuery(), cancellationToken);
+        return me is null
+            ? Unauthorized("Geçerli bir oturum bulunamadı.")
+            : TypedResults.Ok(me);
     }
 
     private static IResult Unauthorized(string detail) =>
