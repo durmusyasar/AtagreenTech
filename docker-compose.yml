@@ -111,7 +111,7 @@ services:
       master-migrator:
         condition: service_completed_successfully
 
-  # UserService tenant migration'ları (Identity tabloları sonraki issue'larda); stock tenant-migrator'dan sonra.
+  # UserService tenant migration'ları (Users/Roles/RefreshTokens); stock tenant-migrator'dan sonra.
   user-tenant-migrator:
     <<: [*hardening, *user-service-image]
     command: ["migrate-tenants"]
