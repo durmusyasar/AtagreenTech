@@ -44,7 +44,12 @@ public sealed class AuthEndpoints : IEndpointModule
         try
         {
             var response = await sender.Send(
-                new LoginCommand(request.Email, request.Password, httpContext.Connection.RemoteIpAddress?.ToString()),
+                new LoginCommand(
+                    request.Email,
+                    request.Password,
+                    httpContext.Connection.RemoteIpAddress?.ToString(),
+                    httpContext.Request.Headers.UserAgent.ToString()
+                ),
                 cancellationToken
             );
             return TypedResults.Ok(response);
@@ -63,7 +68,11 @@ public sealed class AuthEndpoints : IEndpointModule
     )
     {
         var result = await sender.Send(
-            new RefreshTokenCommand(request.RefreshToken, httpContext.Connection.RemoteIpAddress?.ToString()),
+            new RefreshTokenCommand(
+                request.RefreshToken,
+                httpContext.Connection.RemoteIpAddress?.ToString(),
+                httpContext.Request.Headers.UserAgent.ToString()
+            ),
             cancellationToken
         );
 

@@ -67,7 +67,8 @@ internal sealed class LoginCommandHandler(
             user.Id,
             Guid.NewGuid(),
             authOptions.Value.RefreshTokenDays,
-            request.ClientIp
+            request.ClientIp,
+            request.DeviceInfo
         );
 
         await refreshTokens.AddAsync(refreshEntity, cancellationToken);

@@ -75,7 +75,8 @@ internal sealed class RefreshTokenCommandHandler(
             user.Id,
             existing.FamilyId,
             authOptions.Value.RefreshTokenDays,
-            request.ClientIp
+            request.ClientIp,
+            request.DeviceInfo
         );
 
         await refreshTokens.AddAsync(refreshEntity, cancellationToken);

@@ -13,6 +13,7 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
 
         builder.Property(x => x.TokenHash).IsRequired().HasMaxLength(RefreshToken.TokenHashMaxLength);
         builder.Property(x => x.CreatedByIp).HasMaxLength(RefreshToken.CreatedByIpMaxLength);
+        builder.Property(x => x.DeviceInfo).HasMaxLength(RefreshToken.DeviceInfoMaxLength);
 
         builder.HasIndex(x => x.TokenHash).IsUnique().HasFilter(ConfigurationConstants.NotDeletedFilter);
         builder.HasIndex(x => x.FamilyId);
