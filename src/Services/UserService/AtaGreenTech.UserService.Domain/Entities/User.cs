@@ -77,6 +77,12 @@ public class User : BaseEntity
 
     public DateTime? InvitationTokenExpiresAt { get; private set; }
 
+    /// <summary>Ardışık başarısız giriş denemesi sayısı; başarılı girişte sıfırlanır.</summary>
+    public int AccessFailedCount { get; private set; }
+
+    /// <summary>UTC kilit bitiş zamanı; dolana kadar giriş reddedilir.</summary>
+    public DateTime? LockoutEnd { get; private set; }
+
     /// <summary>
     /// Parola veya kritik kimlik değişiminde yenilenir; eski oturumların geçersiz kılınmasında kullanılır.
     /// </summary>
@@ -215,6 +221,33 @@ public class User : BaseEntity
     public void Deactivate() => IsActive = false;
 
     public void Activate() => IsActive = true;
+
+    public bool IsLockedOut(DateTime utcNow) =>
+        LockoutEnd is { } end && end > utcNow;
+
+    /// <summary>
+    /// Başarısız giriş kaydı. Eşik aşılırsa hesabı <paramref name="lockoutDuration"/> kadar kilitler ve sayacı sıfırlar.
+    /// </summary>
+    public void RegisterFailedAccess(int maxFailedAttempts, TimeSpan lockoutDuration, DateTime utcNow)
+    {
+        if (maxFailedAttempts <= 0)
+            throw new ArgumentOutOfRangeException(nameof(maxFailedAttempts));
+        if (lockoutDuration <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(lockoutDuration));
+
+        AccessFailedCount++;
+        if (AccessFailedCount < maxFailedAttempts)
+            return;
+
+        LockoutEnd = utcNow.Add(lockoutDuration);
+        AccessFailedCount = 0;
+    }
+
+    public void ResetAccessFailures()
+    {
+        AccessFailedCount = 0;
+        LockoutEnd = null;
+    }
 
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 

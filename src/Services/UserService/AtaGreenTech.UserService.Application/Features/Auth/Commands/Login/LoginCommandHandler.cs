@@ -23,9 +23,9 @@ internal sealed class LoginCommandHandler(
     IAccessTokenIssuer accessTokenIssuer,
     ICurrentTenant currentTenant,
     IOptions<AuthOptions> authOptions
-) : ICommandHandler<LoginCommand, AuthResponse>
+) : ICommandHandler<LoginCommand, AuthAttemptResult>
 {
-    public async Task<AuthResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<AuthAttemptResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         if (!currentTenant.IsAvailable || currentTenant.Id is null)
             throw new InvalidOperationException("Tenant could not be resolved from the host.");
@@ -34,21 +34,67 @@ internal sealed class LoginCommandHandler(
         await BootstrapAdminIfNeededAsync(cancellationToken);
 
         var email = User.NormalizeEmail(request.Email);
-        var user = await db.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+        // Tracked entity: lockout sayacı transaction commit ile kalıcı olmalı.
+        var user = await users.GetAsync(u => u.Email == email, cancellationToken);
 
-        if (user is null || !passwordHasher.Verify(request.Password, user.PasswordHash))
-            throw new UnauthorizedAccessException("Geçersiz e-posta veya şifre.");
+        if (user is null)
+            return AuthAttemptResult.Fail(
+                AuthErrorCodes.InvalidCredentials,
+                "Geçersiz e-posta veya şifre."
+            );
+
+        var utcNow = DateTime.UtcNow;
+        var options = authOptions.Value;
+
+        if (user.IsLockedOut(utcNow))
+        {
+            var minutesLeft = (int)Math.Ceiling((user.LockoutEnd!.Value - utcNow).TotalMinutes);
+            return AuthAttemptResult.Fail(
+                AuthErrorCodes.AccountLocked,
+                $"Çok fazla başarısız deneme. Lütfen {minutesLeft} dakika sonra tekrar deneyin.",
+                statusCode: 423
+            );
+        }
+
+        if (!passwordHasher.Verify(request.Password, user.PasswordHash))
+        {
+            user.RegisterFailedAccess(
+                options.MaxFailedAccessAttempts,
+                TimeSpan.FromMinutes(options.LockoutMinutes),
+                utcNow
+            );
+            return AuthAttemptResult.Fail(
+                AuthErrorCodes.InvalidCredentials,
+                "Geçersiz e-posta veya şifre."
+            );
+        }
 
         if (!user.IsActive)
-            throw new UnauthorizedAccessException("Hesabınız devre dışı bırakılmıştır.");
+        {
+            return AuthAttemptResult.Fail(
+                AuthErrorCodes.AccountInactive,
+                "Hesabınız devre dışı bırakılmıştır.",
+                statusCode: 403
+            );
+        }
 
         if (!user.IsEmailVerified)
-            throw new UnauthorizedAccessException("Lütfen önce e-posta adresinizi doğrulayın.");
+        {
+            return AuthAttemptResult.Fail(
+                AuthErrorCodes.EmailNotVerified,
+                "Lütfen önce e-posta adresinizi doğrulayın.",
+                statusCode: 403
+            );
+        }
 
-        var roleNames = user.UserRoles
+        user.ResetAccessFailures();
+
+        var userWithRoles = await db.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstAsync(u => u.Id == user.Id, cancellationToken);
+
+        var roleNames = userWithRoles.UserRoles
             .Where(ur => !ur.IsDeleted && ur.Role is { IsDeleted: false })
             .Select(ur => ur.Role.Name)
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -66,14 +112,14 @@ internal sealed class LoginCommandHandler(
         var (refreshPlaintext, refreshEntity) = RefreshTokenFactory.Create(
             user.Id,
             Guid.NewGuid(),
-            authOptions.Value.RefreshTokenDays,
+            options.RefreshTokenDays,
             request.ClientIp,
             request.DeviceInfo
         );
 
         await refreshTokens.AddAsync(refreshEntity, cancellationToken);
 
-        return new AuthResponse(access.AccessToken, refreshPlaintext, access.ExpiresAt);
+        return AuthAttemptResult.Ok(new AuthResponse(access.AccessToken, refreshPlaintext, access.ExpiresAt));
     }
 
     private async Task BootstrapAdminIfNeededAsync(CancellationToken cancellationToken)
@@ -89,7 +135,6 @@ internal sealed class LoginCommandHandler(
             );
         }
 
-        // Roller RbacCatalog ile oluşmuş olmalı; Admin rolünü bağla.
         var adminRole = (await roles.GetAllByFilterAsync(r => r.Name == Role.Names.Admin, cancellationToken))
             .FirstOrDefault()
             ?? throw new InvalidOperationException("Admin role was not seeded.");
@@ -100,7 +145,7 @@ internal sealed class LoginCommandHandler(
         );
         await userRoles.AddAsync(new UserRole(admin.Id, adminRole.Id), cancellationToken);
 
-        // Login sorgusu AsNoTracking olduğu için bootstrap kayıtlarının DB'de görünmesi gerekir.
+        // Login sorgusu AsNoTracking / ayrı GetAsync olduğu için bootstrap'ın DB'de görünmesi gerekir.
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 

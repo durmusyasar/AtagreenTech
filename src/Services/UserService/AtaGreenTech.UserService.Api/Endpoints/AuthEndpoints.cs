@@ -1,3 +1,5 @@
+using AtaGreenTech.UserService.Api.Contracts;
+using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.AcceptInvite;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.ChangePassword;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.ForgotPassword;
@@ -8,7 +10,9 @@ using AtaGreenTech.UserService.Application.Features.Auth.Commands.ResendVerifica
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.ResetPassword;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.VerifyEmail;
 using AtaGreenTech.UserService.Application.Features.Auth.Queries.GetMe;
+using AtaGreenTech.UserService.Api.Hosting;
 using MediatR;
+using Microsoft.AspNetCore.RateLimiting;
 using OmniSync.Core.Infrastructure.Endpoints;
 
 namespace AtaGreenTech.UserService.Api.Endpoints;
@@ -22,16 +26,26 @@ public sealed class AuthEndpoints : IEndpointModule
 
     public void MapEndpoints(RouteGroupBuilder group)
     {
-        group.MapPost("/login", LoginAsync).AllowAnonymous();
+        group.MapPost("/login", LoginAsync)
+            .AllowAnonymous()
+            .RequireRateLimiting(AuthRateLimiting.PolicyName);
         group.MapPost("/refresh", RefreshAsync).AllowAnonymous();
         group.MapPost("/logout", LogoutAsync).AllowAnonymous();
         group.MapGet("/me", MeAsync).RequireAuthorization();
         group.MapPost("/verify-email", VerifyEmailAsync).AllowAnonymous();
-        group.MapPost("/resend-verification", ResendVerificationAsync).AllowAnonymous();
-        group.MapPost("/forgot-password", ForgotPasswordAsync).AllowAnonymous();
-        group.MapPost("/reset-password", ResetPasswordAsync).AllowAnonymous();
+        group.MapPost("/resend-verification", ResendVerificationAsync)
+            .AllowAnonymous()
+            .RequireRateLimiting(AuthRateLimiting.PolicyName);
+        group.MapPost("/forgot-password", ForgotPasswordAsync)
+            .AllowAnonymous()
+            .RequireRateLimiting(AuthRateLimiting.PolicyName);
+        group.MapPost("/reset-password", ResetPasswordAsync)
+            .AllowAnonymous()
+            .RequireRateLimiting(AuthRateLimiting.PolicyName);
         group.MapPost("/change-password", ChangePasswordAsync).RequireAuthorization();
-        group.MapPost("/accept-invite", AcceptInviteAsync).AllowAnonymous();
+        group.MapPost("/accept-invite", AcceptInviteAsync)
+            .AllowAnonymous()
+            .RequireRateLimiting(AuthRateLimiting.PolicyName);
     }
 
     private static async Task<IResult> LoginAsync(
@@ -41,23 +55,19 @@ public sealed class AuthEndpoints : IEndpointModule
         CancellationToken cancellationToken
     )
     {
-        try
-        {
-            var response = await sender.Send(
-                new LoginCommand(
-                    request.Email,
-                    request.Password,
-                    httpContext.Connection.RemoteIpAddress?.ToString(),
-                    httpContext.Request.Headers.UserAgent.ToString()
-                ),
-                cancellationToken
-            );
-            return TypedResults.Ok(response);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(ex.Message);
-        }
+        var result = await sender.Send(
+            new LoginCommand(
+                request.Email,
+                request.Password,
+                httpContext.Connection.RemoteIpAddress?.ToString(),
+                httpContext.Request.Headers.UserAgent.ToString()
+            ),
+            cancellationToken
+        );
+
+        return result.IsSuccess
+            ? TypedResults.Ok(result.Response)
+            : AuthError(result);
     }
 
     private static async Task<IResult> RefreshAsync(
@@ -78,7 +88,7 @@ public sealed class AuthEndpoints : IEndpointModule
 
         return result.IsSuccess
             ? TypedResults.Ok(result.Response)
-            : Unauthorized(result.ErrorMessage!);
+            : AuthError(result);
     }
 
     private static async Task<IResult> LogoutAsync(
@@ -95,7 +105,10 @@ public sealed class AuthEndpoints : IEndpointModule
     {
         var me = await sender.Send(new GetMeQuery(), cancellationToken);
         return me is null
-            ? Unauthorized("Geçerli bir oturum bulunamadı.")
+            ? AuthError(
+                AuthErrorCodes.InvalidCredentials,
+                "Geçerli bir oturum bulunamadı."
+            )
             : TypedResults.Ok(me);
     }
 
@@ -158,7 +171,7 @@ public sealed class AuthEndpoints : IEndpointModule
         }
         catch (UnauthorizedAccessException ex)
         {
-            return Unauthorized(ex.Message);
+            return AuthError(AuthErrorCodes.InvalidCredentials, ex.Message);
         }
     }
 
@@ -178,18 +191,20 @@ public sealed class AuthEndpoints : IEndpointModule
     private static IResult ToMessageResult(Application.Features.Auth.MessageResult result) =>
         result.Succeeded
             ? TypedResults.Ok(new { message = result.Message })
-            : Results.Problem(
-                title: "Bad Request",
-                detail: result.Message,
+            : Results.Json(
+                new ErrorResponse("AUTH_BAD_REQUEST", result.Message),
                 statusCode: StatusCodes.Status400BadRequest
             );
 
-    private static IResult Unauthorized(string detail) =>
-        Results.Problem(
-            title: "Unauthorized",
-            detail: detail,
-            statusCode: StatusCodes.Status401Unauthorized
+    private static IResult AuthError(AuthAttemptResult result) =>
+        AuthError(
+            result.ErrorCode ?? AuthErrorCodes.InvalidCredentials,
+            result.ErrorMessage ?? "Kimlik doğrulama başarısız.",
+            result.StatusCode
         );
+
+    private static IResult AuthError(string code, string message, int statusCode = StatusCodes.Status401Unauthorized) =>
+        Results.Json(new ErrorResponse(code, message), statusCode: statusCode);
 }
 
 /// <summary>Login istek gövdesi.</summary>

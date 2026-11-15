@@ -23,6 +23,8 @@ builder.AddOmniSyncCore(options =>
         .AddOmniSyncCors();
 });
 
+builder.Services.AddAuthRateLimiting(builder.Configuration);
+
 var app = builder.Build();
 
 // `migrate-master` ve `migrate-tenants` komutları migration'ları uygulayıp çıkar; web sunucusu başlamaz ve JWT
@@ -43,6 +45,7 @@ if (args is ["migrate-tenants"])
 // Routing, tenant çözümlemesi, CORS, authentication ve authorization burada sırasıyla eklenir;
 // UseCors/UseAuthentication/UseAuthorization ayrıca çağrılmamalıdır.
 app.UseOmniSyncCore();
+app.UseRateLimiter();
 app.MapOmniSyncEndpoints();
 
 await app.RunAsync();
