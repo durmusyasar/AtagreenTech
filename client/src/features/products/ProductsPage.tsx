@@ -1,7 +1,8 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { keepPreviousData, useQueryClient } from '@tanstack/react-query'
 import { App, Button, Flex, Input, Popconfirm, Segmented, Space, Table, Tag, Typography } from 'antd'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { StatusTag } from '../../components/StatusTag'
 import { TranslationTags } from '../../components/TranslationTags'
 import { invalidate } from '../../core/api/queryClient'
@@ -27,12 +28,30 @@ type StatusFilter = 'all' | 'active' | 'inactive'
 export function ProductsPage() {
   const { language, t } = useLanguage()
   const { message } = App.useApp()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [pageNumber, setPageNumber] = useState(1)
   const [searchTerm, setSearchTerm] = useState<string>()
   const [status, setStatus] = useState<StatusFilter>('all')
   const [categoryId, setCategoryId] = useState<string>()
   // Kapanış animasyonu bitene kadar başlık ve form değişmesin diye düzenlenen ürün modal kapanınca da tutulur.
   const [editor, setEditor] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null })
+  const [handledCreateAction, setHandledCreateAction] = useState(false)
+  const createRequested = searchParams.get('action') === 'new'
+
+  // Komut paleti `?action=new` ile gelir; state render sırasında açılır, URL ayrı temizlenir.
+  if (createRequested && !handledCreateAction) {
+    setHandledCreateAction(true)
+    setEditor({ open: true, product: null })
+  } else if (!createRequested && handledCreateAction) {
+    setHandledCreateAction(false)
+  }
+
+  useEffect(() => {
+    if (!createRequested) return
+    const next = new URLSearchParams(searchParams)
+    next.delete('action')
+    setSearchParams(next, { replace: true })
+  }, [createRequested, searchParams, setSearchParams])
 
   const queryClient = useQueryClient()
   const page = useAppQuery({
