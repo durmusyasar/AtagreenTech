@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Services\UserService\AtaGreenTech.UserService.Application\AtaGreenTech.UserService.Application.csproj" />
+    <ProjectReference Include="..\..\..\src\Services\UserService\AtaGreenTech.UserService.Infrastructure\AtaGreenTech.UserService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
