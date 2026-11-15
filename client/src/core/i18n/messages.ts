@@ -211,6 +211,8 @@ const tr = {
   'error.businessRule': 'İş kuralı doğrulama hatası oluştu.',
   'error.rateLimited': 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar deneyin.',
   'error.network': 'Sunucuya ulaşılamadı. Bağlantınızı kontrol edin.',
+  'network.offlineBanner': 'İnternet bağlantısı yok. Çevrimiçi olduğunuzda işlemlerinizi sürdürebilirsiniz.',
+
   'error.server': 'Beklenmeyen bir sunucu hatası oluştu.',
   'error.traceId': 'İz kimliği: {0}',
   'error.Localization.TranslationsBelowMinimum': 'En az {0} farklı dilde çeviri girilmelidir.',
@@ -450,6 +452,8 @@ const en: Record<MessageKey, string> = {
   'error.businessRule': 'A business rule was violated.',
   'error.rateLimited': 'Too many requests, please try again shortly.',
   'error.network': 'The server could not be reached. Check your connection.',
+  'network.offlineBanner': 'You are offline. You can continue when your connection returns.',
+
   'error.server': 'An unexpected server error occurred.',
   'error.traceId': 'Trace id: {0}',
   'error.Localization.TranslationsBelowMinimum': 'Translations in at least {0} different languages are required.',

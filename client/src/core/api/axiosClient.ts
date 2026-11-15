@@ -2,6 +2,7 @@ import axios, { isAxiosError, isCancel } from 'axios'
 import { translate } from '../i18n/messages'
 import { sessionStore } from '../session'
 import { toApiError } from './apiError'
+import { delay, NETWORK_RETRY_DELAY_MS, nextRetryConfig, shouldRetryNetworkError } from './networkRetry'
 import { notify } from './notifier'
 
 declare module 'axios' {
@@ -14,6 +15,9 @@ declare module 'axios' {
 /**
  * Stok servisi istemcisi. API aynı origin'den (`/api/v1`) çağrılır: geliştirmede Vite, Docker'da nginx istekleri
  * servise aktarır.
+ *
+ * Yanıtsız ağ hatalarında güvenli (GET/HEAD/OPTIONS) istekler sınırlı kez yeniden denenir; bildirim yalnızca
+ * son başarısızlıkta gösterilir. Çevrimdışıyken yeniden deneme yapılmaz (`OfflineBanner` yeterlidir).
  */
 export const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
@@ -36,8 +40,16 @@ axiosClient.interceptors.request.use((config) => {
 
 axiosClient.interceptors.response.use(
   (response) => response,
-  (error: unknown) => {
+  async (error: unknown) => {
     if (isCancel(error)) return Promise.reject(error)
+
+    const isOnline = typeof navigator === 'undefined' ? true : navigator.onLine
+
+    if (isAxiosError(error) && error.config && shouldRetryNetworkError(error, isOnline)) {
+      const retryConfig = nextRetryConfig(error.config)
+      await delay(NETWORK_RETRY_DELAY_MS)
+      return axiosClient.request(retryConfig)
+    }
 
     const { language, token } = sessionStore.getSnapshot()
     const apiError = toApiError(error, language)
@@ -48,7 +60,10 @@ axiosClient.interceptors.response.use(
         notify('warning', translate(language, 'error.unauthorized'), 'unauthorized')
       }
     } else if (!(isAxiosError(error) && error.config?.skipErrorNotification)) {
-      notify('error', apiError.message, apiError.resourceKey ?? apiError.code)
+      // Çevrimdışıyken sticky banner varken aynı metni toast ile tekrarlama.
+      if (!(apiError.code === 'network_error' && !isOnline)) {
+        notify('error', apiError.message, apiError.resourceKey ?? apiError.code)
+      }
     }
 
     return Promise.reject(apiError)
