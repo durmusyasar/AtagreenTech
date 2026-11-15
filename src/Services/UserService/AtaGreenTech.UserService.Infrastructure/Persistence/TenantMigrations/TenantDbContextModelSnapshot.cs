@@ -158,6 +158,13 @@ namespace AtaGreenTech.UserService.Infrastructure.Persistence.TenantMigrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<DateTime?>("InvitationTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InvitationTokenHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -209,6 +216,10 @@ namespace AtaGreenTech.UserService.Infrastructure.Persistence.TenantMigrations
                     b.HasIndex("EmailVerificationTokenHash")
                         .IsUnique()
                         .HasFilter("\"EmailVerificationTokenHash\" IS NOT NULL");
+
+                    b.HasIndex("InvitationTokenHash")
+                        .IsUnique()
+                        .HasFilter("\"InvitationTokenHash\" IS NOT NULL");
 
                     b.HasIndex("PasswordResetTokenHash")
                         .IsUnique()

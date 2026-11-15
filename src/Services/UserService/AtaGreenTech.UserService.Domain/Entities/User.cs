@@ -15,6 +15,7 @@ public class User : BaseEntity
     public const int SecurityStampMaxLength = 64;
     public const int EmailVerificationTokenHashMaxLength = 128;
     public const int PasswordResetTokenHashMaxLength = 128;
+    public const int InvitationTokenHashMaxLength = 128;
 
     private readonly List<UserRole> _userRoles = [];
     private readonly List<RefreshToken> _refreshTokens = [];
@@ -71,6 +72,11 @@ public class User : BaseEntity
 
     public DateTime? PasswordResetTokenExpiresAt { get; private set; }
 
+    /// <summary>Davet token'ının SHA-256 özeti; düz metin saklanmaz.</summary>
+    public string? InvitationTokenHash { get; private set; }
+
+    public DateTime? InvitationTokenExpiresAt { get; private set; }
+
     /// <summary>
     /// Parola veya kritik kimlik değişiminde yenilenir; eski oturumların geçersiz kılınmasında kullanılır.
     /// </summary>
@@ -114,6 +120,64 @@ public class User : BaseEntity
     {
         PasswordResetTokenHash = null;
         PasswordResetTokenExpiresAt = null;
+    }
+
+    /// <summary>
+    /// Admin daveti ile pasif kullanıcı oluşturur. <paramref name="pendingPasswordHash"/> login'i engelleyen
+    /// rastgele bir özet olmalıdır; gerçek şifre <see cref="AcceptInvitation"/> ile set edilir.
+    /// </summary>
+    public static User CreateInvited(
+        string email,
+        string username,
+        string pendingPasswordHash,
+        string firstName,
+        string lastName,
+        string invitationTokenHash,
+        DateTime invitationExpiresAtUtc
+    )
+    {
+        var user = new User(email, username, pendingPasswordHash, firstName, lastName);
+        user.Deactivate();
+        user.SetInvitationChallenge(invitationTokenHash, invitationExpiresAtUtc);
+        return user;
+    }
+
+    public void SetInvitationChallenge(string tokenHash, DateTime expiresAtUtc)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+        if (expiresAtUtc <= DateTime.UtcNow)
+            throw new ArgumentException("Expiry must be in the future.", nameof(expiresAtUtc));
+
+        InvitationTokenHash = tokenHash;
+        InvitationTokenExpiresAt = expiresAtUtc;
+    }
+
+    public bool IsInvitationChallengeValid(string tokenHash, DateTime utcNow) =>
+        !IsActive
+        && InvitationTokenHash is not null
+        && InvitationTokenExpiresAt is not null
+        && InvitationTokenExpiresAt > utcNow
+        && string.Equals(InvitationTokenHash, tokenHash, StringComparison.Ordinal);
+
+    public void ClearInvitationChallenge()
+    {
+        InvitationTokenHash = null;
+        InvitationTokenExpiresAt = null;
+    }
+
+    /// <summary>Daveti kabul eder: şifre + profil, aktifleştirme, e-posta doğrulanmış sayılır.</summary>
+    public void AcceptInvitation(string passwordHash, string firstName, string lastName)
+    {
+        if (InvitationTokenHash is null)
+            throw new InvalidOperationException("User has no pending invitation.");
+
+        SetProfile(firstName, lastName);
+        SetPasswordHash(passwordHash);
+        RotateSecurityStamp();
+        ClearPasswordResetChallenge();
+        ClearInvitationChallenge();
+        MarkEmailVerified();
+        Activate();
     }
 
     /// <summary>Yeni e-posta doğrulama challenge'ı atar (önceki token geçersizleşir).</summary>
