@@ -7,6 +7,12 @@
     <Project Path="src/Services/StockService/AtaGreenTech.StockService.Domain/AtaGreenTech.StockService.Domain.csproj" />
     <Project Path="src/Services/StockService/AtaGreenTech.StockService.Infrastructure/AtaGreenTech.StockService.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Services/UserService/">
+    <Project Path="src/Services/UserService/AtaGreenTech.UserService.Api/AtaGreenTech.UserService.Api.csproj" />
+    <Project Path="src/Services/UserService/AtaGreenTech.UserService.Application/AtaGreenTech.UserService.Application.csproj" />
+    <Project Path="src/Services/UserService/AtaGreenTech.UserService.Domain/AtaGreenTech.UserService.Domain.csproj" />
+    <Project Path="src/Services/UserService/AtaGreenTech.UserService.Infrastructure/AtaGreenTech.UserService.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/Shared/" />
   <Folder Name="/src/Shared/SharedKernel/">
     <Project Path="src/Shared/SharedKernel/AtaGreenTech.SharedKernel.csproj" />
@@ -15,5 +21,8 @@
   <Folder Name="/tests/Services/" />
   <Folder Name="/tests/Services/StockService.Tests/">
     <Project Path="tests/Services/StockService.Tests/AtaGreenTech.StockService.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Services/UserService.Tests/">
+    <Project Path="tests/Services/UserService.Tests/AtaGreenTech.UserService.Tests.csproj" />
   </Folder>
 </Solution>
