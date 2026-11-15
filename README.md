@@ -37,7 +37,7 @@ deploy/generate-secrets.sh   # creates secrets/ (database password, connection s
 GITHUB_USERNAME=<user> GITHUB_PACKAGES_TOKEN=$(gh auth token) docker compose up -d --build
 docker compose ps            # postgres, stock-service and web: healthy; migrators: Exited (0)
 curl -s http://127.0.0.1:5001/health/ready
-open http://acme.omnisync.localhost:3000   # web client for the "acme" tenant
+open http://atagreen.omnisync.localhost:3000   # web client for the "atagreen" tenant
 ```
 
 - The image is a multi-stage build on the chiseled .NET 10 runtime: no shell or package manager, runs as the non-root
