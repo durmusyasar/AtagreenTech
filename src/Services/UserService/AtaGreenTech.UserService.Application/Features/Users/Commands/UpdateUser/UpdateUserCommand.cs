@@ -7,5 +7,6 @@ public sealed record UpdateUserCommand(
     Guid Id,
     string FirstName,
     string LastName,
-    IReadOnlyList<string>? Roles
+    IReadOnlyList<string>? Roles,
+    string? ClientIp = null
 ) : ICommand<UserWriteResult>;

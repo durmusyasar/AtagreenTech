@@ -145,11 +145,16 @@ public sealed class AuthEndpoints : IEndpointModule
     private static async Task<IResult> ResetPasswordAsync(
         ResetPasswordRequest request,
         ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken
     )
     {
         var result = await sender.Send(
-            new ResetPasswordCommand(request.Token, request.NewPassword),
+            new ResetPasswordCommand(
+                request.Token,
+                request.NewPassword,
+                httpContext.Connection.RemoteIpAddress?.ToString()
+            ),
             cancellationToken
         );
         return ToMessageResult(result);

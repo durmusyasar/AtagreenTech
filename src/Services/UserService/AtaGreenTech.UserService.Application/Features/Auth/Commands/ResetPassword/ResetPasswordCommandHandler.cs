@@ -9,7 +9,8 @@ namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.ResetPassw
 internal sealed class ResetPasswordCommandHandler(
     IRepository<User> users,
     IRepository<RefreshToken> refreshTokens,
-    IPasswordHasher passwordHasher
+    IPasswordHasher passwordHasher,
+    IIdentityAuditLogger auditLogger
 ) : ICommandHandler<ResetPasswordCommand, MessageResult>
 {
     public async Task<MessageResult> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
@@ -22,6 +23,15 @@ internal sealed class ResetPasswordCommandHandler(
 
         user.ChangePassword(passwordHasher.Hash(request.NewPassword));
         await SessionRevocation.RevokeAllRefreshTokensAsync(refreshTokens, user.Id, cancellationToken);
+
+        await auditLogger.LogAsync(
+            AuditLog.Actions.PasswordReset,
+            user.Email,
+            user.Id,
+            request.ClientIp,
+            "Şifre sıfırlama işlemi gerçekleştirildi.",
+            cancellationToken
+        );
 
         return MessageResult.Ok("Şifreniz başarıyla sıfırlandı. Tüm aktif oturumlarınız sonlandırıldı.");
     }

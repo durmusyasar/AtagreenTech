@@ -6,13 +6,16 @@ using Microsoft.EntityFrameworkCore;
 using OmniSync.Core.Application.Messaging;
 using OmniSync.Core.Domain.Exceptions;
 using OmniSync.Core.Domain.Repositories;
+using OmniSync.Core.Domain.Users;
 
 namespace AtaGreenTech.UserService.Application.Features.Users.Commands.UpdateUser;
 
 internal sealed class UpdateUserCommandHandler(
     IRepository<User> users,
     IRepository<UserRole> userRoles,
-    IUserDbContext db
+    IUserDbContext db,
+    IIdentityAuditLogger auditLogger,
+    ICurrentUser currentUser
 ) : ICommandHandler<UpdateUserCommand, UserWriteResult>
 {
     public async Task<UserWriteResult> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -23,6 +26,7 @@ internal sealed class UpdateUserCommandHandler(
         user.UpdateProfile(request.FirstName, request.LastName, user.IsActive);
 
         IReadOnlyList<string> roleNames;
+        var rolesChanged = false;
         if (request.Roles is not null)
         {
             var desired = await UserManagementHelpers.ResolveRolesAsync(db.Roles, request.Roles, cancellationToken);
@@ -31,11 +35,13 @@ internal sealed class UpdateUserCommandHandler(
 
             var existing = await userRoles.GetAllByFilterAsync(ur => ur.UserId == user.Id, cancellationToken);
             var desiredIds = desired.Select(r => r.Id).ToHashSet();
+            var existingIds = existing.Select(ur => ur.RoleId).ToHashSet();
+
+            rolesChanged = !desiredIds.SetEquals(existingIds);
 
             foreach (var assignment in existing.Where(ur => !desiredIds.Contains(ur.RoleId)))
                 userRoles.Delete(assignment);
 
-            var existingIds = existing.Select(ur => ur.RoleId).ToHashSet();
             foreach (var role in desired.Where(r => !existingIds.Contains(r.Id)))
                 await userRoles.AddAsync(new UserRole(user.Id, role.Id), cancellationToken);
 
@@ -52,6 +58,22 @@ internal sealed class UpdateUserCommandHandler(
                 .Distinct()
                 .OrderBy(n => n)
                 .ToListAsync(cancellationToken);
+        }
+
+        if (rolesChanged)
+        {
+            Guid? actorId = Guid.TryParse(currentUser.UserId, out var id) ? id : null;
+            var actorEmail = string.IsNullOrWhiteSpace(currentUser.Email)
+                ? "unknown"
+                : currentUser.Email;
+            await auditLogger.LogAsync(
+                AuditLog.Actions.RoleChanged,
+                actorEmail,
+                actorId,
+                request.ClientIp,
+                $"{user.Email} kullanıcısının rolleri güncellendi: {string.Join(", ", roleNames)}.",
+                cancellationToken
+            );
         }
 
         return UserWriteResult.Ok(

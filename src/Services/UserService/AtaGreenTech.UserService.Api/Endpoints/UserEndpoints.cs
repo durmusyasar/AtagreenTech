@@ -73,11 +73,18 @@ public sealed class UserEndpoints : IEndpointModule
     private static async Task<IResult> InviteAsync(
         InviteUserRequest request,
         ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken
     )
     {
         var result = await sender.Send(
-            new InviteUserCommand(request.Email, request.FirstName, request.LastName, request.Role),
+            new InviteUserCommand(
+                request.Email,
+                request.FirstName,
+                request.LastName,
+                request.Role,
+                httpContext.Connection.RemoteIpAddress?.ToString()
+            ),
             cancellationToken
         );
 
@@ -90,11 +97,18 @@ public sealed class UserEndpoints : IEndpointModule
         Guid id,
         UpdateUserRequest request,
         ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken
     )
     {
         var result = await sender.Send(
-            new UpdateUserCommand(id, request.FirstName, request.LastName, request.Roles?.ToArray()),
+            new UpdateUserCommand(
+                id,
+                request.FirstName,
+                request.LastName,
+                request.Roles?.ToArray(),
+                httpContext.Connection.RemoteIpAddress?.ToString()
+            ),
             cancellationToken
         );
 

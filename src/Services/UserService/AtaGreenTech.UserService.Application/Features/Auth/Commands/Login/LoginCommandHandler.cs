@@ -21,6 +21,7 @@ internal sealed class LoginCommandHandler(
     IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
     IAccessTokenIssuer accessTokenIssuer,
+    IIdentityAuditLogger auditLogger,
     ICurrentTenant currentTenant,
     IOptions<AuthOptions> authOptions
 ) : ICommandHandler<LoginCommand, AuthAttemptResult>
@@ -38,10 +39,19 @@ internal sealed class LoginCommandHandler(
         var user = await users.GetAsync(u => u.Email == email, cancellationToken);
 
         if (user is null)
+        {
+            await auditLogger.LogAsync(
+                AuditLog.Actions.LoginFailure,
+                email,
+                ipAddress: request.ClientIp,
+                details: "Geçersiz e-posta veya şifre.",
+                cancellationToken: cancellationToken
+            );
             return AuthAttemptResult.Fail(
                 AuthErrorCodes.InvalidCredentials,
                 "Geçersiz e-posta veya şifre."
             );
+        }
 
         var utcNow = DateTime.UtcNow;
         var options = authOptions.Value;
@@ -49,6 +59,14 @@ internal sealed class LoginCommandHandler(
         if (user.IsLockedOut(utcNow))
         {
             var minutesLeft = (int)Math.Ceiling((user.LockoutEnd!.Value - utcNow).TotalMinutes);
+            await auditLogger.LogAsync(
+                AuditLog.Actions.LoginFailure,
+                user.Email,
+                user.Id,
+                request.ClientIp,
+                "Hesap kilitli.",
+                cancellationToken
+            );
             return AuthAttemptResult.Fail(
                 AuthErrorCodes.AccountLocked,
                 $"Çok fazla başarısız deneme. Lütfen {minutesLeft} dakika sonra tekrar deneyin.",
@@ -63,6 +81,14 @@ internal sealed class LoginCommandHandler(
                 TimeSpan.FromMinutes(options.LockoutMinutes),
                 utcNow
             );
+            await auditLogger.LogAsync(
+                AuditLog.Actions.LoginFailure,
+                user.Email,
+                user.Id,
+                request.ClientIp,
+                "Hatalı şifre.",
+                cancellationToken
+            );
             return AuthAttemptResult.Fail(
                 AuthErrorCodes.InvalidCredentials,
                 "Geçersiz e-posta veya şifre."
@@ -71,6 +97,14 @@ internal sealed class LoginCommandHandler(
 
         if (!user.IsActive)
         {
+            await auditLogger.LogAsync(
+                AuditLog.Actions.LoginFailure,
+                user.Email,
+                user.Id,
+                request.ClientIp,
+                "Hesap pasif.",
+                cancellationToken
+            );
             return AuthAttemptResult.Fail(
                 AuthErrorCodes.AccountInactive,
                 "Hesabınız devre dışı bırakılmıştır.",
@@ -80,6 +114,14 @@ internal sealed class LoginCommandHandler(
 
         if (!user.IsEmailVerified)
         {
+            await auditLogger.LogAsync(
+                AuditLog.Actions.LoginFailure,
+                user.Email,
+                user.Id,
+                request.ClientIp,
+                "E-posta doğrulanmamış.",
+                cancellationToken
+            );
             return AuthAttemptResult.Fail(
                 AuthErrorCodes.EmailNotVerified,
                 "Lütfen önce e-posta adresinizi doğrulayın.",
@@ -118,6 +160,14 @@ internal sealed class LoginCommandHandler(
         );
 
         await refreshTokens.AddAsync(refreshEntity, cancellationToken);
+        await auditLogger.LogAsync(
+            AuditLog.Actions.LoginSuccess,
+            user.Email,
+            user.Id,
+            request.ClientIp,
+            "Kullanıcı sisteme başarıyla giriş yaptı.",
+            cancellationToken
+        );
 
         return AuthAttemptResult.Ok(new AuthResponse(access.AccessToken, refreshPlaintext, access.ExpiresAt));
     }
