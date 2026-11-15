@@ -52,11 +52,11 @@ open http://atagreen.omnisync.localhost:3000   # web client for the "atagreen" t
   (master and tenant database connectivity). `/health/live` only reports that the process responds.
 - PostgreSQL is reachable only on the internal `backend` network; the stock service is published on
   `127.0.0.1:5001` for a reverse proxy that terminates TLS. In Production, tenants are resolved from the subdomain
-  (e.g. `acme.omnisync.com`) and plain HTTP requests are redirected to HTTPS.
+  (e.g. `atagreen.omnisync.com`) and plain HTTP requests are redirected to HTTPS.
 - Tenants are the single label directly below a root domain listed in `TenantResolution:RootDomains`:
   `omnisync.com` and `omnisync.com.tr` (`appsettings.json`), plus `omnisync.localhost` locally (Development settings
   and `ATAGREEN_LOCAL_ROOT_DOMAIN` in Compose). Root domains themselves, `www`, deeper subdomains
-  (`api.acme.omnisync.com`) and other hosts carry no tenant. The client applies the same rule in
+  (`api.atagreen.omnisync.com`) and other hosts carry no tenant. The client applies the same rule in
   `client/src/core/tenant.ts`, so a new root domain must be added in both places.
 - Add a tenant with `deploy/add-tenant.sh <subdomain> "<Name>"` (e.g. `deploy/add-tenant.sh atagreen "Atagreen"`, then
   open `http://atagreen.omnisync.localhost:3000`). It registers the tenant in the master database with its own
@@ -89,7 +89,7 @@ npm run lint && npm test && npm run build
   and UI translations (`core/i18n`). `src/services` wraps API endpoints, `src/features` contains pages and
   `src/components` shared UI.
 - Every request carries `Authorization: Bearer <token>` and `Accept-Language`. The tenant comes from the address
-  (`window.location.hostname`, e.g. `acme.omnisync.com` → `acme`) and reaches the API through the `Host` header, so
+  (`window.location.hostname`, e.g. `atagreen.omnisync.com` → `atagreen`) and reaches the API through the `Host` header, so
   no tenant header is sent. Only the development server (`npm run dev`) lets you pick a tenant on an address without
   one (`localhost:5173`, defaulting to `VITE_DEV_TENANT`) and sends it as `X-Tenant`, which the stock service honours
   only in Development. A built client never does: on an address without a tenant the sign-in page asks you to open

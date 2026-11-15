@@ -3,11 +3,11 @@ import { resolveTenantFromHost, tenantAddressPattern } from './tenant'
 
 describe('resolveTenantFromHost', () => {
   it.each([
-    ['acme.omnisync.com', 'acme'],
-    ['acme.omnisync.com.tr', 'acme'],
-    ['acme.omnisync.localhost', 'acme'],
-    ['ACME.OmniSync.com', 'acme'],
-    ['acme.omnisync.com.', 'acme'],
+    ['atagreen.omnisync.com', 'atagreen'],
+    ['atagreen.omnisync.com.tr', 'atagreen'],
+    ['atagreen.omnisync.localhost', 'atagreen'],
+    ['ATAGREEN.OmniSync.com', 'atagreen'],
+    ['atagreen.omnisync.com.', 'atagreen'],
   ])('reads the subdomain of %s', (host, tenant) => {
     expect(resolveTenantFromHost(host)).toBe(tenant)
   })
@@ -19,10 +19,10 @@ describe('resolveTenantFromHost', () => {
     'omnisync.com',
     'omnisync.com.tr',
     'www.omnisync.com',
-    'api.acme.omnisync.com',
-    'acme.other.com',
-    'acme.atagreen.tech',
-    'acme.localhost',
+    'api.atagreen.omnisync.com',
+    'atagreen.other.com',
+    'shop.atagreen.tech',
+    'atagreen.localhost',
     'evilomnisync.com',
   ])('has no tenant for %s', (host) => {
     expect(resolveTenantFromHost(host)).toBeNull()
@@ -36,7 +36,7 @@ describe('tenantAddressPattern', () => {
     ['omnisync.localhost', '3000', '<tenant>.omnisync.localhost:3000'],
     ['localhost', '3000', '<tenant>.omnisync.localhost:3000'],
     ['127.0.0.1', '8080', '<tenant>.omnisync.localhost:8080'],
-    ['acme.atagreen.localhost', '3000', '<tenant>.omnisync.localhost:3000'],
+    ['shop.atagreen.localhost', '3000', '<tenant>.omnisync.localhost:3000'],
     ['10.0.0.5', '', '<tenant>.omnisync.com'],
   ])('suggests the tenant address for %s:%s', (host, port, pattern) => {
     expect(tenantAddressPattern(host, port)).toBe(pattern)

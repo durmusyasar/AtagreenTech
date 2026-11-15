@@ -10,7 +10,7 @@ vi.mock('../core/session', () => ({
   sessionStore: {
     signIn: vi.fn(),
     signOut: vi.fn(),
-    getSnapshot: () => ({ token: null, tenant: 'acme', isTenantFromHost: true, language: 'tr' }),
+    getSnapshot: () => ({ token: null, tenant: 'atagreen', isTenantFromHost: true, language: 'tr' }),
   },
 }))
 
@@ -48,26 +48,26 @@ describe('authService.login', () => {
   it('validates with the protected endpoint then stores the session', async () => {
     const accessToken = token({
       sub: 'test-user',
-      email: 'test@acme.local',
+      email: 'test@atagreen.local',
       role: ['Admin'],
-      tenant_id: '11111111-1111-1111-1111-111111111111',
+      tenant_id: '5803ca09-ca89-4f92-81ce-66a0477cb081',
       exp: Math.floor(Date.now() / 1000) + 3600,
     })
     mockedGet.mockResolvedValue({
       data: {
         message: 'ok',
         userId: 'test-user',
-        email: 'test@acme.local',
+        email: 'test@atagreen.local',
         roles: ['Admin'],
-        tenant: 'acme',
+        tenant: 'atagreen',
         timestamp: new Date().toISOString(),
       },
     })
 
     await expect(authService.login({ accessToken })).resolves.toEqual({
       token: accessToken,
-      userName: 'test@acme.local',
-      tenant: 'acme',
+      userName: 'test@atagreen.local',
+      tenant: 'atagreen',
       roles: ['Admin'],
     })
 
@@ -82,7 +82,7 @@ describe('authService.login', () => {
   })
 
   it('does not store the session when the API rejects the token', async () => {
-    const accessToken = token({ email: 'test@acme.local', exp: Math.floor(Date.now() / 1000) + 3600 })
+    const accessToken = token({ email: 'test@atagreen.local', exp: Math.floor(Date.now() / 1000) + 3600 })
     mockedGet.mockRejectedValue(new ApiError({ message: 'unauthorized', status: 401, code: 'http_401' }))
 
     await expect(authService.login({ accessToken })).rejects.toMatchObject({ status: 401 })
