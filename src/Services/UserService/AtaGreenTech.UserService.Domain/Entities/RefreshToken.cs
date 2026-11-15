@@ -10,6 +10,7 @@ public class RefreshToken : BaseEntity
 {
     public const int TokenHashMaxLength = 128;
     public const int CreatedByIpMaxLength = 64;
+    public const int DeviceInfoMaxLength = 512;
 
     protected RefreshToken()
     {
@@ -17,7 +18,14 @@ public class RefreshToken : BaseEntity
         User = null!;
     }
 
-    public RefreshToken(Guid userId, string tokenHash, Guid familyId, DateTime expiresAt, string? createdByIp = null)
+    public RefreshToken(
+        Guid userId,
+        string tokenHash,
+        Guid familyId,
+        DateTime expiresAt,
+        string? createdByIp = null,
+        string? deviceInfo = null
+    )
         : this()
     {
         if (userId == Guid.Empty)
@@ -33,6 +41,7 @@ public class RefreshToken : BaseEntity
         FamilyId = familyId;
         ExpiresAt = expiresAt;
         CreatedByIp = string.IsNullOrWhiteSpace(createdByIp) ? null : createdByIp.Trim();
+        DeviceInfo = NormalizeDeviceInfo(deviceInfo);
     }
 
     public Guid UserId { get; private set; }
@@ -51,7 +60,11 @@ public class RefreshToken : BaseEntity
 
     public DateTime? RevokedAt { get; private set; }
 
+    /// <summary>Oturumu oluşturan istemci IP'si (taslaktaki IpAddress karşılığı).</summary>
     public string? CreatedByIp { get; private set; }
+
+    /// <summary>User-Agent veya cihaz özeti; oturum listesinde gösterilir.</summary>
+    public string? DeviceInfo { get; private set; }
 
     public bool IsExpired(DateTime utcNow) => utcNow >= ExpiresAt;
 
@@ -65,4 +78,16 @@ public class RefreshToken : BaseEntity
         IsRevoked = true;
         RevokedAt = revokedAtUtc ?? DateTime.UtcNow;
     }
+
+    private static string? NormalizeDeviceInfo(string? deviceInfo)
+    {
+        if (string.IsNullOrWhiteSpace(deviceInfo))
+            return null;
+
+        var trimmed = deviceInfo.Trim();
+        return trimmed.Length <= DeviceInfoMaxLength
+            ? trimmed
+            : trimmed[..DeviceInfoMaxLength];
+    }
 }
+

@@ -19,7 +19,8 @@ internal static class RefreshTokenFactory
         Guid userId,
         Guid familyId,
         int refreshTokenDays,
-        string? clientIp
+        string? clientIp,
+        string? deviceInfo = null
     )
     {
         var plaintext = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
@@ -28,8 +29,10 @@ internal static class RefreshTokenFactory
             Hash(plaintext),
             familyId,
             DateTime.UtcNow.AddDays(refreshTokenDays),
-            clientIp
+            clientIp,
+            deviceInfo
         );
         return (plaintext, entity);
     }
 }
+
