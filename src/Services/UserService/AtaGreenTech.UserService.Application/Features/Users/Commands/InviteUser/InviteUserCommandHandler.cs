@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using OmniSync.Core.Application.Messaging;
 using OmniSync.Core.Domain.Repositories;
 using OmniSync.Core.Domain.Tenants;
+using OmniSync.Core.Domain.Users;
 
 namespace AtaGreenTech.UserService.Application.Features.Users.Commands.InviteUser;
 
@@ -16,6 +17,8 @@ internal sealed class InviteUserCommandHandler(
     IRepository<UserRole> userRoles,
     IPasswordHasher passwordHasher,
     IUserInvitationSender invitationSender,
+    IIdentityAuditLogger auditLogger,
+    ICurrentUser currentUser,
     ICurrentTenant currentTenant,
     IOptions<AuthOptions> authOptions
 ) : ICommandHandler<InviteUserCommand, MessageResult>
@@ -64,6 +67,16 @@ internal sealed class InviteUserCommandHandler(
             plaintext
         );
         await invitationSender.SendAsync(user.Email, inviteUrl, cancellationToken);
+
+        var actor = string.IsNullOrWhiteSpace(currentUser.Email) ? currentUser.UserId : currentUser.Email;
+        await auditLogger.LogAsync(
+            AuditLog.Actions.UserInvited,
+            user.Email,
+            user.Id,
+            request.ClientIp,
+            $"Yeni kullanıcı davet e-postası gönderildi. Rol: {role.Name}. Davet eden: {actor ?? "unknown"}.",
+            cancellationToken
+        );
 
         return MessageResult.Ok("Kullanıcı daveti başarıyla gönderildi.");
     }

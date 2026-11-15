@@ -3,5 +3,10 @@ using OmniSync.Core.Application.Messaging;
 
 namespace AtaGreenTech.UserService.Application.Features.Users.Commands.InviteUser;
 
-public sealed record InviteUserCommand(string Email, string FirstName, string LastName, string Role)
-    : ICommand<MessageResult>;
+public sealed record InviteUserCommand(
+    string Email,
+    string FirstName,
+    string LastName,
+    string Role,
+    string? ClientIp = null
+) : ICommand<MessageResult>;

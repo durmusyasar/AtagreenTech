@@ -31,6 +31,7 @@ public static class DependencyInjection
                 services.AddScoped<IUserDbContext, UserQueryContext>();
                 services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
                 services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
+                services.AddScoped<IIdentityAuditLogger, IdentityAuditLogger>();
                 services.AddSingleton<IEmailVerificationSender, LoggingEmailVerificationSender>();
                 services.AddSingleton<IPasswordResetSender, LoggingPasswordResetSender>();
                 services.AddSingleton<IUserInvitationSender, LoggingUserInvitationSender>();
