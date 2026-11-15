@@ -1,3 +1,4 @@
+using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Domain.Entities;
 using FluentValidation;
 
@@ -15,7 +16,7 @@ internal sealed class CreateUserCommandValidator : AbstractValidator<CreateUserC
     public CreateUserCommandValidator()
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(User.EmailMaxLength);
-        RuleFor(x => x.Password).NotEmpty().MinimumLength(8).MaximumLength(128);
+        RuleFor(x => x.Password).ApplyStrongPassword();
         RuleFor(x => x.FirstName).NotEmpty().MaximumLength(User.NameMaxLength);
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(User.NameMaxLength);
         RuleFor(x => x.Roles)

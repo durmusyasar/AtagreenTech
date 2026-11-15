@@ -24,6 +24,18 @@ public sealed class AuthOptions
     /// <summary>Kullanıcı davet token'ının geçerlilik süresi (gün).</summary>
     public int InvitationDays { get; set; } = 3;
 
+    /// <summary>Ardışık başarısız giriş sonrası hesabın kilitlenmesi için eşik.</summary>
+    public int MaxFailedAccessAttempts { get; set; } = 5;
+
+    /// <summary>Hesap kilidi süresi (dakika).</summary>
+    public int LockoutMinutes { get; set; } = 15;
+
+    /// <summary>Auth hassas uç noktaları için pencere başına izin verilen istek sayısı.</summary>
+    public int AuthRateLimitPermitLimit { get; set; } = 5;
+
+    /// <summary>Auth rate limit penceresi (dakika).</summary>
+    public int AuthRateLimitWindowMinutes { get; set; } = 1;
+
     /// <summary>
     /// Doğrulama / sıfırlama / davet linkinin host'u (ör. <c>https://omnisync.com</c>). Tenant subdomain'i gönderimde eklenir.
     /// </summary>

@@ -60,6 +60,22 @@ public static class DependencyInjection
                         "Auth:InvitationDays must be greater than zero."
                     )
                     .Validate(
+                        o => o.MaxFailedAccessAttempts > 0,
+                        "Auth:MaxFailedAccessAttempts must be greater than zero."
+                    )
+                    .Validate(
+                        o => o.LockoutMinutes > 0,
+                        "Auth:LockoutMinutes must be greater than zero."
+                    )
+                    .Validate(
+                        o => o.AuthRateLimitPermitLimit > 0,
+                        "Auth:AuthRateLimitPermitLimit must be greater than zero."
+                    )
+                    .Validate(
+                        o => o.AuthRateLimitWindowMinutes > 0,
+                        "Auth:AuthRateLimitWindowMinutes must be greater than zero."
+                    )
+                    .Validate(
                         o => Uri.TryCreate(o.PublicAppBaseUrl, UriKind.Absolute, out var uri)
                             && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps),
                         "Auth:PublicAppBaseUrl must be an absolute http(s) URL."
