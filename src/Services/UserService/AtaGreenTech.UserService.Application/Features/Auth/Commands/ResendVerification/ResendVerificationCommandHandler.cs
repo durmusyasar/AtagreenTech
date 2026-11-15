@@ -30,25 +30,14 @@ internal sealed class ResendVerificationCommandHandler(
         var (plaintext, hash) = EmailVerificationTokenFactory.Create();
         user.SetEmailVerificationChallenge(hash, DateTime.UtcNow.AddHours(hours));
 
-        var verifyUrl = BuildVerificationUrl(plaintext);
+        var verifyUrl = AuthPublicLinks.Build(
+            authOptions.Value,
+            currentTenant,
+            "/verify-email",
+            plaintext
+        );
         await emailSender.SendAsync(user.Email, verifyUrl, cancellationToken);
 
         return MessageResult.Ok(GenericSuccess);
-    }
-
-    private string BuildVerificationUrl(string plaintextToken)
-    {
-        var baseUrl = authOptions.Value.PublicAppBaseUrl.TrimEnd('/');
-        var tenant = currentTenant.Identifier;
-        // Tenant subdomain varsa {tenant}.host; yoksa düz base URL.
-        if (!string.IsNullOrWhiteSpace(tenant)
-            && Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri)
-            && uri.Host.Split('.').Length >= 2)
-        {
-            var builder = new UriBuilder(uri) { Host = $"{tenant}.{uri.Host}" };
-            baseUrl = builder.Uri.GetLeftPart(UriPartial.Authority);
-        }
-
-        return $"{baseUrl}/verify-email?token={Uri.EscapeDataString(plaintextToken)}";
     }
 }

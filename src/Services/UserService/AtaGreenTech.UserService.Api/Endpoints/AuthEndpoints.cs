@@ -1,7 +1,10 @@
+using AtaGreenTech.UserService.Application.Features.Auth.Commands.ChangePassword;
+using AtaGreenTech.UserService.Application.Features.Auth.Commands.ForgotPassword;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.Login;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.Logout;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.Refresh;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.ResendVerification;
+using AtaGreenTech.UserService.Application.Features.Auth.Commands.ResetPassword;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.VerifyEmail;
 using AtaGreenTech.UserService.Application.Features.Auth.Queries.GetMe;
 using MediatR;
@@ -10,7 +13,7 @@ using OmniSync.Core.Infrastructure.Endpoints;
 namespace AtaGreenTech.UserService.Api.Endpoints;
 
 /// <summary>
-/// <c>/api/v1/auth</c>: login, refresh, logout, me ve e-posta doğrulama. Tenant host'tan çözülür.
+/// <c>/api/v1/auth</c>: oturum, e-posta doğrulama ve şifre yönetimi. Tenant host'tan çözülür.
 /// </summary>
 public sealed class AuthEndpoints : IEndpointModule
 {
@@ -24,6 +27,9 @@ public sealed class AuthEndpoints : IEndpointModule
         group.MapGet("/me", MeAsync).RequireAuthorization();
         group.MapPost("/verify-email", VerifyEmailAsync).AllowAnonymous();
         group.MapPost("/resend-verification", ResendVerificationAsync).AllowAnonymous();
+        group.MapPost("/forgot-password", ForgotPasswordAsync).AllowAnonymous();
+        group.MapPost("/reset-password", ResetPasswordAsync).AllowAnonymous();
+        group.MapPost("/change-password", ChangePasswordAsync).RequireAuthorization();
     }
 
     private static async Task<IResult> LoginAsync(
@@ -89,13 +95,7 @@ public sealed class AuthEndpoints : IEndpointModule
     )
     {
         var result = await sender.Send(new VerifyEmailCommand(request.Token), cancellationToken);
-        return result.Succeeded
-            ? TypedResults.Ok(new { message = result.Message })
-            : Results.Problem(
-                title: "Bad Request",
-                detail: result.Message,
-                statusCode: StatusCodes.Status400BadRequest
-            );
+        return ToMessageResult(result);
     }
 
     private static async Task<IResult> ResendVerificationAsync(
@@ -107,6 +107,58 @@ public sealed class AuthEndpoints : IEndpointModule
         var result = await sender.Send(new ResendVerificationCommand(request.Email), cancellationToken);
         return TypedResults.Ok(new { message = result.Message });
     }
+
+    private static async Task<IResult> ForgotPasswordAsync(
+        ForgotPasswordRequest request,
+        ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await sender.Send(new ForgotPasswordCommand(request.Email), cancellationToken);
+        return TypedResults.Ok(new { message = result.Message });
+    }
+
+    private static async Task<IResult> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await sender.Send(
+            new ResetPasswordCommand(request.Token, request.NewPassword),
+            cancellationToken
+        );
+        return ToMessageResult(result);
+    }
+
+    private static async Task<IResult> ChangePasswordAsync(
+        ChangePasswordRequest request,
+        ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            var result = await sender.Send(
+                new ChangePasswordCommand(request.CurrentPassword, request.NewPassword),
+                cancellationToken
+            );
+            return TypedResults.Ok(new { message = result.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+    }
+
+    private static IResult ToMessageResult(Application.Features.Auth.MessageResult result) =>
+        result.Succeeded
+            ? TypedResults.Ok(new { message = result.Message })
+            : Results.Problem(
+                title: "Bad Request",
+                detail: result.Message,
+                statusCode: StatusCodes.Status400BadRequest
+            );
 
     private static IResult Unauthorized(string detail) =>
         Results.Problem(
@@ -130,3 +182,12 @@ public sealed record VerifyEmailRequest(string Token);
 
 /// <summary>Doğrulama e-postasını yeniden gönderme istek gövdesi.</summary>
 public sealed record ResendVerificationRequest(string Email);
+
+/// <summary>Şifre unutma istek gövdesi.</summary>
+public sealed record ForgotPasswordRequest(string Email);
+
+/// <summary>Şifre sıfırlama istek gövdesi.</summary>
+public sealed record ResetPasswordRequest(string Token, string NewPassword);
+
+/// <summary>Oturumdayken şifre değiştirme istek gövdesi.</summary>
+public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);

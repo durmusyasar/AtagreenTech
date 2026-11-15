@@ -18,8 +18,11 @@ public sealed class AuthOptions
     /// <summary>E-posta doğrulama token'ının geçerlilik süresi (saat).</summary>
     public int EmailVerificationHours { get; set; } = 24;
 
+    /// <summary>Şifre sıfırlama token'ının geçerlilik süresi (saat).</summary>
+    public int PasswordResetHours { get; set; } = 1;
+
     /// <summary>
-    /// Doğrulama linkinin host'u (ör. <c>https://omnisync.com</c>). Tenant subdomain'i gönderimde eklenir.
+    /// Doğrulama / sıfırlama linkinin host'u (ör. <c>https://omnisync.com</c>). Tenant subdomain'i gönderimde eklenir.
     /// </summary>
     public string PublicAppBaseUrl { get; set; } = "https://omnisync.com";
 

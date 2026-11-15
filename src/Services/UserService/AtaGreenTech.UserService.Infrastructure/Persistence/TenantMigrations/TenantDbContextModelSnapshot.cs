@@ -177,6 +177,13 @@ namespace AtaGreenTech.UserService.Infrastructure.Persistence.TenantMigrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
+                    b.Property<DateTime?>("PasswordResetTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PasswordResetTokenHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<string>("SecurityStamp")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -202,6 +209,10 @@ namespace AtaGreenTech.UserService.Infrastructure.Persistence.TenantMigrations
                     b.HasIndex("EmailVerificationTokenHash")
                         .IsUnique()
                         .HasFilter("\"EmailVerificationTokenHash\" IS NOT NULL");
+
+                    b.HasIndex("PasswordResetTokenHash")
+                        .IsUnique()
+                        .HasFilter("\"PasswordResetTokenHash\" IS NOT NULL");
 
                     b.HasIndex("Username")
                         .IsUnique()
