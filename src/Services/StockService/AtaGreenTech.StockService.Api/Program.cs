@@ -22,6 +22,8 @@ builder.Services.AddScoped<IRequestOriginProvider, HttpRequestOriginProvider>();
 builder.AddOmniSyncCore(options =>
 {
     // Endpoint modülleri Api'den, handler ve validator'lar Application'dan taranır.
+    // JWT doğrulama OmniSync JwtSettings ile yapılır (Issuer/Audience = JwtContract / UserService).
+    // Permission politikaları AddStockInfrastructure içinde kaydedilir (stock.read|write|delete + jokerler).
     options.AddApplicationAssemblies(typeof(Program).Assembly, typeof(IStockDbContext).Assembly)
         .AddStockInfrastructure()
         .AddOmniSyncCors();

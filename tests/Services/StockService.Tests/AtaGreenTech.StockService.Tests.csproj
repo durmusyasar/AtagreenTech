@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Services\StockService\AtaGreenTech.StockService.Application\AtaGreenTech.StockService.Application.csproj" />
+    <ProjectReference Include="..\..\..\src\Shared\SharedKernel\AtaGreenTech.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>
