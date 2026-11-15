@@ -1,3 +1,4 @@
+using AtaGreenTech.UserService.Application.Features.Auth.Commands.AcceptInvite;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.ChangePassword;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.ForgotPassword;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.Login;
@@ -30,6 +31,7 @@ public sealed class AuthEndpoints : IEndpointModule
         group.MapPost("/forgot-password", ForgotPasswordAsync).AllowAnonymous();
         group.MapPost("/reset-password", ResetPasswordAsync).AllowAnonymous();
         group.MapPost("/change-password", ChangePasswordAsync).RequireAuthorization();
+        group.MapPost("/accept-invite", AcceptInviteAsync).AllowAnonymous();
     }
 
     private static async Task<IResult> LoginAsync(
@@ -151,6 +153,19 @@ public sealed class AuthEndpoints : IEndpointModule
         }
     }
 
+    private static async Task<IResult> AcceptInviteAsync(
+        AcceptInviteRequest request,
+        ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await sender.Send(
+            new AcceptInviteCommand(request.Token, request.Password, request.FirstName, request.LastName),
+            cancellationToken
+        );
+        return ToMessageResult(result);
+    }
+
     private static IResult ToMessageResult(Application.Features.Auth.MessageResult result) =>
         result.Succeeded
             ? TypedResults.Ok(new { message = result.Message })
@@ -191,3 +206,6 @@ public sealed record ResetPasswordRequest(string Token, string NewPassword);
 
 /// <summary>Oturumdayken şifre değiştirme istek gövdesi.</summary>
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+
+/// <summary>Davet kabul istek gövdesi.</summary>
+public sealed record AcceptInviteRequest(string Token, string Password, string FirstName, string LastName);

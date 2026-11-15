@@ -19,6 +19,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.SecurityStamp).IsRequired().HasMaxLength(User.SecurityStampMaxLength);
         builder.Property(x => x.EmailVerificationTokenHash).HasMaxLength(User.EmailVerificationTokenHashMaxLength);
         builder.Property(x => x.PasswordResetTokenHash).HasMaxLength(User.PasswordResetTokenHashMaxLength);
+        builder.Property(x => x.InvitationTokenHash).HasMaxLength(User.InvitationTokenHashMaxLength);
 
         builder.HasIndex(x => x.Email).IsUnique().HasFilter(ConfigurationConstants.NotDeletedFilter);
         builder.HasIndex(x => x.Username).IsUnique().HasFilter(ConfigurationConstants.NotDeletedFilter);
@@ -28,6 +29,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(x => x.PasswordResetTokenHash)
             .IsUnique()
             .HasFilter($"\"{nameof(User.PasswordResetTokenHash)}\" IS NOT NULL");
+        builder.HasIndex(x => x.InvitationTokenHash)
+            .IsUnique()
+            .HasFilter($"\"{nameof(User.InvitationTokenHash)}\" IS NOT NULL");
 
         builder.HasMany(x => x.UserRoles)
             .WithOne(x => x.User)

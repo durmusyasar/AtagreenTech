@@ -21,8 +21,11 @@ public sealed class AuthOptions
     /// <summary>Şifre sıfırlama token'ının geçerlilik süresi (saat).</summary>
     public int PasswordResetHours { get; set; } = 1;
 
+    /// <summary>Kullanıcı davet token'ının geçerlilik süresi (gün).</summary>
+    public int InvitationDays { get; set; } = 3;
+
     /// <summary>
-    /// Doğrulama / sıfırlama linkinin host'u (ör. <c>https://omnisync.com</c>). Tenant subdomain'i gönderimde eklenir.
+    /// Doğrulama / sıfırlama / davet linkinin host'u (ör. <c>https://omnisync.com</c>). Tenant subdomain'i gönderimde eklenir.
     /// </summary>
     public string PublicAppBaseUrl { get; set; } = "https://omnisync.com";
 
