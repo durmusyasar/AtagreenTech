@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   App,
   Button,
@@ -23,8 +23,8 @@ import { TranslationTabs } from '../../components/translations/TranslationTabs'
 import { useTranslationForm } from '../../components/translations/useTranslationForm'
 import { invalidate } from '../../core/api/queryClient'
 import { useLanguage } from '../../core/context/useLanguage'
+import { useAppMutation } from '../../core/hooks/useAppMutation'
 import { DEFAULT_LANGUAGE } from '../../core/i18n/languages'
-import { productService } from '../../services/productService'
 import { queryKeys } from '../../services/queryKeys'
 import type { Category } from '../../types/category'
 import { CURRENCIES, type CreateProductRequest, type Product } from '../../types/product'
@@ -111,12 +111,12 @@ function ProductForm({
   }, [units, product])
 
   const queryClient = useQueryClient()
-  const save = useMutation({
-    // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
-    mutationFn: ({ request, isActive }: { request: CreateProductRequest; isActive: boolean }): Promise<unknown> =>
-      product
-        ? productService.update(product.id, { ...request, isActive }, { skipErrorNotification: true })
-        : productService.create(request, { skipErrorNotification: true }),
+  // Hatalar global bildirim yerine formun içinde, ilgili alanın yanında gösterilir.
+  const save = useAppMutation<string | void, { request: CreateProductRequest; isActive: boolean }>({
+    url: product ? `/products/${product.id}` : '/products',
+    method: product ? 'put' : 'post',
+    skipErrorNotification: true,
+    body: ({ request, isActive }) => (product ? { ...request, isActive } : request),
     // Stok hareketleri ve bakiyeler ürün adını ve para birimini gösterir.
     onSuccess: () => invalidate(queryClient, queryKeys.products, queryKeys.stock),
   })

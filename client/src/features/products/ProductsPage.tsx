@@ -1,14 +1,17 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useQueryClient } from '@tanstack/react-query'
 import { App, Button, Flex, Input, Popconfirm, Segmented, Space, Table, Tag, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { StatusTag } from '../../components/StatusTag'
 import { TranslationTags } from '../../components/TranslationTags'
 import { invalidate } from '../../core/api/queryClient'
 import { useLanguage } from '../../core/context/useLanguage'
-import { DEFAULT_LANGUAGE } from '../../core/i18n/languages'
+import { useAppLazyQuery } from '../../core/hooks/useAppLazyQuery'
+import { useAppMutation } from '../../core/hooks/useAppMutation'
+import { useAppQuery } from '../../core/hooks/useAppQuery'
+import { DEFAULT_LANGUAGE, type Language } from '../../core/i18n/languages'
 import { categoryQueries } from '../../services/categoryService'
-import { productQueries, productService } from '../../services/productService'
+import { productQueries } from '../../services/productService'
 import { queryKeys } from '../../services/queryKeys'
 import { unitOfMeasureQueries } from '../../services/unitOfMeasureService'
 import type { Product } from '../../types/product'
@@ -32,7 +35,7 @@ export function ProductsPage() {
   const [editor, setEditor] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null })
 
   const queryClient = useQueryClient()
-  const page = useQuery({
+  const page = useAppQuery({
     ...productQueries.list({
       language,
       pageNumber,
@@ -44,17 +47,25 @@ export function ProductsPage() {
     placeholderData: keepPreviousData,
   })
   // Kategori filtresi ve formdaki seçimler için tüm kategoriler ve birimler; adlar arayüz diline göre çözümlenir.
-  const categories = useQuery(categoryQueries.listAll(language))
-  const units = useQuery(unitOfMeasureQueries.list({ language }))
+  const categories = useAppQuery(categoryQueries.listAll(language))
+  const units = useAppQuery(unitOfMeasureQueries.list({ language }))
   const categoryOptions = useMemo(() => parentOptions(categories.data ?? []), [categories.data])
 
   // Silme hataları (ör. stok hareketi olan ürün) global bildirimde gösterilir.
-  const remove = useMutation({
-    mutationFn: (product: Product) => productService.remove(product.id),
+  const remove = useAppMutation<void, Product>({
+    url: (product) => `/products/${product.id}`,
+    method: 'delete',
     onSuccess: (_, product) => {
       message.success(t('product.deleted', product.sku))
       return invalidate(queryClient, queryKeys.products)
     },
+  })
+
+  // Düzenlemede güncel çeviriler ve alanlar için detay GET'i; başarısız olursa liste satırı kullanılır.
+  const [loadProduct] = useAppLazyQuery<Product, { id: string; language: Language }>({
+    url: ({ id }) => `/products/${id}`,
+    queryKey: ({ id, language }) => [...queryKeys.products, 'byId', id, language],
+    params: ({ language }) => ({ language }),
   })
 
   // Filtre değişince ilk sayfaya dönülür; aksi halde sonuç az olduğunda boş bir sayfada kalınabilir.
@@ -65,7 +76,22 @@ export function ProductsPage() {
       set(value)
     }
 
-  const openEditor = (product: Product | null) => setEditor({ open: true, product })
+  const openEditor = async (product: Product | null) => {
+    if (!product) {
+      setEditor({ open: true, product: null })
+      return
+    }
+
+    setEditor({ open: true, product })
+    try {
+      const fresh = await loadProduct({ id: product.id, language })
+      setEditor((current) =>
+        current.open && current.product?.id === product.id ? { open: true, product: fresh } : current,
+      )
+    } catch {
+      // Liste satırı yeterli.
+    }
+  }
   const closeEditor = () => setEditor((current) => ({ ...current, open: false }))
 
   return (

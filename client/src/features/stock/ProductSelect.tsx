@@ -1,7 +1,8 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData } from '@tanstack/react-query'
 import { Flex, Select, Spin, Tag, Typography, type SelectProps } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useLanguage } from '../../core/context/useLanguage'
+import { useAppQuery } from '../../core/hooks/useAppQuery'
 import { productQueries } from '../../services/productService'
 import type { Product } from '../../types/product'
 
@@ -37,7 +38,7 @@ export function ProductSelect({ activeOnly = false, onProductChange, onChange, .
   }, [search])
 
   // Yeni aramanın sonucu gelene kadar önceki sonuçlar listede kalır.
-  const { data, isFetching: loading } = useQuery({
+  const { data, isFetching: loading } = useAppQuery({
     ...productQueries.list({ language, searchTerm, isActive: activeOnly ? true : undefined, pageSize: RESULT_LIMIT }),
     placeholderData: keepPreviousData,
   })
