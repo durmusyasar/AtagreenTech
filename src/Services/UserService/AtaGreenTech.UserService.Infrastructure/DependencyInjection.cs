@@ -1,4 +1,6 @@
+using System.Text.RegularExpressions;
 using AtaGreenTech.UserService.Application.Interfaces;
+using AtaGreenTech.UserService.Application.Options;
 using AtaGreenTech.UserService.Infrastructure.Persistence;
 using AtaGreenTech.UserService.Infrastructure.Security;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,10 +24,28 @@ public static class DependencyInjection
         options.TenantMigrationsAssembly = assembly;
 
         options.ConfigureServices(
-            (services, _) =>
+            (services, configuration) =>
             {
                 services.AddScoped<IUserDbContext, UserQueryContext>();
                 services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
+                services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
+
+                services.AddOptions<AuthOptions>()
+                    .Bind(configuration.GetSection(AuthOptions.SectionName))
+                    .Validate(
+                        o => o.AccessTokenMinutes > 0,
+                        "Auth:AccessTokenMinutes must be greater than zero."
+                    )
+                    .Validate(
+                        o => o.RefreshTokenDays > 0,
+                        "Auth:RefreshTokenDays must be greater than zero."
+                    )
+                    .Validate(
+                        o => string.IsNullOrWhiteSpace(o.Bootstrap.Email)
+                            || Regex.IsMatch(o.Bootstrap.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"),
+                        "Auth:Bootstrap:Email must be a valid email address when set."
+                    )
+                    .ValidateOnStart();
             }
         );
 
