@@ -117,6 +117,9 @@ services:
     <<: *hardening
     build:
       context: ./client
+      args:
+        # Kimlik servisi gelene kadar isteğe bağlı; ör. VITE_DEFAULT_ACCESS_TOKEN=$(mint-jwt) docker compose build web
+        VITE_DEFAULT_ACCESS_TOKEN: ${VITE_DEFAULT_ACCESS_TOKEN:-}
     image: atagreen-web:${ATAGREEN_VERSION:-latest}
     restart: unless-stopped
     # nginx, açılışta şablondan ürettiği yapılandırmayı conf.d'ye yazar; imajın kullanıcısı uid 101'dir.

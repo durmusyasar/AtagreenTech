@@ -7,6 +7,11 @@ COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 COPY . .
+
+# Kimlik servisi gelene kadar isteğe bağlı varsayılan test token'ı (build arg; imaja yalnızca bilinçli verilirse girer).
+ARG VITE_DEFAULT_ACCESS_TOKEN=
+ENV VITE_DEFAULT_ACCESS_TOKEN=$VITE_DEFAULT_ACCESS_TOKEN
+
 RUN npm run lint && npm test && npm run build
 
 # Root olmayan kullanıcıyla (uid 101) 8080'den dinleyen nginx.
