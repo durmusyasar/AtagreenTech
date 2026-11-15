@@ -161,6 +161,8 @@ services:
     restart: unless-stopped
     environment:
       <<: *api-runtime
+      # Boş tenant'ta ilk Admin bootstrap parolası (üretimde AUTH_BOOTSTRAP_PASSWORD ile override edin).
+      Auth__Bootstrap__Password: ${AUTH_BOOTSTRAP_PASSWORD:-Admin123!}
     secrets:
       - source: master_connection_string
         target: ConnectionStrings__MasterDb
