@@ -1,3 +1,7 @@
+:root {
+  --primary-color: #2e7d32;
+}
+
 html,
 body,
 #root {

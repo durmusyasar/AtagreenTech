@@ -3,6 +3,7 @@ using AtaGreenTech.StockService.Application.Common;
 using AtaGreenTech.StockService.Application.Interfaces;
 using AtaGreenTech.StockService.Domain.Localization;
 using AtaGreenTech.StockService.Infrastructure.Persistence;
+using AtaGreenTech.StockService.Infrastructure.Persistence.Master;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSync.Core.Infrastructure.Hosting;
@@ -12,9 +13,9 @@ namespace AtaGreenTech.StockService.Infrastructure;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Stok servisinin entity eşlemelerini OmniSync'in tenant modeline ekler; okuma modelini ve bakiye kilidini
-    /// kaydeder. Tablolar her tenant'ın kendi veritabanında Core'un <c>TenantDbContext</c>'i üzerinden kullanılır; ayrı
-    /// bir DbContext tanımlanmaz.
+    /// Stok servisinin entity eşlemelerini OmniSync'in tenant modeline ekler; okuma modelini, bakiye kilidini ve
+    /// master marka okuyucusunu kaydeder. Tablolar her tenant'ın kendi veritabanında Core'un <c>TenantDbContext</c>'i
+    /// üzerinden kullanılır; ayrı bir DbContext tanımlanmaz.
     /// </summary>
     public static OmniSyncCoreOptions AddStockInfrastructure(this OmniSyncCoreOptions options)
     {
@@ -30,6 +31,7 @@ public static class DependencyInjection
             {
                 services.AddScoped<IStockDbContext, StockQueryContext>();
                 services.AddScoped<IStockBalanceLocker, StockBalanceLocker>();
+                services.AddScoped<ITenantBrandingReader, TenantBrandingReader>();
 
                 services.AddOptions<LocalizationOptions>()
                     .Bind(configuration.GetSection(LocalizationOptions.SectionName))

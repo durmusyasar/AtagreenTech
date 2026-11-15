@@ -7,9 +7,10 @@ import {
   SwapOutlined,
   TagsOutlined,
 } from '@ant-design/icons'
-import { Layout, Menu, theme, Typography } from 'antd'
+import { Layout, Menu, theme } from 'antd'
 import { useState, type ReactNode } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { BrandMark } from '../BrandMark'
 import { useLanguage } from '../../core/context/useLanguage'
 import type { MessageKey } from '../../core/i18n/messages'
 import { Footer } from './Footer'
@@ -42,12 +43,7 @@ export function AppLayout() {
     <Layout style={{ minHeight: '100vh' }}>
       <Layout.Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} breakpoint="lg" theme="light">
         <div className="app-logo">
-          <img src="/favicon.svg" alt="" width={28} height={28} />
-          {!collapsed && (
-            <Typography.Text strong style={{ color: token.colorPrimary }}>
-              {t('app.title')}
-            </Typography.Text>
-          )}
+          <BrandMark size={28} showName={!collapsed} nameStyle={{ color: token.colorPrimary }} />
         </div>
         <Menu
           mode="inline"

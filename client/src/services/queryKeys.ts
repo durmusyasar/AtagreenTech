@@ -4,6 +4,8 @@
  */
 export const queryKeys = {
   session: ['session'],
+  /** Host'tan çözülen tenant'ın logo / renk / favicon ayarları. */
+  tenantConfig: ['tenant', 'config'],
   unitsOfMeasure: ['units-of-measure'],
   categories: ['categories'],
   products: ['products'],

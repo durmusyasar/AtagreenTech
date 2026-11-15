@@ -1,13 +1,14 @@
 import { GlobalOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons'
 import { Button, Dropdown, Flex, Select, Tag, Tooltip, Typography } from 'antd'
 import { Link } from 'react-router-dom'
+import { BrandMark } from '../BrandMark'
 import { useAuth } from '../../core/context/useAuth'
 import { useLanguage } from '../../core/context/useLanguage'
 import { useTenant } from '../../core/context/useTenant'
 import { LANGUAGE_LABELS, SUPPORTED_LANGUAGES, type Language } from '../../core/i18n/languages'
 
 /**
- * Üst çubuk: marka, aktif tenant, dil seçici (TR/EN) ve kullanıcı / çıkış.
+ * Üst çubuk: tenant markası, aktif tenant, dil seçici (TR/EN) ve kullanıcı / çıkış.
  * Modül linkleri sol menüdedir (`AppLayout` sider); burada yalnızca oturum ve bağlam kontrolleri vardır.
  */
 export function Navbar() {
@@ -18,11 +19,8 @@ export function Navbar() {
   return (
     <Flex align="center" justify="space-between" gap={16} style={{ height: '100%', width: '100%' }}>
       <Flex align="center" gap={12} style={{ minWidth: 0 }}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'inherit' }}>
-          <img src="/favicon.svg" alt="" width={24} height={24} />
-          <Typography.Text strong ellipsis>
-            {t('app.title')}
-          </Typography.Text>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', color: 'inherit', minWidth: 0 }}>
+          <BrandMark size={24} />
         </Link>
         {tenant && (
           <Tooltip title={t('header.tenant')}>
