@@ -18,6 +18,8 @@ const tr = {
   'header.tenant': 'Tenant',
   'header.language': 'Dil',
   'header.signOut': 'Çıkış yap',
+  'header.account': 'Hesap',
+  'footer.line': '{0} © {1} — Tüm hakları saklıdır | Sürüm: v{2}',
   'login.title': 'Oturum aç',
   'login.description':
     'Kimlik servisi devreye alınana kadar sistemin imzaladığı varsayılan erişim token\u2019ı ile oturum açılır. Tenant adresten alınır.',
@@ -244,6 +246,8 @@ const en: Record<MessageKey, string> = {
   'header.tenant': 'Tenant',
   'header.language': 'Language',
   'header.signOut': 'Sign out',
+  'header.account': 'Account',
+  'footer.line': '{0} © {1} — All rights reserved | Version: v{2}',
   'login.title': 'Sign in',
   'login.description':
     'Until the identity service is available, sign in with the system-issued default access token. The tenant comes from the address.',

@@ -12,7 +12,8 @@ import { useState, type ReactNode } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useLanguage } from '../../core/context/useLanguage'
 import type { MessageKey } from '../../core/i18n/messages'
-import { AppHeader } from './AppHeader'
+import { Footer } from './Footer'
+import { Navbar } from './Navbar'
 
 const NAVIGATION: { path: string; label: MessageKey; icon: ReactNode }[] = [
   { path: '/', label: 'menu.dashboard', icon: <DashboardOutlined /> },
@@ -24,6 +25,10 @@ const NAVIGATION: { path: string; label: MessageKey; icon: ReactNode }[] = [
   { path: '/stock-balances', label: 'menu.stockBalances', icon: <BarChartOutlined /> },
 ]
 
+/**
+ * Oturum açık sayfaların ortak iskeleti: sol modül menüsü, üst Navbar (tenant / dil / profil),
+ * içerik ve alt Footer (telif + sürüm). Rotalar `Outlet` ile buraya bağlanır.
+ */
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const { pathname } = useLocation()
@@ -31,7 +36,7 @@ export function AppLayout() {
   const { t } = useLanguage()
   const { token } = theme.useToken()
 
-  const selected = NAVIGATION.filter((item) => item.path === '/' ? pathname === '/' : pathname.startsWith(item.path))
+  const selected = NAVIGATION.filter((item) => (item.path === '/' ? pathname === '/' : pathname.startsWith(item.path)))
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -52,13 +57,24 @@ export function AppLayout() {
         />
       </Layout.Sider>
 
-      <Layout>
-        <Layout.Header style={{ background: token.colorBgContainer, paddingInline: 24 }}>
-          <AppHeader />
+      <Layout style={{ minWidth: 0 }}>
+        <Layout.Header
+          style={{
+            background: token.colorBgContainer,
+            paddingInline: 24,
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            lineHeight: 'normal',
+            height: 64,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <Navbar />
         </Layout.Header>
-        <Layout.Content style={{ margin: 24 }}>
+        <Layout.Content style={{ margin: 24, minHeight: 280 }}>
           <Outlet />
         </Layout.Content>
+        <Footer />
       </Layout>
     </Layout>
   )
