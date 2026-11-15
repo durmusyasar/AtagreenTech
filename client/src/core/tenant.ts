@@ -16,8 +16,8 @@ const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1'])
 export const TENANT_SELECTION_ENABLED = import.meta.env.DEV
 
 /**
- * Stok servisinin tenant çözümlemesiyle aynı kural: `acme.omnisync.com` → `acme`. Tenant, kök domain'in hemen
- * altındaki tek etikettir; kök domain'in kendisi, `www`, çok seviyeli alt alan adları (`api.acme.omnisync.com`) ve
+ * Stok servisinin tenant çözümlemesiyle aynı kural: `atagreen.omnisync.com` → `atagreen`. Tenant, kök domain'in hemen
+ * altındaki tek etikettir; kök domain'in kendisi, `www`, çok seviyeli alt alan adları (`api.atagreen.omnisync.com`) ve
  * listede olmayan adresler (`localhost`, IP adresleri) tenant içermez.
  */
 export function resolveTenantFromHost(hostname: string): string | null {

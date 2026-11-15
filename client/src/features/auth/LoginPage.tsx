@@ -1,34 +1,60 @@
 import { LoginOutlined } from '@ant-design/icons'
-import { Alert, Button, Card, Flex, Form, Input, Typography } from 'antd'
+import { Alert, App, Button, Card, Flex, Form, Input, Typography } from 'antd'
+import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { ApiError } from '../../core/api/apiError'
 import { useAuth } from '../../core/context/useAuth'
 import { useLanguage } from '../../core/context/useLanguage'
 import { useTenant } from '../../core/context/useTenant'
+import { useAppMutation } from '../../core/hooks/useAppMutation'
+import type { MessageKey } from '../../core/i18n/messages'
 import { isExpired, readTokenClaims } from '../../core/jwt'
 import { TENANT_SELECTION_ENABLED, tenantAddressPattern } from '../../core/tenant'
+import { authService } from '../../services/authService'
+import type { LoginRequest, LoginResult } from '../../types/auth'
+import { defaultAccessToken } from './defaultAccessToken'
 
 interface LoginForm {
-  token: string
-  tenant?: string
+  accessToken: string
 }
 
 /**
- * Kimlik servisi henüz olmadığından oturum, stok servisinin doğrulayacağı bir erişim token'ıyla açılır. Token'ın
- * imzası ve tenant'ı ilk API isteğinde doğrulanır; geçersizse 401 ile oturum kapanır. Derlenmiş pakette tenant yalnızca
- * adresten gelir; tenant'sız bir adreste form yerine tenant adresine yönlendiren uyarı gösterilir.
+ * Kimlik servisi henüz olmadığından oturum, stok servisinin doğrulayacağı erişim token'ıyla açılır.
+ * Tenant adresten (veya geliştirmede `VITE_DEV_TENANT`) gelir; formda tenant alanı yoktur.
+ * `VITE_DEFAULT_ACCESS_TOKEN` tanımlıysa tek tıkla oturum açılır; aksi halde token alanı gösterilir.
  */
 export function LoginPage() {
-  const { isAuthenticated, signIn } = useAuth()
+  const { isAuthenticated } = useAuth()
   const { tenant, isTenantFromHost } = useTenant()
   const { t } = useLanguage()
+  const { message } = App.useApp()
   const navigate = useNavigate()
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
+  const presetToken = defaultAccessToken()
+  const [useCustomToken, setUseCustomToken] = useState(!presetToken)
+  const [formError, setFormError] = useState<string>()
+  const [form] = Form.useForm<LoginForm>()
+
+  const login = useAppMutation<LoginResult, LoginRequest>({
+    mutationFn: (request) => authService.login(request),
+    onSuccess: (result) => {
+      message.success(t('login.welcome', result.userName))
+      navigate(from, { replace: true })
+    },
+    onError: (error) => {
+      setFormError(describeLoginError(error, t))
+    },
+  })
 
   if (isAuthenticated) return <Navigate to={from} replace />
 
-  const submit = ({ token, tenant: formTenant }: LoginForm) => {
-    signIn(token.trim(), formTenant)
-    navigate(from, { replace: true })
+  const tenantReady = isTenantFromHost || TENANT_SELECTION_ENABLED
+  const showTokenField = useCustomToken || !presetToken
+
+  const submit = (values: LoginForm) => {
+    setFormError(undefined)
+    const accessToken = showTokenField ? values.accessToken : presetToken
+    login.mutate({ accessToken })
   }
 
   return (
@@ -44,7 +70,7 @@ export function LoginPage() {
           <Typography.Text type="secondary">{t('login.description')}</Typography.Text>
         </Flex>
 
-        {!isTenantFromHost && !TENANT_SELECTION_ENABLED ? (
+        {!tenantReady ? (
           <Alert
             type="warning"
             showIcon
@@ -54,44 +80,82 @@ export function LoginPage() {
             )}
           />
         ) : (
-          <Form<LoginForm> layout="vertical" requiredMark={false} initialValues={{ tenant }} onFinish={submit}>
+          <Form<LoginForm>
+            form={form}
+            layout="vertical"
+            requiredMark={false}
+            initialValues={{ accessToken: presetToken }}
+            onFinish={submit}
+          >
             {isTenantFromHost ? (
-              <Typography.Paragraph>{t('login.tenantFromHost', tenant)}</Typography.Paragraph>
+              <Typography.Paragraph style={{ marginBottom: 16 }}>
+                {t('login.tenantFromHost', tenant)}
+              </Typography.Paragraph>
             ) : (
+              <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
+                {t('login.devTenant', tenant)}
+              </Typography.Paragraph>
+            )}
+
+            {presetToken && !useCustomToken && (
+              <Alert type="info" showIcon style={{ marginBottom: 16 }} message={t('login.defaultTokenReady')} />
+            )}
+
+            {showTokenField && (
               <Form.Item
-                name="tenant"
-                label={t('login.tenant')}
-                rules={[{ required: true, whitespace: true, message: t('login.tenantRequired') }]}
+                name="accessToken"
+                label={t('login.token')}
+                rules={[
+                  { required: true, whitespace: true, message: t('login.tokenRequired') },
+                  {
+                    validator: (_, value?: string) => {
+                      if (!value?.trim()) return Promise.resolve()
+                      const claims = readTokenClaims(value)
+                      if (!claims) return Promise.reject(new Error(t('login.tokenInvalid')))
+                      if (isExpired(claims)) return Promise.reject(new Error(t('login.tokenExpired')))
+                      return Promise.resolve()
+                    },
+                  },
+                ]}
               >
-                <Input autoComplete="organization" />
+                <Input.TextArea rows={4} spellCheck={false} autoComplete="off" placeholder={t('login.tokenPlaceholder')} />
               </Form.Item>
             )}
 
-            <Form.Item
-              name="token"
-              label={t('login.token')}
-              rules={[
-                { required: true, whitespace: true, message: t('login.tokenRequired') },
-                {
-                  validator: (_, value?: string) => {
-                    if (!value?.trim()) return Promise.resolve()
-                    const claims = readTokenClaims(value)
-                    if (!claims) return Promise.reject(new Error(t('login.tokenInvalid')))
-                    if (isExpired(claims)) return Promise.reject(new Error(t('login.tokenExpired')))
-                    return Promise.resolve()
-                  },
-                },
-              ]}
-            >
-              <Input.TextArea rows={5} spellCheck={false} autoComplete="off" />
-            </Form.Item>
+            {formError && (
+              <Alert type="error" showIcon style={{ marginBottom: 16 }} message={formError} />
+            )}
 
-            <Button type="primary" htmlType="submit" icon={<LoginOutlined />} block>
+            <Button type="primary" htmlType="submit" icon={<LoginOutlined />} loading={login.isPending} block>
               {t('login.submit')}
             </Button>
+
+            {presetToken && (
+              <Button
+                type="link"
+                block
+                style={{ marginTop: 8 }}
+                onClick={() => {
+                  setFormError(undefined)
+                  setUseCustomToken((current) => !current)
+                }}
+              >
+                {useCustomToken ? t('login.useDefaultToken') : t('login.useCustomToken')}
+              </Button>
+            )}
           </Form>
         )}
       </Card>
     </Flex>
   )
+}
+
+function describeLoginError(error: unknown, t: (key: MessageKey, ...params: unknown[]) => string): string {
+  if (error instanceof ApiError) {
+    if (error.code === 'invalid_token') return t('login.tokenInvalid')
+    if (error.code === 'token_expired') return t('login.tokenExpired')
+    if (error.message && error.message !== 'invalid_token' && error.message !== 'token_expired') return error.message
+    return t('login.failed')
+  }
+  return t('login.failed')
 }

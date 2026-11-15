@@ -37,7 +37,7 @@ describe('clearOnSessionChange', () => {
   it('clears the cache when the token or tenant changes, not on other session changes', () => {
     const queryClient = new QueryClient()
     const clear = vi.spyOn(queryClient, 'clear')
-    const session = fakeSession({ token: 'a', tenant: 'acme' })
+    const session = fakeSession({ token: 'a', tenant: 'atagreen' })
     clearOnSessionChange(queryClient, session)
 
     session.set({})
