@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using OmniSync.Core.Infrastructure.Hosting;
 
 namespace AtaGreenTech.UserService.Infrastructure;
