@@ -1,16 +1,19 @@
 using AtaGreenTech.UserService.Api.Contracts;
+using AtaGreenTech.UserService.Api.Hosting;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.AcceptInvite;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.ChangePassword;
+using AtaGreenTech.UserService.Application.Features.Auth.Commands.DisableMfa;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.ForgotPassword;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.Login;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.Logout;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.Refresh;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.ResendVerification;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.ResetPassword;
+using AtaGreenTech.UserService.Application.Features.Auth.Commands.SetupMfa;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.VerifyEmail;
+using AtaGreenTech.UserService.Application.Features.Auth.Commands.VerifyMfa;
 using AtaGreenTech.UserService.Application.Features.Auth.Queries.GetMe;
-using AtaGreenTech.UserService.Api.Hosting;
 using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
 using OmniSync.Core.Infrastructure.Endpoints;
@@ -18,7 +21,7 @@ using OmniSync.Core.Infrastructure.Endpoints;
 namespace AtaGreenTech.UserService.Api.Endpoints;
 
 /// <summary>
-/// <c>/api/v1/auth</c>: oturum, e-posta doğrulama ve şifre yönetimi. Tenant host'tan çözülür.
+/// <c>/api/v1/auth</c>: oturum, MFA, e-posta doğrulama ve şifre yönetimi. Tenant host'tan çözülür.
 /// </summary>
 public sealed class AuthEndpoints : IEndpointModule
 {
@@ -46,6 +49,10 @@ public sealed class AuthEndpoints : IEndpointModule
         group.MapPost("/accept-invite", AcceptInviteAsync)
             .AllowAnonymous()
             .RequireRateLimiting(AuthRateLimiting.PolicyName);
+
+        group.MapPost("/mfa/setup", SetupMfaAsync).RequireAuthorization();
+        group.MapPost("/mfa/verify", VerifyMfaAsync).RequireAuthorization();
+        group.MapPost("/mfa/disable", DisableMfaAsync).RequireAuthorization();
     }
 
     private static async Task<IResult> LoginAsync(
@@ -60,7 +67,9 @@ public sealed class AuthEndpoints : IEndpointModule
                 request.Email,
                 request.Password,
                 httpContext.Connection.RemoteIpAddress?.ToString(),
-                httpContext.Request.Headers.UserAgent.ToString()
+                httpContext.Request.Headers.UserAgent.ToString(),
+                request.TotpCode,
+                request.RecoveryCode
             ),
             cancellationToken
         );
@@ -193,6 +202,58 @@ public sealed class AuthEndpoints : IEndpointModule
         return ToMessageResult(result);
     }
 
+    private static async Task<IResult> SetupMfaAsync(ISender sender, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await sender.Send(new SetupMfaCommand(), cancellationToken);
+            return result.Succeeded && result.Setup is not null
+                ? TypedResults.Ok(result.Setup)
+                : Results.Json(
+                    new ErrorResponse("AUTH_BAD_REQUEST", result.Message ?? "MFA kurulumu başarısız."),
+                    statusCode: StatusCodes.Status400BadRequest
+                );
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return AuthError(AuthErrorCodes.InvalidCredentials, ex.Message);
+        }
+    }
+
+    private static async Task<IResult> VerifyMfaAsync(
+        VerifyMfaRequest request,
+        ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            var result = await sender.Send(new VerifyMfaCommand(request.Code), cancellationToken);
+            return ToMessageResult(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return AuthError(AuthErrorCodes.InvalidCredentials, ex.Message);
+        }
+    }
+
+    private static async Task<IResult> DisableMfaAsync(
+        DisableMfaRequest request,
+        ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            var result = await sender.Send(new DisableMfaCommand(request.Password), cancellationToken);
+            return ToMessageResult(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return AuthError(AuthErrorCodes.InvalidCredentials, ex.Message);
+        }
+    }
+
     private static IResult ToMessageResult(Application.Features.Auth.MessageResult result) =>
         result.Succeeded
             ? TypedResults.Ok(new { message = result.Message })
@@ -202,18 +263,31 @@ public sealed class AuthEndpoints : IEndpointModule
             );
 
     private static IResult AuthError(AuthAttemptResult result) =>
-        AuthError(
-            result.ErrorCode ?? AuthErrorCodes.InvalidCredentials,
-            result.ErrorMessage ?? "Kimlik doğrulama başarısız.",
-            result.StatusCode
+        Results.Json(
+            new ErrorResponse(
+                result.ErrorCode ?? AuthErrorCodes.InvalidCredentials,
+                result.ErrorMessage ?? "Kimlik doğrulama başarısız.",
+                result.MfaRequired
+            ),
+            statusCode: result.StatusCode
         );
 
-    private static IResult AuthError(string code, string message, int statusCode = StatusCodes.Status401Unauthorized) =>
-        Results.Json(new ErrorResponse(code, message), statusCode: statusCode);
+    private static IResult AuthError(
+        string code,
+        string message,
+        int statusCode = StatusCodes.Status401Unauthorized,
+        bool mfaRequired = false
+    ) =>
+        Results.Json(new ErrorResponse(code, message, mfaRequired), statusCode: statusCode);
 }
 
-/// <summary>Login istek gövdesi.</summary>
-public sealed record LoginRequest(string Email, string Password);
+/// <summary>Login istek gövdesi. MFA açıksa <see cref="TotpCode"/> veya <see cref="RecoveryCode"/> gerekir.</summary>
+public sealed record LoginRequest(
+    string Email,
+    string Password,
+    string? TotpCode = null,
+    string? RecoveryCode = null
+);
 
 /// <summary>Refresh istek gövdesi.</summary>
 public sealed record RefreshTokenRequest(string RefreshToken);
@@ -238,3 +312,9 @@ public sealed record ChangePasswordRequest(string CurrentPassword, string NewPas
 
 /// <summary>Davet kabul istek gövdesi.</summary>
 public sealed record AcceptInviteRequest(string Token, string Password, string FirstName, string LastName);
+
+/// <summary>MFA kurulum doğrulama istek gövdesi.</summary>
+public sealed record VerifyMfaRequest(string Code);
+
+/// <summary>MFA kapatma istek gövdesi.</summary>
+public sealed record DisableMfaRequest(string Password);

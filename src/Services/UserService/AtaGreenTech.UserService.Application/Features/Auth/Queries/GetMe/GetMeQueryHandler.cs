@@ -48,7 +48,8 @@ internal sealed class GetMeQueryHandler(
             user.LastName,
             currentTenant.Id.Value.ToString(),
             roles,
-            permissions
+            permissions,
+            user.IsMfaEnabled
         );
     }
 }

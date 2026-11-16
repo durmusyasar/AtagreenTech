@@ -69,5 +69,7 @@ public class AuditLog : BaseEntity
         public const string RoleChanged = "ROLE_CHANGED";
         public const string UserInvited = "USER_INVITED";
         public const string PasswordReset = "PASSWORD_RESET";
+        public const string MfaEnabled = "MFA_ENABLED";
+        public const string MfaDisabled = "MFA_DISABLED";
     }
 }

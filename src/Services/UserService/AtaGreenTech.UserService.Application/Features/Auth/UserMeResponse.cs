@@ -12,5 +12,6 @@ public sealed record UserMeResponse(
     string LastName,
     string TenantId,
     IReadOnlyList<string> Roles,
-    IReadOnlyList<string> Permissions
+    IReadOnlyList<string> Permissions,
+    bool IsMfaEnabled = false
 );

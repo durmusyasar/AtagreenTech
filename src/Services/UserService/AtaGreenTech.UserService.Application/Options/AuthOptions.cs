@@ -36,6 +36,12 @@ public sealed class AuthOptions
     /// <summary>Auth rate limit penceresi (dakika).</summary>
     public int AuthRateLimitWindowMinutes { get; set; } = 1;
 
+    /// <summary>Authenticator uygulamasında görünen TOTP issuer adı.</summary>
+    public string MfaIssuer { get; set; } = "OmniSync";
+
+    /// <summary>MFA kurulumunda üretilen kurtarma kodu adedi.</summary>
+    public int MfaRecoveryCodeCount { get; set; } = 8;
+
     /// <summary>
     /// Doğrulama / sıfırlama / davet linkinin host'u (ör. <c>https://omnisync.com</c>). Tenant subdomain'i gönderimde eklenir.
     /// </summary>

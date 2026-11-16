@@ -19,9 +19,14 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.SecurityStamp).IsRequired().HasMaxLength(User.SecurityStampMaxLength);
         builder.Property(x => x.AccessFailedCount).IsRequired();
         builder.Property(x => x.LockoutEnd);
+        builder.Property(x => x.IsMfaEnabled).IsRequired();
+        builder.Property(x => x.TotpSecret).HasMaxLength(User.TotpSecretMaxLength);
+        builder.Property(x => x.RecoveryCodeHashesJson).HasColumnType("jsonb");
         builder.Property(x => x.EmailVerificationTokenHash).HasMaxLength(User.EmailVerificationTokenHashMaxLength);
         builder.Property(x => x.PasswordResetTokenHash).HasMaxLength(User.PasswordResetTokenHashMaxLength);
         builder.Property(x => x.InvitationTokenHash).HasMaxLength(User.InvitationTokenHashMaxLength);
+
+        builder.Ignore(x => x.RecoveryCodeHashes);
 
         builder.HasIndex(x => x.Email).IsUnique().HasFilter(ConfigurationConstants.NotDeletedFilter);
         builder.HasIndex(x => x.Username).IsUnique().HasFilter(ConfigurationConstants.NotDeletedFilter);

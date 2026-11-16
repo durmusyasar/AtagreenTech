@@ -31,6 +31,7 @@ public static class DependencyInjection
                 services.AddScoped<IUserDbContext, UserQueryContext>();
                 services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
                 services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
+                services.AddSingleton<ITotpService, Rfc6238TotpService>();
                 services.AddScoped<IIdentityAuditLogger, IdentityAuditLogger>();
                 services.AddSingleton<IEmailVerificationSender, LoggingEmailVerificationSender>();
                 services.AddSingleton<IPasswordResetSender, LoggingPasswordResetSender>();
@@ -75,6 +76,14 @@ public static class DependencyInjection
                     .Validate(
                         o => o.AuthRateLimitWindowMinutes > 0,
                         "Auth:AuthRateLimitWindowMinutes must be greater than zero."
+                    )
+                    .Validate(
+                        o => !string.IsNullOrWhiteSpace(o.MfaIssuer),
+                        "Auth:MfaIssuer must not be empty."
+                    )
+                    .Validate(
+                        o => o.MfaRecoveryCodeCount is >= 1 and <= 20,
+                        "Auth:MfaRecoveryCodeCount must be between 1 and 20."
                     )
                     .Validate(
                         o => Uri.TryCreate(o.PublicAppBaseUrl, UriKind.Absolute, out var uri)
