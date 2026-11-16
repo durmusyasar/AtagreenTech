@@ -96,8 +96,8 @@ npm run lint && npm test && npm run build
   your tenant address (e.g. `<tenant>.omnisync.localhost:3000`).
 - Errors are normalised into `ApiError`: `400` keeps field errors for forms, `422` business rules are translated by
   their `resourceKey`, and `401` signs the user out and redirects to the sign-in page.
-- Access tokens are issued by **UserService** (`iss`: `AtaGreenTech.UserService`, `aud`: `AtaGreenTech.Apps`) and
-  validated by Stock (and other APIs) with the shared `JwtSettings:SigningKey` secret. Required claims: `sub`,
-  `email`, `role`, `tenant_id`. Until login UI lands, you may still paste a token minted with that contract; it is
-  kept in `sessionStorage` and cleared when the tab closes.
+- Access tokens are issued by **UserService** (`iss`: `AtaGreenTech.UserService`, `aud`: `AtaGreenTech.Apps`) via
+  email/password (+ optional MFA) login and validated by Stock (and other APIs) with the shared
+  `JwtSettings:SigningKey` secret. Required claims: `sub`, `email`, `role`, `tenant_id`. Access + refresh tokens are
+  kept in `sessionStorage` and cleared when the tab closes; 401 responses trigger a single-flight refresh queue.
 
