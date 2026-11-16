@@ -5,6 +5,7 @@ using AtaGreenTech.UserService.Application.Options;
 using AtaGreenTech.UserService.Infrastructure.Email;
 using AtaGreenTech.UserService.Infrastructure.Persistence;
 using AtaGreenTech.UserService.Infrastructure.Security;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSync.Core.Infrastructure.Hosting;
 
@@ -33,11 +34,30 @@ public static class DependencyInjection
                 services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
                 services.AddSingleton<ITotpService, Rfc6238TotpService>();
                 services.AddScoped<IIdentityAuditLogger, IdentityAuditLogger>();
+                services.AddScoped<IOidcAuthService, OidcPlaceholderService>();
                 services.AddSingleton<IEmailVerificationSender, LoggingEmailVerificationSender>();
                 services.AddSingleton<IPasswordResetSender, LoggingPasswordResetSender>();
                 services.AddSingleton<IUserInvitationSender, LoggingUserInvitationSender>();
 
                 services.AddAuthorization(options => options.AddAtaGreenPermissionPolicies());
+
+                services.AddOptions<FeatureFlagsOptions>()
+                    .Bind(configuration.GetSection(FeatureFlagsOptions.SectionName))
+                    .ValidateOnStart();
+
+                // OidcProviders altında Google/Microsoft child key'leri doğrudan Providers sözlüğüne bağlanır.
+                services.AddOptions<OidcOptions>()
+                    .Configure<IConfiguration>((options, config) =>
+                    {
+                        var section = config.GetSection(OidcOptions.SectionName);
+                        foreach (var child in section.GetChildren())
+                        {
+                            var provider = new OidcProviderConfig();
+                            child.Bind(provider);
+                            options.Providers[child.Key] = provider;
+                        }
+                    })
+                    .ValidateOnStart();
 
                 services.AddOptions<AuthOptions>()
                     .Bind(configuration.GetSection(AuthOptions.SectionName))
