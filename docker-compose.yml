@@ -163,6 +163,8 @@ services:
       <<: *api-runtime
       # Boş tenant'ta ilk Admin bootstrap parolası (üretimde AUTH_BOOTSTRAP_PASSWORD ile override edin).
       Auth__Bootstrap__Password: ${AUTH_BOOTSTRAP_PASSWORD:-Admin123!}
+      # Dahili POST /api/v1/internal/tenants/seed; boşsa endpoint 401 döner.
+      InternalProvisioning__ApiKey: ${INTERNAL_PROVISION_API_KEY:-}
     secrets:
       - source: master_connection_string
         target: ConnectionStrings__MasterDb

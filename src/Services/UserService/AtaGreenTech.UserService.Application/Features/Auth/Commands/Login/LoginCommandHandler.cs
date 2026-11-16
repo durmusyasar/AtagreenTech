@@ -13,17 +13,13 @@ namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.Login;
 internal sealed class LoginCommandHandler(
     IUserDbContext db,
     IRepository<User> users,
-    IRepository<Role> roles,
-    IRepository<UserRole> userRoles,
-    IRepository<Permission> permissions,
-    IRepository<RolePermission> rolePermissions,
     IRepository<RefreshToken> refreshTokens,
-    IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
     IAccessTokenIssuer accessTokenIssuer,
     ITotpService totpService,
     IIdentityAuditLogger auditLogger,
     ICurrentTenant currentTenant,
+    ITenantIdentitySeeder identitySeeder,
     IOptions<AuthOptions> authOptions
 ) : ICommandHandler<LoginCommand, AuthAttemptResult>
 {
@@ -32,8 +28,10 @@ internal sealed class LoginCommandHandler(
         if (!currentTenant.IsAvailable || currentTenant.Id is null)
             throw new InvalidOperationException("Tenant could not be resolved from the host.");
 
-        await RbacCatalog.EnsureAsync(roles, permissions, rolePermissions, unitOfWork, cancellationToken);
-        await BootstrapAdminIfNeededAsync(cancellationToken);
+        await identitySeeder.EnsureAsync(
+            mode: TenantIdentitySeedMode.BootstrapIfEmpty,
+            cancellationToken: cancellationToken
+        );
 
         var email = User.NormalizeEmail(request.Email);
         var user = await users.GetAsync(u => u.Email == email, cancellationToken);
@@ -225,44 +223,5 @@ internal sealed class LoginCommandHandler(
             AuthErrorCodes.MfaInvalid,
             "Geçersiz MFA veya kurtarma kodu."
         );
-    }
-
-    private async Task BootstrapAdminIfNeededAsync(CancellationToken cancellationToken)
-    {
-        if (await users.ExistsAsync(_ => true, cancellationToken))
-            return;
-
-        var bootstrap = authOptions.Value.Bootstrap;
-        if (string.IsNullOrWhiteSpace(bootstrap.Password))
-        {
-            throw new InvalidOperationException(
-                "Tenant has no users and Auth:Bootstrap:Password is not configured."
-            );
-        }
-
-        var adminRole = (await roles.GetAllByFilterAsync(r => r.Name == Role.Names.Admin, cancellationToken))
-            .FirstOrDefault()
-            ?? throw new InvalidOperationException("Admin role was not seeded.");
-
-        var admin = await users.AddAsync(
-            CreateBootstrapAdmin(bootstrap, passwordHasher),
-            cancellationToken
-        );
-        await userRoles.AddAsync(new UserRole(admin.Id, adminRole.Id), cancellationToken);
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-    }
-
-    private static User CreateBootstrapAdmin(BootstrapAdminOptions bootstrap, IPasswordHasher passwordHasher)
-    {
-        var admin = new User(
-            bootstrap.Email,
-            bootstrap.Username,
-            passwordHasher.Hash(bootstrap.Password),
-            bootstrap.FirstName,
-            bootstrap.LastName
-        );
-        admin.MarkEmailVerified();
-        return admin;
     }
 }

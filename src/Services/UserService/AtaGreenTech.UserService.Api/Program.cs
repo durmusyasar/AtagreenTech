@@ -42,6 +42,10 @@ if (args is ["migrate-tenants"])
     return summary.HasFailures ? 1 : 0;
 }
 
+// `seed-tenant <subdomain> [--email=...] [--password=...]`: RBAC + varsayılan Admin (add-tenant otomasyonu).
+if (args is [TenantSeedCli.Command, ..])
+    return await TenantSeedCli.RunAsync(app, args);
+
 // Routing, tenant çözümlemesi, CORS, authentication ve authorization burada sırasıyla eklenir;
 // UseCors/UseAuthentication/UseAuthorization ayrıca çağrılmamalıdır.
 app.UseOmniSyncCore();
