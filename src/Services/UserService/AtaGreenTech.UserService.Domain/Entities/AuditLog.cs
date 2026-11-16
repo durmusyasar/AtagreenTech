@@ -72,5 +72,6 @@ public class AuditLog : BaseEntity
         public const string PasswordReset = "PASSWORD_RESET";
         public const string MfaEnabled = "MFA_ENABLED";
         public const string MfaDisabled = "MFA_DISABLED";
+        public const string TenantIdentitySeeded = "TENANT_IDENTITY_SEEDED";
     }
 }

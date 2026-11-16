@@ -58,12 +58,13 @@ open http://atagreen.omnisync.localhost:3000   # web client for the "atagreen" t
   and `ATAGREEN_LOCAL_ROOT_DOMAIN` in Compose). Root domains themselves, `www`, deeper subdomains
   (`api.atagreen.omnisync.com`) and other hosts carry no tenant. The client applies the same rule in
   `client/src/core/tenant.ts`, so a new root domain must be added in both places.
-- Add a tenant with `deploy/add-tenant.sh <subdomain> "<Name>"` (e.g. `deploy/add-tenant.sh atagreen "Atagreen"`, then
-  open `http://atagreen.omnisync.localhost:3000`). It registers the tenant in the master database with its own
-  database (`atagreen_stock_<subdomain>`), runs `tenant-migrator` to create and migrate that database, and prints the
-  tenant ID that access tokens must carry as `tenant_id`. Re-running it for an existing tenant only applies pending
-  migrations. Tenant connection strings use `Host=postgres` and `GSS Encryption Mode=Disable`; after deploying new
-  tenant migrations, apply them to all tenants with `docker compose run --rm tenant-migrator`.
+- Add a tenant with `deploy/add-tenant.sh <subdomain> "<Name>" [admin_email] [admin_password]` (e.g.
+  `deploy/add-tenant.sh atagreen "Atagreen"`, then open `http://atagreen.omnisync.localhost:3000`). It registers the
+  tenant in the master database with its own database (`atagreen_stock_<subdomain>`), runs Stock + User tenant
+  migrators, seeds Admin/Manager/Viewer + default Admin (`Auth:Bootstrap` / `AUTH_BOOTSTRAP_PASSWORD`), and verifies
+  login. Re-running is idempotent. After deploying new tenant migrations only, use
+  `docker compose run --rm tenant-migrator` and `docker compose run --rm user-tenant-migrator`. Manual seed:
+  `docker compose run --rm --no-deps user-service seed-tenant <subdomain>`.
 - The `web` service is an unprivileged nginx (UID 101, read-only root filesystem) published on `127.0.0.1:3000`
   (`ATAGREEN_WEB_PORT`). It serves the client and forwards `/api/` to the stock service, so the browser talks to a
   single origin and no CORS configuration is needed. The `Host` header is passed through, so tenants are resolved from

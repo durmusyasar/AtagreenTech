@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using AtaGreenTech.SharedKernel.Security;
+using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
 using AtaGreenTech.UserService.Infrastructure.Email;
@@ -34,12 +35,17 @@ public static class DependencyInjection
                 services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
                 services.AddSingleton<ITotpService, Rfc6238TotpService>();
                 services.AddScoped<IIdentityAuditLogger, IdentityAuditLogger>();
+                services.AddScoped<ITenantIdentitySeeder, TenantIdentitySeeder>();
                 services.AddScoped<IOidcAuthService, OidcPlaceholderService>();
                 services.AddSingleton<IEmailVerificationSender, LoggingEmailVerificationSender>();
                 services.AddSingleton<IPasswordResetSender, LoggingPasswordResetSender>();
                 services.AddSingleton<IUserInvitationSender, LoggingUserInvitationSender>();
 
                 services.AddAuthorization(options => options.AddAtaGreenPermissionPolicies());
+
+                services.AddOptions<InternalProvisioningOptions>()
+                    .Bind(configuration.GetSection(InternalProvisioningOptions.SectionName))
+                    .ValidateOnStart();
 
                 services.AddOptions<FeatureFlagsOptions>()
                     .Bind(configuration.GetSection(FeatureFlagsOptions.SectionName))
