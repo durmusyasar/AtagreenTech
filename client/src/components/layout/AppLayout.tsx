@@ -11,32 +11,33 @@ import {
   TeamOutlined,
 } from '@ant-design/icons'
 import { Layout, Menu, theme } from 'antd'
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { createNavigationItems } from '../../config/navigation'
+import { useLanguage } from '../../core/context/useLanguage'
+import { usePermissions } from '../../core/hooks/usePermissions'
 import { BrandMark } from '../BrandMark'
 import { CommandPalette } from '../command-palette/CommandPalette'
-import { useLanguage } from '../../core/context/useLanguage'
-import { useIsAdmin } from '../../core/hooks/useIsAdmin'
-import type { MessageKey } from '../../core/i18n/messages'
 import { Footer } from './Footer'
 import { Navbar } from './Navbar'
 
-const NAVIGATION: { path: string; label: MessageKey; icon: ReactNode; adminOnly?: boolean }[] = [
-  { path: '/', label: 'menu.dashboard', icon: <DashboardOutlined /> },
-  { path: '/units-of-measure', label: 'menu.unitsOfMeasure', icon: <ColumnWidthOutlined /> },
-  { path: '/categories', label: 'menu.categories', icon: <AppstoreOutlined /> },
-  { path: '/products', label: 'menu.products', icon: <TagsOutlined /> },
-  { path: '/warehouses', label: 'menu.warehouses', icon: <ShopOutlined /> },
-  { path: '/stock-movements', label: 'menu.stockMovements', icon: <SwapOutlined /> },
-  { path: '/stock-balances', label: 'menu.stockBalances', icon: <BarChartOutlined /> },
-  { path: '/account/security', label: 'menu.security', icon: <LockOutlined /> },
-  { path: '/admin/users', label: 'menu.users', icon: <TeamOutlined />, adminOnly: true },
-  { path: '/admin/roles', label: 'menu.roles', icon: <SafetyCertificateOutlined />, adminOnly: true },
-]
+const NAV_ICONS = {
+  dashboard: <DashboardOutlined />,
+  units: <ColumnWidthOutlined />,
+  categories: <AppstoreOutlined />,
+  products: <TagsOutlined />,
+  warehouses: <ShopOutlined />,
+  movements: <SwapOutlined />,
+  balances: <BarChartOutlined />,
+  security: <LockOutlined />,
+  users: <TeamOutlined />,
+  roles: <SafetyCertificateOutlined />,
+}
 
 /**
  * Oturum açık sayfaların ortak iskeleti: sol modül menüsü, üst Navbar (tenant / dil / profil),
  * içerik ve alt Footer (telif + sürüm). Rotalar `Outlet` ile buraya bağlanır.
+ * Menü öğeleri rol/izin setine göre `createNavigationItems` üzerinden filtrelenir.
  */
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
@@ -44,13 +45,16 @@ export function AppLayout() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { t } = useLanguage()
-  const isAdmin = useIsAdmin()
+  const access = usePermissions()
   const { token } = theme.useToken()
   const openCommandPalette = useCallback(() => setCommandOpen(true), [])
 
   const visibleNav = useMemo(
-    () => NAVIGATION.filter((item) => !item.adminOnly || isAdmin),
-    [isAdmin],
+    () =>
+      createNavigationItems(NAV_ICONS).filter((item) =>
+        access.canAccess({ roles: item.roles, permissions: item.permissions }),
+      ),
+    [access],
   )
   const selected = visibleNav.filter((item) =>
     item.path === '/' ? pathname === '/' : pathname.startsWith(item.path),

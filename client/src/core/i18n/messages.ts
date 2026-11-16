@@ -366,6 +366,10 @@ const tr = {
   'balance.lastChangedAt': 'Son hareket',
   'notFound.title': 'Sayfa bulunamadı',
   'notFound.back': 'Ana sayfaya dön',
+  'unauthorized.title': 'Erişim yetkiniz bulunmuyor (403)',
+  'unauthorized.description':
+    'Bu sayfayı veya işlemi görüntülemek için gerekli rol ya da izin yetkisine sahip değilsiniz.',
+  'unauthorized.back': 'Ana panele dön',
   'error.unauthorized': 'Oturumunuzun süresi doldu, lütfen tekrar oturum açın.',
   'error.forbidden': 'Bu işlem veya tenant için yetkiniz yok.',
   'error.notFound': 'Kayıt bulunamadı.',
@@ -764,6 +768,10 @@ const en: Record<MessageKey, string> = {
   'balance.lastChangedAt': 'Last movement',
   'notFound.title': 'Page not found',
   'notFound.back': 'Back to home',
+  'unauthorized.title': 'Access denied (403)',
+  'unauthorized.description':
+    'You do not have the required role or permission to view this page or perform this action.',
+  'unauthorized.back': 'Back to dashboard',
   'error.unauthorized': 'Your session has expired, please sign in again.',
   'error.forbidden': 'You are not allowed to perform this action or access this tenant.',
   'error.notFound': 'Record not found.',
