@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  /** API kök yolu; varsayılan `/api/v1` (aynı origin). */
+  /** API kök yolu; varsayılan `/api/v1` (aynı origin). Eski `VITE_DEFAULT_ACCESS_TOKEN` kaldırıldı. */
   readonly VITE_API_BASE_URL?: string
   /**
    * Adres alt alan adı içermediğinde `X-Tenant` ile gönderilen varsayılan tenant. Yalnızca geliştirme sunucusunda

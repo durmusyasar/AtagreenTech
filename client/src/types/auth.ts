@@ -26,8 +26,10 @@ export interface LoginResult {
 /** UserService `AUTH_*` / `SSO_*` hata kodları. */
 export const AuthErrorCodes = {
   MfaRequired: 'AUTH_MFA_REQUIRED',
+  MfaInvalid: 'AUTH_MFA_INVALID',
   InvalidCredentials: 'AUTH_INVALID_CREDENTIALS',
   AccountLocked: 'AUTH_ACCOUNT_LOCKED',
   AccountInactive: 'AUTH_ACCOUNT_INACTIVE',
   EmailNotVerified: 'AUTH_EMAIL_NOT_VERIFIED',
+  RateLimitExceeded: 'AUTH_RATE_LIMIT_EXCEEDED',
 } as const
