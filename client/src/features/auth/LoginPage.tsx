@@ -1,7 +1,7 @@
 import { LoginOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import { Alert, App, Button, Card, Flex, Form, Input, Select, Typography } from 'antd'
 import { useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { BrandMark } from '../../components/BrandMark'
 import { ApiError } from '../../core/api/apiError'
 import { useAuth } from '../../core/context/useAuth'
@@ -33,7 +33,10 @@ export function LoginPage() {
   const { language, setLanguage, t } = useLanguage()
   const { message } = App.useApp()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
+  const invitedBanner = searchParams.get('invited') === '1'
+  const resetBanner = searchParams.get('reset') === '1'
 
   const [step, setStep] = useState<LoginStep>('CREDENTIALS')
   const [mfaMode, setMfaMode] = useState<MfaMode>('TOTP')
@@ -153,6 +156,13 @@ export function LoginPage() {
               </Typography.Paragraph>
             )}
 
+            {invitedBanner && (
+              <Alert type="success" showIcon style={{ marginBottom: 16 }} message={t('login.invitedSuccess')} />
+            )}
+            {resetBanner && (
+              <Alert type="success" showIcon style={{ marginBottom: 16 }} message={t('login.resetSuccess')} />
+            )}
+
             {/* Credentials alanları MFA adımında da form state'te kalsın diye gizli tutulur. */}
             <div style={{ display: step === 'CREDENTIALS' ? undefined : 'none' }}>
               <Form.Item
@@ -170,6 +180,11 @@ export function LoginPage() {
                 name="password"
                 label={t('login.password')}
                 rules={[{ required: true, message: t('login.passwordRequired') }]}
+                extra={
+                  <Link to="/forgot-password" style={{ fontSize: 12 }}>
+                    {t('login.forgotPassword')}
+                  </Link>
+                }
               >
                 <Input.Password autoComplete="current-password" placeholder="••••••••" />
               </Form.Item>
