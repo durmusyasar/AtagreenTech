@@ -5,16 +5,25 @@ import { defineConfig, loadEnv } from 'vite'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const stockTarget = env.DEV_API_PROXY_TARGET || 'http://localhost:5154'
+  const userTarget = env.DEV_USER_API_PROXY_TARGET || 'http://localhost:5155'
 
   return {
     plugins: [react()],
     server: {
       port: 5173,
       strictPort: true,
-      // Uygulama API'ye her ortamda göreli /api yoluyla gider; geliştirmede bu istekler yerel stok servisine
-      // aktarılır, Docker'da aynı işi nginx yapar. Böylece CORS'a gerek kalmaz.
+      // Uygulama API'ye her ortamda göreli /api yoluyla gider. Geliştirmede kimlik uçları UserService'e,
+      // diğerleri StockService'e aktarılır (Docker'da aynı ayrımı nginx yapar).
       proxy: {
-        '/api': env.DEV_API_PROXY_TARGET || 'http://localhost:5154',
+        '^/api/v1/(auth|users|roles|sessions|audit-logs)(/|$)': {
+          target: userTarget,
+          changeOrigin: true,
+        },
+        '/api': {
+          target: stockTarget,
+          changeOrigin: true,
+        },
       },
     },
     build: {

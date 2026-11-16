@@ -6,8 +6,13 @@ export interface ProblemDetails {
   title?: string
   status?: number
   detail?: string
+  /** UserService `ErrorResponse.message` ile uyum. */
+  message?: string
   instance?: string
   errorCode?: string
+  /** UserService `ErrorResponse.code` ile uyum. */
+  code?: string
+  mfaRequired?: boolean
   traceId?: string
   errors?: Record<string, string[]>
   resourceKey?: string

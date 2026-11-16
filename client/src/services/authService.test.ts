@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../core/api/axiosClient', () => ({
   axiosClient: {
+    post: vi.fn(),
     get: vi.fn(),
   },
 }))
@@ -10,82 +11,96 @@ vi.mock('../core/session', () => ({
   sessionStore: {
     signIn: vi.fn(),
     signOut: vi.fn(),
-    getSnapshot: () => ({ token: null, tenant: 'atagreen', isTenantFromHost: true, language: 'tr' }),
+    setTokens: vi.fn(),
+    getSnapshot: () => ({
+      token: null,
+      refreshToken: null,
+      expiresAt: null,
+      tenant: 'atagreen',
+      isTenantFromHost: true,
+      language: 'tr',
+    }),
+  },
+}))
+
+vi.mock('./sessionService', () => ({
+  sessionService: {
+    getCurrent: vi.fn(),
   },
 }))
 
 import { ApiError } from '../core/api/apiError'
 import { axiosClient } from '../core/api/axiosClient'
 import { sessionStore } from '../core/session'
+import { AuthErrorCodes } from '../types/auth'
 import { authService } from './authService'
+import { sessionService } from './sessionService'
 
-const mockedGet = vi.mocked(axiosClient.get)
+const mockedPost = vi.mocked(axiosClient.post)
 const mockedSignIn = vi.mocked(sessionStore.signIn)
-
-function token(payload: object): string {
-  const encode = (value: object) =>
-    btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(value))))
-      .replaceAll('+', '-')
-      .replaceAll('/', '_')
-      .replaceAll('=', '')
-  return `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode(payload)}.signature`
-}
+const mockedGetMe = vi.mocked(sessionService.getCurrent)
 
 describe('authService.login', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('rejects malformed and expired tokens before calling the API', async () => {
-    await expect(authService.login({ accessToken: 'not-a-jwt' })).rejects.toMatchObject({ code: 'invalid_token' })
-    await expect(
-      authService.login({ accessToken: token({ email: 'a@b.c', exp: 1 }) }),
-    ).rejects.toMatchObject({ code: 'token_expired' })
-    expect(mockedGet).not.toHaveBeenCalled()
-    expect(mockedSignIn).not.toHaveBeenCalled()
-  })
-
-  it('validates with the protected endpoint then stores the session', async () => {
-    const accessToken = token({
-      sub: 'test-user',
-      email: 'test@atagreen.local',
-      role: ['Admin'],
-      tenant_id: '5803ca09-ca89-4f92-81ce-66a0477cb081',
-      exp: Math.floor(Date.now() / 1000) + 3600,
-    })
-    mockedGet.mockResolvedValue({
+  it('stores tokens and loads /auth/me on success', async () => {
+    mockedPost.mockResolvedValue({
       data: {
-        message: 'ok',
-        userId: 'test-user',
-        email: 'test@atagreen.local',
-        roles: ['Admin'],
-        tenant: 'atagreen',
-        timestamp: new Date().toISOString(),
+        accessToken: 'access',
+        refreshToken: 'refresh',
+        expiresAt: '2026-11-16T12:00:00Z',
       },
     })
-
-    await expect(authService.login({ accessToken })).resolves.toEqual({
-      token: accessToken,
-      userName: 'test@atagreen.local',
-      tenant: 'atagreen',
+    mockedGetMe.mockResolvedValue({
+      id: '11111111-1111-1111-1111-111111111111',
+      email: 'admin@omnisync.com',
+      username: 'admin',
+      firstName: 'System',
+      lastName: 'Admin',
+      tenantId: '5803ca09-ca89-4f92-81ce-66a0477cb081',
       roles: ['Admin'],
+      permissions: ['users.read'],
+      isMfaEnabled: false,
     })
 
-    expect(mockedGet).toHaveBeenCalledWith(
-      '/security-test/protected',
-      expect.objectContaining({
-        headers: { Authorization: `Bearer ${accessToken}` },
-        skipErrorNotification: true,
-      }),
+    await expect(
+      authService.login({ email: 'admin@omnisync.com', password: 'Admin123!' }),
+    ).resolves.toMatchObject({
+      userName: 'admin@omnisync.com',
+      roles: ['Admin'],
+      accessToken: 'access',
+      refreshToken: 'refresh',
+    })
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      '/auth/login',
+      expect.objectContaining({ email: 'admin@omnisync.com', password: 'Admin123!' }),
+      expect.objectContaining({ skipErrorNotification: true }),
     )
-    expect(mockedSignIn).toHaveBeenCalledWith(accessToken)
+    expect(mockedSignIn).toHaveBeenCalledWith({
+      accessToken: 'access',
+      refreshToken: 'refresh',
+      expiresAt: '2026-11-16T12:00:00Z',
+    })
+    expect(mockedGetMe).toHaveBeenCalled()
   })
 
-  it('does not store the session when the API rejects the token', async () => {
-    const accessToken = token({ email: 'test@atagreen.local', exp: Math.floor(Date.now() / 1000) + 3600 })
-    mockedGet.mockRejectedValue(new ApiError({ message: 'unauthorized', status: 401, code: 'http_401' }))
+  it('propagates AUTH_MFA_REQUIRED without storing a session', async () => {
+    mockedPost.mockRejectedValue(
+      new ApiError({
+        message: 'İki aşamalı doğrulama kodu gereklidir.',
+        status: 401,
+        code: AuthErrorCodes.MfaRequired,
+      }),
+    )
 
-    await expect(authService.login({ accessToken })).rejects.toMatchObject({ status: 401 })
+    await expect(
+      authService.login({ email: 'admin@omnisync.com', password: 'Admin123!' }),
+    ).rejects.toMatchObject({ code: AuthErrorCodes.MfaRequired })
+
     expect(mockedSignIn).not.toHaveBeenCalled()
+    expect(mockedGetMe).not.toHaveBeenCalled()
   })
 })

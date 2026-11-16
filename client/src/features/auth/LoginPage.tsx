@@ -1,4 +1,4 @@
-import { LoginOutlined } from '@ant-design/icons'
+import { LoginOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
 import { Alert, App, Button, Card, Flex, Form, Input, Typography } from 'antd'
 import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
@@ -9,20 +9,19 @@ import { useLanguage } from '../../core/context/useLanguage'
 import { useTenant } from '../../core/context/useTenant'
 import { useAppMutation } from '../../core/hooks/useAppMutation'
 import type { MessageKey } from '../../core/i18n/messages'
-import { isExpired, readTokenClaims } from '../../core/jwt'
 import { TENANT_SELECTION_ENABLED, tenantAddressPattern } from '../../core/tenant'
 import { authService } from '../../services/authService'
-import type { LoginRequest, LoginResult } from '../../types/auth'
-import { defaultAccessToken } from './defaultAccessToken'
+import { AuthErrorCodes, type LoginRequest, type LoginResult } from '../../types/auth'
 
 interface LoginForm {
-  accessToken: string
+  email: string
+  password: string
+  mfaCode?: string
 }
 
 /**
- * Kimlik servisi henüz olmadığından oturum, stok servisinin doğrulayacağı erişim token'ıyla açılır.
- * Tenant adresten (veya geliştirmede `VITE_DEV_TENANT`) gelir; formda tenant alanı yoktur.
- * `VITE_DEFAULT_ACCESS_TOKEN` tanımlıysa tek tıkla oturum açılır; aksi halde token alanı gösterilir.
+ * Gerçek kimlik girişi: `POST /auth/login` (+ isteğe bağlı MFA ikinci adım).
+ * Tenant adresten (veya geliştirmede `VITE_DEV_TENANT`) gelir.
  */
 export function LoginPage() {
   const { isAuthenticated } = useAuth()
@@ -31,8 +30,7 @@ export function LoginPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
-  const presetToken = defaultAccessToken()
-  const [useCustomToken, setUseCustomToken] = useState(!presetToken)
+  const [mfaStepRequired, setMfaStepRequired] = useState(false)
   const [formError, setFormError] = useState<string>()
   const [form] = Form.useForm<LoginForm>()
 
@@ -43,6 +41,11 @@ export function LoginPage() {
       navigate(from, { replace: true })
     },
     onError: (error) => {
+      if (error instanceof ApiError && error.code === AuthErrorCodes.MfaRequired) {
+        setMfaStepRequired(true)
+        setFormError(t('login.mfaRequired'))
+        return
+      }
       setFormError(describeLoginError(error, t))
     },
   })
@@ -50,12 +53,18 @@ export function LoginPage() {
   if (isAuthenticated) return <Navigate to={from} replace />
 
   const tenantReady = isTenantFromHost || TENANT_SELECTION_ENABLED
-  const showTokenField = useCustomToken || !presetToken
 
   const submit = (values: LoginForm) => {
     setFormError(undefined)
-    const accessToken = showTokenField ? values.accessToken : presetToken
-    login.mutate({ accessToken })
+    const mfaCode = values.mfaCode?.trim()
+    const looksLikeTotp = mfaCode !== undefined && /^\d{6}$/.test(mfaCode)
+
+    login.mutate({
+      email: values.email,
+      password: values.password,
+      totpCode: mfaStepRequired && looksLikeTotp ? mfaCode : undefined,
+      recoveryCode: mfaStepRequired && mfaCode && !looksLikeTotp ? mfaCode : undefined,
+    })
   }
 
   return (
@@ -80,8 +89,8 @@ export function LoginPage() {
             form={form}
             layout="vertical"
             requiredMark={false}
-            initialValues={{ accessToken: presetToken }}
             onFinish={submit}
+            initialValues={{ email: '', password: '' }}
           >
             {isTenantFromHost ? (
               <Typography.Paragraph style={{ marginBottom: 16 }}>
@@ -93,28 +102,40 @@ export function LoginPage() {
               </Typography.Paragraph>
             )}
 
-            {presetToken && !useCustomToken && (
-              <Alert type="info" showIcon style={{ marginBottom: 16 }} message={t('login.defaultTokenReady')} />
-            )}
+            {!mfaStepRequired ? (
+              <>
+                <Form.Item
+                  name="email"
+                  label={t('login.email')}
+                  rules={[
+                    { required: true, whitespace: true, message: t('login.emailRequired') },
+                    { type: 'email', message: t('login.emailInvalid') },
+                  ]}
+                >
+                  <Input autoComplete="username" placeholder="admin@omnisync.com" />
+                </Form.Item>
 
-            {showTokenField && (
+                <Form.Item
+                  name="password"
+                  label={t('login.password')}
+                  rules={[{ required: true, message: t('login.passwordRequired') }]}
+                >
+                  <Input.Password autoComplete="current-password" placeholder="••••••••" />
+                </Form.Item>
+              </>
+            ) : (
               <Form.Item
-                name="accessToken"
-                label={t('login.token')}
-                rules={[
-                  { required: true, whitespace: true, message: t('login.tokenRequired') },
-                  {
-                    validator: (_, value?: string) => {
-                      if (!value?.trim()) return Promise.resolve()
-                      const claims = readTokenClaims(value)
-                      if (!claims) return Promise.reject(new Error(t('login.tokenInvalid')))
-                      if (isExpired(claims)) return Promise.reject(new Error(t('login.tokenExpired')))
-                      return Promise.resolve()
-                    },
-                  },
-                ]}
+                name="mfaCode"
+                label={t('login.mfaCode')}
+                rules={[{ required: true, whitespace: true, message: t('login.mfaCodeRequired') }]}
               >
-                <Input.TextArea rows={4} spellCheck={false} autoComplete="off" placeholder={t('login.tokenPlaceholder')} />
+                <Input
+                  autoFocus
+                  autoComplete="one-time-code"
+                  placeholder="123456"
+                  prefix={<SafetyCertificateOutlined />}
+                  style={{ letterSpacing: 4, textAlign: 'center', fontSize: 18 }}
+                />
               </Form.Item>
             )}
 
@@ -122,21 +143,28 @@ export function LoginPage() {
               <Alert type="error" showIcon style={{ marginBottom: 16 }} message={formError} />
             )}
 
-            <Button type="primary" htmlType="submit" icon={<LoginOutlined />} loading={login.isPending} block>
-              {t('login.submit')}
+            <Button
+              type="primary"
+              htmlType="submit"
+              icon={<LoginOutlined />}
+              loading={login.isPending}
+              block
+            >
+              {mfaStepRequired ? t('login.verifyMfa') : t('login.submit')}
             </Button>
 
-            {presetToken && (
+            {mfaStepRequired && (
               <Button
                 type="link"
                 block
                 style={{ marginTop: 8 }}
                 onClick={() => {
+                  setMfaStepRequired(false)
                   setFormError(undefined)
-                  setUseCustomToken((current) => !current)
+                  form.setFieldValue('mfaCode', undefined)
                 }}
               >
-                {useCustomToken ? t('login.useDefaultToken') : t('login.useCustomToken')}
+                {t('login.backToCredentials')}
               </Button>
             )}
           </Form>
@@ -148,9 +176,7 @@ export function LoginPage() {
 
 function describeLoginError(error: unknown, t: (key: MessageKey, ...params: unknown[]) => string): string {
   if (error instanceof ApiError) {
-    if (error.code === 'invalid_token') return t('login.tokenInvalid')
-    if (error.code === 'token_expired') return t('login.tokenExpired')
-    if (error.message && error.message !== 'invalid_token' && error.message !== 'token_expired') return error.message
+    if (error.message && error.code !== `http_${error.status}`) return error.message
     return t('login.failed')
   }
   return t('login.failed')

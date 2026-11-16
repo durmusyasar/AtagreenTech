@@ -4,9 +4,9 @@ import type { CurrentSession } from '../types/session'
 import { queryKeys } from './queryKeys'
 
 export const sessionService = {
-  /** Token'ın ve tenant'ın API tarafından kabul edildiğini doğrular. */
+  /** Giriş yapmış kullanıcının profili (`GET /auth/me`). */
   async getCurrent(signal?: AbortSignal): Promise<CurrentSession> {
-    const { data } = await axiosClient.get<CurrentSession>('/security-test/protected', { signal })
+    const { data } = await axiosClient.get<CurrentSession>('/auth/me', { signal })
     return data
   },
 }

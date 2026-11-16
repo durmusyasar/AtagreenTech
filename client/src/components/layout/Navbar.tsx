@@ -65,7 +65,16 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
         <Dropdown
           trigger={['click']}
           menu={{
-            items: [{ key: 'sign-out', icon: <LogoutOutlined />, label: t('header.signOut'), onClick: signOut }],
+            items: [
+              {
+                key: 'sign-out',
+                icon: <LogoutOutlined />,
+                label: t('header.signOut'),
+                onClick: () => {
+                  void signOut()
+                },
+              },
+            ],
           }}
         >
           <Button type="text" icon={<UserOutlined />}>
