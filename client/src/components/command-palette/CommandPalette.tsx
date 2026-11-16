@@ -8,6 +8,7 @@ import {
   ShopOutlined,
   SwapOutlined,
   TagsOutlined,
+  SafetyCertificateOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
 import { Empty, Flex, Input, Modal, Typography, theme, type InputRef } from 'antd'
@@ -131,6 +132,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               keywords: 'users kullanıcı admin invite davet',
               icon: <TeamOutlined />,
               run: () => go('/admin/users'),
+            } satisfies PaletteCommand,
+            {
+              id: 'roles',
+              titleKey: 'menu.roles' as const,
+              categoryKey: 'command.category.pages' as const,
+              keywords: 'roles permissions rbac rol izin',
+              icon: <SafetyCertificateOutlined />,
+              run: () => go('/admin/roles'),
             } satisfies PaletteCommand,
           ]
         : []),

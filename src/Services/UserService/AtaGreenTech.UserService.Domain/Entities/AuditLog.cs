@@ -67,6 +67,7 @@ public class AuditLog : BaseEntity
         public const string LoginSuccess = "LOGIN_SUCCESS";
         public const string LoginFailure = "LOGIN_FAILURE";
         public const string RoleChanged = "ROLE_CHANGED";
+        public const string RolePermissionsChanged = "ROLE_PERMISSIONS_CHANGED";
         public const string UserInvited = "USER_INVITED";
         public const string PasswordReset = "PASSWORD_RESET";
         public const string MfaEnabled = "MFA_ENABLED";

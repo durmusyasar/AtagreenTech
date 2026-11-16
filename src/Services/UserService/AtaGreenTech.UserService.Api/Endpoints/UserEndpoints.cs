@@ -1,5 +1,6 @@
 using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.UserService.Application.Features.Auth;
+using AtaGreenTech.UserService.Application.Features.Users.Commands.AssignUserRoles;
 using AtaGreenTech.UserService.Application.Features.Users.Commands.CreateUser;
 using AtaGreenTech.UserService.Application.Features.Users.Commands.DeleteUser;
 using AtaGreenTech.UserService.Application.Features.Users.Commands.InviteUser;
@@ -39,6 +40,7 @@ public sealed class UserEndpoints : IEndpointModule
         group.MapPost("", CreateAsync).RequireAuthorization(AuthorizationPolicies.UsersWrite);
         group.MapPost("/invite", InviteAsync).RequireAuthorization(AuthorizationPolicies.UsersWrite);
         group.MapPut("/{id:guid}", UpdateAsync).RequireAuthorization(AuthorizationPolicies.UsersWrite);
+        group.MapPut("/{id:guid}/roles", AssignRolesAsync).RequireAuthorization(AuthorizationPolicies.UsersWrite);
         group.MapPatch("/{id:guid}/activate", (Guid id, ISender sender, CancellationToken ct) =>
             SetActiveAsync(id, true, sender, ct)).RequireAuthorization(AuthorizationPolicies.UsersDelete);
         group.MapPatch("/{id:guid}/deactivate", (Guid id, ISender sender, CancellationToken ct) =>
@@ -117,6 +119,28 @@ public sealed class UserEndpoints : IEndpointModule
             : BadRequest(result.Message);
     }
 
+    private static async Task<IResult> AssignRolesAsync(
+        Guid id,
+        AssignUserRolesRequest request,
+        ISender sender,
+        HttpContext httpContext,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await sender.Send(
+            new AssignUserRolesCommand(
+                id,
+                request.Roles?.ToArray() ?? [],
+                httpContext.Connection.RemoteIpAddress?.ToString()
+            ),
+            cancellationToken
+        );
+
+        return result.Succeeded && result.User is not null
+            ? TypedResults.Ok(result.User)
+            : BadRequest(result.Message);
+    }
+
     private static async Task<IResult> SetActiveAsync(
         Guid id,
         bool isActive,
@@ -168,3 +192,6 @@ public sealed record UpdateUserRequest(
     string LastName,
     IEnumerable<string>? Roles
 );
+
+/// <summary>Admin kullanıcıya rol atama istek gövdesi.</summary>
+public sealed record AssignUserRolesRequest(IEnumerable<string>? Roles);
