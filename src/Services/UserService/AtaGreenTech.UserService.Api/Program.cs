@@ -50,3 +50,6 @@ app.MapOmniSyncEndpoints();
 
 await app.RunAsync();
 return 0;
+
+// WebApplicationFactory<Program> için entry-point görünürlüğü.
+public partial class Program;
