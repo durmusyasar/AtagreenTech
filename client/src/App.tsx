@@ -22,6 +22,7 @@ import { ProductsPage } from './features/products/ProductsPage'
 import { StockBalancesPage } from './features/stock/StockBalancesPage'
 import { StockMovementsPage } from './features/stock/StockMovementsPage'
 import { UnitsOfMeasurePage } from './features/units-of-measure/UnitsOfMeasurePage'
+import { RolesPage } from './features/roles/RolesPage'
 import { UsersPage } from './features/users/UsersPage'
 import { WarehousesPage } from './features/warehouses/WarehousesPage'
 
@@ -54,6 +55,14 @@ const router = createBrowserRouter([
         element: (
           <RequireAdmin>
             <UsersPage />
+          </RequireAdmin>
+        ),
+      },
+      {
+        path: 'admin/roles',
+        element: (
+          <RequireAdmin>
+            <RolesPage />
           </RequireAdmin>
         ),
       },

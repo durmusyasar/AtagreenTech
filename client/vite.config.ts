@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       // Uygulama API'ye her ortamda göreli /api yoluyla gider. Geliştirmede kimlik uçları UserService'e,
       // diğerleri StockService'e aktarılır (Docker'da aynı ayrımı nginx yapar).
       proxy: {
-        '^/api/v1/(auth|users|roles|sessions|audit-logs)(/|$)': {
+        '^/api/v1/(auth|users|roles|permissions|sessions|audit-logs)(/|$)': {
           target: userTarget,
           changeOrigin: true,
         },
