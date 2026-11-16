@@ -2,12 +2,15 @@ export interface TokenClaims {
   subject: string | null
   email: string | null
   roles: string[]
+  /** JWT `permission` claim değerleri (granüler RBAC). */
+  permissions: string[]
   tenantId: string | null
   /** Bitiş zamanı (Unix saniye); token'da yoksa `null`. */
   expiresAt: number | null
 }
 
 const ROLE_CLAIMS = ['role', 'roles', 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+const PERMISSION_CLAIMS = ['permission', 'permissions']
 
 /**
  * Token'ın içeriğini arayüzde göstermek ve süresini kontrol etmek için okur. İmza doğrulanmaz; bunu her istekte API
@@ -26,6 +29,7 @@ export function readTokenClaims(token: string): TokenClaims | null {
       subject: asString(claims.sub),
       email: asString(claims.email),
       roles: ROLE_CLAIMS.flatMap((name) => asStringList(claims[name])),
+      permissions: PERMISSION_CLAIMS.flatMap((name) => asStringList(claims[name])),
       tenantId: asString(claims.tenant_id),
       expiresAt: typeof claims.exp === 'number' ? claims.exp : null,
     }

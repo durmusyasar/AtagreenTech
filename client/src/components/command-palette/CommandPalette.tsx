@@ -4,19 +4,28 @@ import {
   ColumnWidthOutlined,
   DashboardOutlined,
   GlobalOutlined,
+  LockOutlined,
   PlusOutlined,
+  SafetyCertificateOutlined,
   ShopOutlined,
   SwapOutlined,
   TagsOutlined,
-  LockOutlined,
-  SafetyCertificateOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
 import { Empty, Flex, Input, Modal, Typography, theme, type InputRef } from 'antd'
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+} from 'react'
 import { useNavigate } from 'react-router-dom'
+import { createNavigationItems } from '../../config/navigation'
 import { useLanguage } from '../../core/context/useLanguage'
-import { useIsAdmin } from '../../core/hooks/useIsAdmin'
+import { usePermissions } from '../../core/hooks/usePermissions'
 import type { MessageKey } from '../../core/i18n/messages'
 import { filterByQuery, isCommandPaletteToggle } from './commandPaletteSearch'
 
@@ -34,14 +43,40 @@ interface CommandPaletteProps {
   onOpenChange: (open: boolean) => void
 }
 
+const NAV_ICONS = {
+  dashboard: <DashboardOutlined />,
+  units: <ColumnWidthOutlined />,
+  categories: <AppstoreOutlined />,
+  products: <TagsOutlined />,
+  warehouses: <ShopOutlined />,
+  movements: <SwapOutlined />,
+  balances: <BarChartOutlined />,
+  security: <LockOutlined />,
+  users: <TeamOutlined />,
+  roles: <SafetyCertificateOutlined />,
+}
+
+const NAV_KEYWORDS: Record<string, string> = {
+  '/': 'home overview genel bakış dashboard',
+  '/units-of-measure': 'uom unit ölçü birim',
+  '/categories': 'category kategori',
+  '/products': 'product ürün sku',
+  '/warehouses': 'warehouse depo',
+  '/stock-movements': 'movement hareket transfer stock',
+  '/stock-balances': 'balance bakiye inventory',
+  '/account/security': 'security güvenlik mfa password şifre session oturum',
+  '/admin/users': 'users kullanıcı admin invite davet',
+  '/admin/roles': 'roles permissions rbac rol izin',
+}
+
 /**
  * Ctrl/Cmd+K ile açılan komuta paleti: sayfa gezinmesi, hızlı oluşturma ve dil değiştirme.
- * Yalnızca oturum açık layout’ta (`AppLayout`) mount edilir.
+ * Menü rotaları rol/izin filtresiyle navigation config'ten türetilir.
  */
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate()
   const { language, setLanguage, t } = useLanguage()
-  const isAdmin = useIsAdmin()
+  const access = usePermissions()
   const { token } = theme.useToken()
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
@@ -66,100 +101,35 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     [navigate, setOpen],
   )
 
-  const commands = useMemo<PaletteCommand[]>(
-    () => [
-      {
-        id: 'dashboard',
-        titleKey: 'menu.dashboard',
-        categoryKey: 'command.category.pages',
-        keywords: 'home overview genel bakış dashboard',
-        icon: <DashboardOutlined />,
-        run: () => go('/'),
-      },
-      {
-        id: 'units',
-        titleKey: 'menu.unitsOfMeasure',
-        categoryKey: 'command.category.pages',
-        keywords: 'uom unit ölçü birim',
-        icon: <ColumnWidthOutlined />,
-        run: () => go('/units-of-measure'),
-      },
-      {
-        id: 'categories',
-        titleKey: 'menu.categories',
-        categoryKey: 'command.category.pages',
-        keywords: 'category kategori',
-        icon: <AppstoreOutlined />,
-        run: () => go('/categories'),
-      },
-      {
-        id: 'products',
-        titleKey: 'menu.products',
-        categoryKey: 'command.category.pages',
-        keywords: 'product ürün sku',
-        icon: <TagsOutlined />,
-        run: () => go('/products'),
-      },
-      {
-        id: 'warehouses',
-        titleKey: 'menu.warehouses',
-        categoryKey: 'command.category.pages',
-        keywords: 'warehouse depo',
-        icon: <ShopOutlined />,
-        run: () => go('/warehouses'),
-      },
-      {
-        id: 'movements',
-        titleKey: 'menu.stockMovements',
-        categoryKey: 'command.category.pages',
-        keywords: 'movement hareket transfer stock',
-        icon: <SwapOutlined />,
-        run: () => go('/stock-movements'),
-      },
-      {
-        id: 'balances',
-        titleKey: 'menu.stockBalances',
-        categoryKey: 'command.category.pages',
-        keywords: 'balance bakiye inventory',
-        icon: <BarChartOutlined />,
-        run: () => go('/stock-balances'),
-      },
-      {
-        id: 'security',
-        titleKey: 'menu.security',
-        categoryKey: 'command.category.pages',
-        keywords: 'security güvenlik mfa password şifre session oturum',
-        icon: <LockOutlined />,
-        run: () => go('/account/security'),
-      },
-      ...(isAdmin
-        ? [
-            {
-              id: 'users',
-              titleKey: 'menu.users' as const,
-              categoryKey: 'command.category.pages' as const,
-              keywords: 'users kullanıcı admin invite davet',
-              icon: <TeamOutlined />,
-              run: () => go('/admin/users'),
-            } satisfies PaletteCommand,
-            {
-              id: 'roles',
-              titleKey: 'menu.roles' as const,
-              categoryKey: 'command.category.pages' as const,
-              keywords: 'roles permissions rbac rol izin',
-              icon: <SafetyCertificateOutlined />,
-              run: () => go('/admin/roles'),
-            } satisfies PaletteCommand,
-          ]
-        : []),
-      {
+  const commands = useMemo<PaletteCommand[]>(() => {
+    const pageCommands = createNavigationItems(NAV_ICONS)
+      .filter((item) => access.canAccess({ roles: item.roles, permissions: item.permissions }))
+      .map(
+        (item): PaletteCommand => ({
+          id: item.path,
+          titleKey: item.label,
+          categoryKey: 'command.category.pages',
+          keywords: NAV_KEYWORDS[item.path] ?? '',
+          icon: item.icon,
+          run: () => go(item.path),
+        }),
+      )
+
+    const actionCommands: PaletteCommand[] = []
+    if (access.can('stock.write')) {
+      actionCommands.push({
         id: 'new-product',
         titleKey: 'command.newProduct',
         categoryKey: 'command.category.actions',
         keywords: 'new create ekle ürün product',
         icon: <PlusOutlined />,
         run: () => go('/products?action=new'),
-      },
+      })
+    }
+
+    return [
+      ...pageCommands,
+      ...actionCommands,
       {
         id: 'lang-toggle',
         titleKey: 'command.toggleLanguage',
@@ -171,9 +141,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           setOpen(false)
         },
       },
-    ],
-    [go, isAdmin, language, setLanguage, setOpen],
-  )
+    ]
+  }, [access, go, language, setLanguage, setOpen])
 
   const searchable = useMemo(
     () =>
