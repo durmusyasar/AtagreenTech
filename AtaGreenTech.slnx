@@ -25,4 +25,7 @@
   <Folder Name="/tests/Services/UserService.Tests/">
     <Project Path="tests/Services/UserService.Tests/AtaGreenTech.UserService.Tests.csproj" />
   </Folder>
+  <Folder Name="/tests/AtaGreenTech.IntegrationTests/">
+    <Project Path="tests/AtaGreenTech.IntegrationTests/AtaGreenTech.IntegrationTests.csproj" />
+  </Folder>
 </Solution>
