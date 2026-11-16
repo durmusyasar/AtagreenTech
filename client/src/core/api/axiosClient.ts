@@ -46,7 +46,11 @@ function isAuthBootstrapUrl(url: string | undefined): boolean {
     url.includes('/auth/login') ||
     url.includes('/auth/refresh') ||
     url.includes('/auth/logout') ||
-    url.includes('/auth/accept-invite')
+    url.includes('/auth/accept-invite') ||
+    url.includes('/auth/verify-email') ||
+    url.includes('/auth/resend-verification') ||
+    url.includes('/auth/forgot-password') ||
+    url.includes('/auth/reset-password')
   )
 }
 

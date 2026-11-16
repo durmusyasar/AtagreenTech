@@ -10,7 +10,11 @@ import { RequireAuth } from './components/RequireAuth'
 import { clearOnSessionChange, createQueryClient } from './core/api/queryClient'
 import { TenantThemeProvider } from './core/context/TenantThemeProvider'
 import { sessionStore } from './core/session'
+import { AcceptInvitePage } from './features/auth/AcceptInvitePage'
+import { ForgotPasswordPage } from './features/auth/ForgotPasswordPage'
 import { LoginPage } from './features/auth/LoginPage'
+import { ResetPasswordPage } from './features/auth/ResetPasswordPage'
+import { VerifyEmailPage } from './features/auth/VerifyEmailPage'
 import { CategoriesPage } from './features/categories/CategoriesPage'
 import { DashboardPage } from './features/dashboard/DashboardPage'
 import { ProductsPage } from './features/products/ProductsPage'
@@ -24,6 +28,10 @@ clearOnSessionChange(queryClient, sessionStore)
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  { path: '/accept-invite', element: <AcceptInvitePage /> },
+  { path: '/verify-email', element: <VerifyEmailPage /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
   {
     path: '/',
     element: (
