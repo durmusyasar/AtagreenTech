@@ -29,8 +29,8 @@
 ### Running with Docker Compose
 
 The stack (`docker-compose.yml`) starts PostgreSQL, applies master and tenant migrations with one-off migrator
-containers, then starts the stock service once the database is healthy and all migrations have succeeded, and finally
-the web client.
+containers (Stock + User), then starts **stock-service** and **user-service** once the database is healthy, and finally
+the web client (nginx routes `/api/v1/auth|users|…` to UserService, other `/api/` to StockService).
 
 ```bash
 deploy/generate-secrets.sh   # creates secrets/ (database password, connection string, JWT signing key)
@@ -76,29 +76,67 @@ open http://atagreen.omnisync.localhost:3000   # web client for the "atagreen" t
   `deploy/nginx/omnisync.conf.example` (with `deploy/nginx/atagreen-proxy.conf`) terminates TLS with wildcard
   certificates, redirects HTTP to HTTPS and forwards `Host`, `X-Forwarded-For` and `X-Forwarded-Proto`.
 
+## Kimlik Doğrulama ve Yetkilendirme (Identity & IAM)
+
+Merkezi kimlik ve RBAC **UserService** (.NET 10 Minimal API) üzerindedir; StockService ve client aynı JWT sözleşmesini
+tüketir. Detaylı akış ve secret tablosu: [`docs/IDENTITY_ARCHITECTURE.md`](docs/IDENTITY_ARCHITECTURE.md).
+
+### Mimari genel bakış
+
+- **Token’lar:** UserService kısa ömürlü JWT `accessToken` + tek kullanımlık `refreshToken` üretir
+  (`iss`: `AtaGreenTech.UserService`, `aud`: `AtaGreenTech.Apps`, imza: `JwtSettings:SigningKey`).
+- **Refresh rotation & reuse detection:** Her `/api/v1/auth/refresh` yeni çift üretir; kullanılmış refresh tekrar
+  sunulursa ilgili `FamilyId` oturum ailesi iptal edilir.
+- **İzinler:** JWT `permission` claim’leri (`users.read`, `stock.write`, `stock.*`, `*`) client’ta
+  `RequireAuth` / `PermissionGuard` ve StockService policy’lerinde (`perm:stock.read|write|delete`) doğrulanır.
+- **MFA:** TOTP (authenticator) + tek kullanımlık kurtarma kodları; `/account/security` üzerinden yönetilir.
+- **Tenant seed:** `deploy/add-tenant.sh` veya `seed-tenant` CLI Admin/Manager/Viewer + varsayılan Admin’i idempotent oluşturur.
+
+### Yerel geliştirmede giriş
+
+1. Secret’ları oluşturup yığını ayağa kaldırın:
+
+   ```bash
+   deploy/generate-secrets.sh
+   GITHUB_USERNAME=<user> GITHUB_PACKAGES_TOKEN=$(gh auth token) docker compose up -d --build
+   ```
+
+2. Tenant + Admin seed (örnek `atagreen`; varsayılan Admin `admin@omnisync.com` / `AUTH_BOOTSTRAP_PASSWORD` veya `Admin123!`):
+
+   ```bash
+   deploy/add-tenant.sh atagreen "Atagreen"
+   # veya: deploy/add-tenant.sh acme "Acme" admin@acme.com 'StrongPass123!'
+   ```
+
+3. Tarayıcıdan tenant adresini açın ve giriş yapın:
+
+   `http://atagreen.omnisync.localhost:3000/login`
+
+Client `sessionStore` access/refresh token’ları `sessionStorage`’da tutar; Axios 401 interceptor’ı tek uçuşluk refresh
+kuyruğu çalıştırır. Eski `VITE_DEFAULT_ACCESS_TOKEN` / manuel JWT yapıştırma akışı kaldırılmıştır — geliştirme girişi
+yalnızca `/login` (ve gerekirse MFA) ile yapılır.
+
 ### Web Client Development
 
 ```bash
 cd client
 cp .env.example .env.local   # optional: API address and development tenant
 npm install
-npm run dev                  # http://localhost:5173, /api is proxied to the stock service on :5154
+npm run dev                  # http://localhost:5173 — /api → Stock (:5154) + User (:5155) proxy
 npm run lint && npm test && npm run build
 ```
 
 - `src/core` holds cross-cutting code: the Axios client (`core/api`), session/tenant/language hooks (`core/context`)
   and UI translations (`core/i18n`). `src/services` wraps API endpoints, `src/features` contains pages and
   `src/components` shared UI.
-- Every request carries `Authorization: Bearer <token>` and `Accept-Language`. The tenant comes from the address
-  (`window.location.hostname`, e.g. `atagreen.omnisync.com` → `atagreen`) and reaches the API through the `Host` header, so
-  no tenant header is sent. Only the development server (`npm run dev`) lets you pick a tenant on an address without
-  one (`localhost:5173`, defaulting to `VITE_DEV_TENANT`) and sends it as `X-Tenant`, which the stock service honours
+- Every request carries `Authorization: Bearer <token>` (after login) and `Accept-Language`. The tenant comes from the
+  address (`window.location.hostname`, e.g. `atagreen.omnisync.com` → `atagreen`) and reaches the API through the
+  `Host` header, so no tenant header is sent. Only the development server (`npm run dev`) lets you pick a tenant on an
+  address without one (`localhost:5173`, defaulting to `VITE_DEV_TENANT`) and sends it as `X-Tenant`, which APIs honour
   only in Development. A built client never does: on an address without a tenant the sign-in page asks you to open
   your tenant address (e.g. `<tenant>.omnisync.localhost:3000`).
 - Errors are normalised into `ApiError`: `400` keeps field errors for forms, `422` business rules are translated by
-  their `resourceKey`, and `401` signs the user out and redirects to the sign-in page.
-- Access tokens are issued by **UserService** (`iss`: `AtaGreenTech.UserService`, `aud`: `AtaGreenTech.Apps`) via
-  email/password (+ optional MFA) login and validated by Stock (and other APIs) with the shared
-  `JwtSettings:SigningKey` secret. Required claims: `sub`, `email`, `role`, `tenant_id`. Access + refresh tokens are
-  kept in `sessionStorage` and cleared when the tab closes; 401 responses trigger a single-flight refresh queue.
+  their `resourceKey`. A `401` first tries a single-flight refresh; if refresh fails, the session is cleared and the
+  user is sent to `/login`. Missing role/permission on a route yields `/unauthorized` (403).
+- Required JWT claims: `sub`, `email`, `role`, `tenant_id`, plus granular `permission` values for RBAC.
 
