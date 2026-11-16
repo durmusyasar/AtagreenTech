@@ -4,6 +4,8 @@
  */
 export const queryKeys = {
   session: ['session'],
+  /** Aktif cihaz oturumları (`GET /sessions`). */
+  sessions: ['sessions'],
   /** Host'tan çözülen tenant'ın logo / renk / favicon ayarları. */
   tenantConfig: ['tenant', 'config'],
   users: ['users'],

@@ -37,6 +37,7 @@ export function LoginPage() {
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
   const invitedBanner = searchParams.get('invited') === '1'
   const resetBanner = searchParams.get('reset') === '1'
+  const passwordChangedBanner = searchParams.get('passwordChanged') === '1'
 
   const [step, setStep] = useState<LoginStep>('CREDENTIALS')
   const [mfaMode, setMfaMode] = useState<MfaMode>('TOTP')
@@ -161,6 +162,14 @@ export function LoginPage() {
             )}
             {resetBanner && (
               <Alert type="success" showIcon style={{ marginBottom: 16 }} message={t('login.resetSuccess')} />
+            )}
+            {passwordChangedBanner && (
+              <Alert
+                type="success"
+                showIcon
+                style={{ marginBottom: 16 }}
+                message={t('login.passwordChangedSuccess')}
+              />
             )}
 
             {/* Credentials alanları MFA adımında da form state'te kalsın diye gizli tutulur. */}
