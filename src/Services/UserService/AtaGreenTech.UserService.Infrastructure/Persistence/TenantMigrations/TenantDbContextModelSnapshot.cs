@@ -323,6 +323,9 @@ namespace AtaGreenTech.UserService.Infrastructure.Persistence.TenantMigrations
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsMfaEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -343,8 +346,15 @@ namespace AtaGreenTech.UserService.Infrastructure.Persistence.TenantMigrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<string>("RecoveryCodeHashesJson")
+                        .HasColumnType("jsonb");
+
                     b.Property<string>("SecurityStamp")
                         .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("TotpSecret")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 

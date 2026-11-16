@@ -21,6 +21,7 @@ internal sealed class LoginCommandHandler(
     IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
     IAccessTokenIssuer accessTokenIssuer,
+    ITotpService totpService,
     IIdentityAuditLogger auditLogger,
     ICurrentTenant currentTenant,
     IOptions<AuthOptions> authOptions
@@ -35,7 +36,6 @@ internal sealed class LoginCommandHandler(
         await BootstrapAdminIfNeededAsync(cancellationToken);
 
         var email = User.NormalizeEmail(request.Email);
-        // Tracked entity: lockout sayacı transaction commit ile kalıcı olmalı.
         var user = await users.GetAsync(u => u.Email == email, cancellationToken);
 
         if (user is null)
@@ -129,6 +129,13 @@ internal sealed class LoginCommandHandler(
             );
         }
 
+        if (user.IsMfaEnabled)
+        {
+            var mfaResult = await VerifyMfaAsync(user, request, options, utcNow, cancellationToken);
+            if (mfaResult is not null)
+                return mfaResult;
+        }
+
         user.ResetAccessFailures();
 
         var userWithRoles = await db.Users
@@ -172,6 +179,54 @@ internal sealed class LoginCommandHandler(
         return AuthAttemptResult.Ok(new AuthResponse(access.AccessToken, refreshPlaintext, access.ExpiresAt));
     }
 
+    private async Task<AuthAttemptResult?> VerifyMfaAsync(
+        User user,
+        LoginCommand request,
+        AuthOptions options,
+        DateTime utcNow,
+        CancellationToken cancellationToken
+    )
+    {
+        var hasTotp = !string.IsNullOrWhiteSpace(request.TotpCode);
+        var hasRecovery = !string.IsNullOrWhiteSpace(request.RecoveryCode);
+
+        if (!hasTotp && !hasRecovery)
+            return AuthAttemptResult.RequireMfa();
+
+        var valid = false;
+        if (hasTotp)
+        {
+            valid = !string.IsNullOrWhiteSpace(user.TotpSecret)
+                && totpService.VerifyCode(user.TotpSecret, request.TotpCode!);
+        }
+        else if (hasRecovery)
+        {
+            var hash = RecoveryCodeFactory.Hash(request.RecoveryCode!);
+            valid = user.TryConsumeRecoveryCodeHash(hash);
+        }
+
+        if (valid)
+            return null;
+
+        user.RegisterFailedAccess(
+            options.MaxFailedAccessAttempts,
+            TimeSpan.FromMinutes(options.LockoutMinutes),
+            utcNow
+        );
+        await auditLogger.LogAsync(
+            AuditLog.Actions.LoginFailure,
+            user.Email,
+            user.Id,
+            request.ClientIp,
+            "Geçersiz MFA veya kurtarma kodu.",
+            cancellationToken
+        );
+        return AuthAttemptResult.Fail(
+            AuthErrorCodes.MfaInvalid,
+            "Geçersiz MFA veya kurtarma kodu."
+        );
+    }
+
     private async Task BootstrapAdminIfNeededAsync(CancellationToken cancellationToken)
     {
         if (await users.ExistsAsync(_ => true, cancellationToken))
@@ -195,7 +250,6 @@ internal sealed class LoginCommandHandler(
         );
         await userRoles.AddAsync(new UserRole(admin.Id, adminRole.Id), cancellationToken);
 
-        // Login sorgusu AsNoTracking / ayrı GetAsync olduğu için bootstrap'ın DB'de görünmesi gerekir.
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 

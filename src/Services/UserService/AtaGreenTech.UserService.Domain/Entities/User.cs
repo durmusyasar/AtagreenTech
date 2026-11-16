@@ -1,3 +1,4 @@
+using System.Text.Json;
 using OmniSync.Core.Domain.Common;
 
 namespace AtaGreenTech.UserService.Domain.Entities;
@@ -16,9 +17,12 @@ public class User : BaseEntity
     public const int EmailVerificationTokenHashMaxLength = 128;
     public const int PasswordResetTokenHashMaxLength = 128;
     public const int InvitationTokenHashMaxLength = 128;
+    public const int TotpSecretMaxLength = 64;
+    public const int RecoveryCodeHashMaxLength = 128;
 
     private readonly List<UserRole> _userRoles = [];
     private readonly List<RefreshToken> _refreshTokens = [];
+    private List<string> _recoveryCodeHashes = [];
 
     protected User()
     {
@@ -83,6 +87,15 @@ public class User : BaseEntity
     /// <summary>UTC kilit bitiş zamanı; dolana kadar giriş reddedilir.</summary>
     public DateTime? LockoutEnd { get; private set; }
 
+    /// <summary>TOTP MFA etkin mi. Kurulum doğrulanana kadar <see langword="false"/> kalır.</summary>
+    public bool IsMfaEnabled { get; private set; }
+
+    /// <summary>Authenticator Base32 gizli anahtarı; MFA kapalıyken null olabilir (kurulum beklerken dolu).</summary>
+    public string? TotpSecret { get; private set; }
+
+    /// <summary>Kurtarma kodu SHA-256 özetlerinin JSON dizisi; düz metin saklanmaz.</summary>
+    public string? RecoveryCodeHashesJson { get; private set; }
+
     /// <summary>
     /// Parola veya kritik kimlik değişiminde yenilenir; eski oturumların geçersiz kılınmasında kullanılır.
     /// </summary>
@@ -91,6 +104,16 @@ public class User : BaseEntity
     public IReadOnlyCollection<UserRole> UserRoles => _userRoles.AsReadOnly();
 
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+
+    /// <summary>Kurtarma kodlarının SHA-256 özetleri (bellek görünümü).</summary>
+    public IReadOnlyCollection<string> RecoveryCodeHashes
+    {
+        get
+        {
+            EnsureRecoveryCodesLoaded();
+            return _recoveryCodeHashes.AsReadOnly();
+        }
+    }
 
     public void UpdateProfile(string firstName, string lastName, bool isActive)
     {
@@ -248,6 +271,85 @@ public class User : BaseEntity
         AccessFailedCount = 0;
         LockoutEnd = null;
     }
+
+    /// <summary>
+    /// MFA kurulumunu başlatır (henüz etkinleştirmez). Önceki bekleyen kurulum ve kodlar üzerine yazılır.
+    /// </summary>
+    public void BeginMfaEnrollment(string totpSecretBase32, IReadOnlyList<string> recoveryCodeHashes)
+    {
+        if (IsMfaEnabled)
+            throw new InvalidOperationException("MFA is already enabled. Disable it before re-enrollment.");
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(totpSecretBase32);
+        ArgumentNullException.ThrowIfNull(recoveryCodeHashes);
+        if (recoveryCodeHashes.Count == 0)
+            throw new ArgumentException("At least one recovery code hash is required.", nameof(recoveryCodeHashes));
+
+        var secret = totpSecretBase32.Trim();
+        if (secret.Length > TotpSecretMaxLength)
+            throw new ArgumentException($"TOTP secret must be at most {TotpSecretMaxLength} characters.", nameof(totpSecretBase32));
+
+        TotpSecret = secret;
+        _recoveryCodeHashes = [];
+        foreach (var hash in recoveryCodeHashes)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(hash);
+            if (hash.Length > RecoveryCodeHashMaxLength)
+                throw new ArgumentException($"Recovery code hash must be at most {RecoveryCodeHashMaxLength} characters.");
+            _recoveryCodeHashes.Add(hash);
+        }
+
+        PersistRecoveryCodes();
+    }
+
+    /// <summary>Kurulum TOTP doğrulaması başarılı olduktan sonra MFA'yı açar.</summary>
+    public void EnableMfa()
+    {
+        if (string.IsNullOrWhiteSpace(TotpSecret))
+            throw new InvalidOperationException("MFA enrollment has not been started.");
+
+        EnsureRecoveryCodesLoaded();
+        if (_recoveryCodeHashes.Count == 0)
+            throw new InvalidOperationException("MFA recovery codes are missing.");
+
+        IsMfaEnabled = true;
+    }
+
+    /// <summary>Tek kullanımlık kurtarma kodunu tüketir.</summary>
+    public bool TryConsumeRecoveryCodeHash(string codeHash)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(codeHash);
+        EnsureRecoveryCodesLoaded();
+        var index = _recoveryCodeHashes.FindIndex(h =>
+            string.Equals(h, codeHash, StringComparison.Ordinal));
+        if (index < 0)
+            return false;
+
+        _recoveryCodeHashes.RemoveAt(index);
+        PersistRecoveryCodes();
+        return true;
+    }
+
+    public void DisableMfa()
+    {
+        IsMfaEnabled = false;
+        TotpSecret = null;
+        _recoveryCodeHashes = [];
+        RecoveryCodeHashesJson = null;
+    }
+
+    private void EnsureRecoveryCodesLoaded()
+    {
+        if (_recoveryCodeHashes.Count > 0 || string.IsNullOrWhiteSpace(RecoveryCodeHashesJson))
+            return;
+
+        _recoveryCodeHashes = JsonSerializer.Deserialize<List<string>>(RecoveryCodeHashesJson) ?? [];
+    }
+
+    private void PersistRecoveryCodes() =>
+        RecoveryCodeHashesJson = _recoveryCodeHashes.Count == 0
+            ? null
+            : JsonSerializer.Serialize(_recoveryCodeHashes);
 
     public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
