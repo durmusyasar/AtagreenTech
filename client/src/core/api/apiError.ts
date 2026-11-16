@@ -48,7 +48,7 @@ export function toApiError(error: unknown, language: Language): ApiError {
   return new ApiError({
     message: describe(status, problem, language),
     status,
-    code: problem.errorCode ?? `http_${status}`,
+    code: problem.errorCode ?? problem.code ?? `http_${status}`,
     resourceKey: problem.resourceKey,
     parameters: problem.parameters,
     fieldErrors: problem.errors,
@@ -70,9 +70,11 @@ function describe(status: number, problem: ProblemDetails, language: Language): 
       return messages.length > 0 ? messages.join(' ') : translate(language, 'error.validation')
     }
     case 401:
-      return translate(language, 'error.unauthorized')
+      return problem.detail ?? problem.message ?? translate(language, 'error.unauthorized')
     case 403:
-      return translate(language, 'error.forbidden')
+      return problem.detail ?? problem.message ?? translate(language, 'error.forbidden')
+    case 423:
+      return problem.detail ?? problem.message ?? translate(language, 'error.forbidden')
     case 404:
       return translate(language, 'error.notFound')
     case 422: {
@@ -108,5 +110,12 @@ function formatParameters(problem: ProblemDetails, language: Language): string[]
 }
 
 function asProblemDetails(data: unknown): ProblemDetails {
-  return typeof data === 'object' && data !== null ? (data as ProblemDetails) : {}
+  if (typeof data !== 'object' || data === null) return {}
+  const raw = data as ProblemDetails
+  return {
+    ...raw,
+    // UserService ErrorResponse { code, message } ↔ Stock ProblemDetails { errorCode, detail }
+    errorCode: raw.errorCode ?? raw.code,
+    detail: raw.detail ?? raw.message,
+  }
 }

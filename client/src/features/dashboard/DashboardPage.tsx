@@ -35,13 +35,13 @@ export function DashboardPage() {
                 {t('dashboard.connected')}
               </Space>
             </Descriptions.Item>
-            <Descriptions.Item label={t('dashboard.user')}>{data.email ?? data.userId ?? '—'}</Descriptions.Item>
+            <Descriptions.Item label={t('dashboard.user')}>{data.email || data.username || '—'}</Descriptions.Item>
             <Descriptions.Item label={t('dashboard.roles')}>
               {data.roles.map((role) => (
                 <Tag key={role}>{role}</Tag>
               ))}
             </Descriptions.Item>
-            <Descriptions.Item label={t('dashboard.tenant')}>{data.tenant ?? '—'}</Descriptions.Item>
+            <Descriptions.Item label={t('dashboard.tenant')}>{data.tenantId || '—'}</Descriptions.Item>
             <Descriptions.Item label={t('dashboard.tokenExpires')}>{expiresAt}</Descriptions.Item>
           </Descriptions>
         )}

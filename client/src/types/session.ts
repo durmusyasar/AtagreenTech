@@ -1,9 +1,12 @@
-/** `GET /api/v1/security-test/protected` yanıtı: token'ın ve tenant'ın API tarafından nasıl görüldüğü. */
+/** `GET /api/v1/auth/me` yanıtı (UserMeResponse). */
 export interface CurrentSession {
-  message: string
-  userId: string | null
-  email: string | null
+  id: string
+  email: string
+  username: string
+  firstName: string
+  lastName: string
+  tenantId: string
   roles: string[]
-  tenant: string | null
-  timestamp: string
+  permissions: string[]
+  isMfaEnabled: boolean
 }

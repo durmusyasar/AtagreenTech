@@ -1,12 +1,19 @@
 import { DEFAULT_LANGUAGE, isSupportedLanguage, type Language } from './i18n/languages'
 import { resolveTenantFromHost, TENANT_SELECTION_ENABLED } from './tenant'
 
-const TOKEN_KEY = 'atagreen.accessToken'
+const ACCESS_TOKEN_KEY = 'atagreen.accessToken'
+const REFRESH_TOKEN_KEY = 'atagreen.refreshToken'
+const EXPIRES_AT_KEY = 'atagreen.expiresAt'
 const TENANT_KEY = 'atagreen.tenant'
 const LANGUAGE_KEY = 'atagreen.language'
 
+/** Sessions API'nin "current session" tespiti için (Issue #35). */
+export const REFRESH_TOKEN_HEADER = 'X-Refresh-Token'
+
 export interface SessionState {
   token: string | null
+  refreshToken: string | null
+  expiresAt: string | null
   tenant: string | null
   /**
    * Tenant adresin alt alan adından geliyorsa değiştirilemez ve `X-Tenant` başlığı gönderilmez. Adreste tenant yoksa
@@ -16,14 +23,23 @@ export interface SessionState {
   language: Language
 }
 
+export interface SignInSession {
+  accessToken: string
+  refreshToken: string
+  expiresAt?: string | null
+  tenant?: string
+}
+
 type Listener = () => void
 
 const hostTenant = resolveTenantFromHost(window.location.hostname)
 const listeners = new Set<Listener>()
 
-// Token sekme kapanınca silinsin diye sessionStorage'da tutulur; dil tercihi ve (geliştirmede) seçilen tenant kalıcıdır.
+// Token'lar sekme kapanınca silinsin diye sessionStorage'da tutulur; dil ve (geliştirmede) tenant kalıcıdır.
 let state: SessionState = {
-  token: read(sessionStorage, TOKEN_KEY),
+  token: read(sessionStorage, ACCESS_TOKEN_KEY),
+  refreshToken: read(sessionStorage, REFRESH_TOKEN_KEY),
+  expiresAt: read(sessionStorage, EXPIRES_AT_KEY),
   tenant:
     hostTenant ??
     (TENANT_SELECTION_ENABLED ? (read(localStorage, TENANT_KEY) ?? (import.meta.env.VITE_DEV_TENANT || null)) : null),
@@ -42,17 +58,36 @@ export const sessionStore = {
     return () => listeners.delete(listener)
   },
 
-  signIn(token: string, tenant?: string): void {
-    write(sessionStorage, TOKEN_KEY, token)
+  signIn({ accessToken, refreshToken, expiresAt, tenant }: SignInSession): void {
+    write(sessionStorage, ACCESS_TOKEN_KEY, accessToken)
+    write(sessionStorage, REFRESH_TOKEN_KEY, refreshToken)
+    write(sessionStorage, EXPIRES_AT_KEY, expiresAt ?? null)
+
     const canSelect = TENANT_SELECTION_ENABLED && !state.isTenantFromHost
     const nextTenant = canSelect && tenant ? tenant.trim().toLowerCase() : state.tenant
     if (canSelect) write(localStorage, TENANT_KEY, nextTenant)
-    update({ token, tenant: nextTenant })
+
+    update({
+      token: accessToken,
+      refreshToken,
+      expiresAt: expiresAt ?? null,
+      tenant: nextTenant,
+    })
+  },
+
+  /** Access + refresh çifti (rotation sonrası). Tenant değişmez. */
+  setTokens(accessToken: string, refreshToken: string, expiresAt?: string | null): void {
+    write(sessionStorage, ACCESS_TOKEN_KEY, accessToken)
+    write(sessionStorage, REFRESH_TOKEN_KEY, refreshToken)
+    write(sessionStorage, EXPIRES_AT_KEY, expiresAt ?? null)
+    update({ token: accessToken, refreshToken, expiresAt: expiresAt ?? null })
   },
 
   signOut(): void {
-    write(sessionStorage, TOKEN_KEY, null)
-    update({ token: null })
+    write(sessionStorage, ACCESS_TOKEN_KEY, null)
+    write(sessionStorage, REFRESH_TOKEN_KEY, null)
+    write(sessionStorage, EXPIRES_AT_KEY, null)
+    update({ token: null, refreshToken: null, expiresAt: null })
   },
 
   setLanguage(language: Language): void {

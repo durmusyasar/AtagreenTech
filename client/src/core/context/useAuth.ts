@@ -1,27 +1,34 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
+import { authService } from '../../services/authService'
 import { readTokenClaims, type TokenClaims } from '../jwt'
-import { sessionStore } from '../session'
+import { sessionStore, type SignInSession } from '../session'
 import { useSession } from './useSession'
 
 export interface AuthContextValue {
   token: string | null
+  refreshToken: string | null
   claims: TokenClaims | null
   isAuthenticated: boolean
-  signIn: (token: string, tenant?: string) => void
-  signOut: () => void
+  signIn: (session: SignInSession) => void
+  signOut: () => Promise<void>
 }
 
 export function useAuth(): AuthContextValue {
-  const { token } = useSession()
+  const { token, refreshToken } = useSession()
+
+  const signOut = useCallback(async () => {
+    await authService.logout()
+  }, [])
 
   return useMemo(() => {
     const claims = token ? readTokenClaims(token) : null
     return {
       token,
+      refreshToken,
       claims,
       isAuthenticated: token !== null,
       signIn: sessionStore.signIn,
-      signOut: sessionStore.signOut,
+      signOut,
     }
-  }, [token])
+  }, [token, refreshToken, signOut])
 }
