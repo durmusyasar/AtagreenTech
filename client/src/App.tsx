@@ -6,6 +6,7 @@ import { SessionHydrator } from './components/SessionHydrator'
 import { AppLayout } from './components/layout/AppLayout'
 import { NotFound } from './components/NotFound'
 import { NotificationBridge } from './components/NotificationBridge'
+import { RequireAdmin } from './components/RequireAdmin'
 import { RequireAuth } from './components/RequireAuth'
 import { clearOnSessionChange, createQueryClient } from './core/api/queryClient'
 import { TenantThemeProvider } from './core/context/TenantThemeProvider'
@@ -21,6 +22,7 @@ import { ProductsPage } from './features/products/ProductsPage'
 import { StockBalancesPage } from './features/stock/StockBalancesPage'
 import { StockMovementsPage } from './features/stock/StockMovementsPage'
 import { UnitsOfMeasurePage } from './features/units-of-measure/UnitsOfMeasurePage'
+import { UsersPage } from './features/users/UsersPage'
 import { WarehousesPage } from './features/warehouses/WarehousesPage'
 
 const queryClient = createQueryClient()
@@ -47,6 +49,14 @@ const router = createBrowserRouter([
       { path: 'warehouses', element: <WarehousesPage /> },
       { path: 'stock-movements', element: <StockMovementsPage /> },
       { path: 'stock-balances', element: <StockBalancesPage /> },
+      {
+        path: 'admin/users',
+        element: (
+          <RequireAdmin>
+            <UsersPage />
+          </RequireAdmin>
+        ),
+      },
       { path: '*', element: <NotFound /> },
     ],
   },

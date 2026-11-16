@@ -8,11 +8,13 @@ import {
   ShopOutlined,
   SwapOutlined,
   TagsOutlined,
+  TeamOutlined,
 } from '@ant-design/icons'
 import { Empty, Flex, Input, Modal, Typography, theme, type InputRef } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLanguage } from '../../core/context/useLanguage'
+import { useIsAdmin } from '../../core/hooks/useIsAdmin'
 import type { MessageKey } from '../../core/i18n/messages'
 import { filterByQuery, isCommandPaletteToggle } from './commandPaletteSearch'
 
@@ -37,6 +39,7 @@ interface CommandPaletteProps {
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate()
   const { language, setLanguage, t } = useLanguage()
+  const isAdmin = useIsAdmin()
   const { token } = theme.useToken()
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
@@ -119,6 +122,18 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         icon: <BarChartOutlined />,
         run: () => go('/stock-balances'),
       },
+      ...(isAdmin
+        ? [
+            {
+              id: 'users',
+              titleKey: 'menu.users' as const,
+              categoryKey: 'command.category.pages' as const,
+              keywords: 'users kullanıcı admin invite davet',
+              icon: <TeamOutlined />,
+              run: () => go('/admin/users'),
+            } satisfies PaletteCommand,
+          ]
+        : []),
       {
         id: 'new-product',
         titleKey: 'command.newProduct',
@@ -139,7 +154,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         },
       },
     ],
-    [go, language, setLanguage, setOpen],
+    [go, isAdmin, language, setLanguage, setOpen],
   )
 
   const searchable = useMemo(

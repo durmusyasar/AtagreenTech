@@ -6,6 +6,7 @@ export const queryKeys = {
   session: ['session'],
   /** Host'tan çözülen tenant'ın logo / renk / favicon ayarları. */
   tenantConfig: ['tenant', 'config'],
+  users: ['users'],
   unitsOfMeasure: ['units-of-measure'],
   categories: ['categories'],
   products: ['products'],
