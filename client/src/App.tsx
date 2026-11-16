@@ -23,6 +23,7 @@ import { StockBalancesPage } from './features/stock/StockBalancesPage'
 import { StockMovementsPage } from './features/stock/StockMovementsPage'
 import { UnitsOfMeasurePage } from './features/units-of-measure/UnitsOfMeasurePage'
 import { RolesPage } from './features/roles/RolesPage'
+import { SecurityPage } from './features/security/SecurityPage'
 import { UsersPage } from './features/users/UsersPage'
 import { WarehousesPage } from './features/warehouses/WarehousesPage'
 
@@ -50,6 +51,7 @@ const router = createBrowserRouter([
       { path: 'warehouses', element: <WarehousesPage /> },
       { path: 'stock-movements', element: <StockMovementsPage /> },
       { path: 'stock-balances', element: <StockBalancesPage /> },
+      { path: 'account/security', element: <SecurityPage /> },
       {
         path: 'admin/users',
         element: (

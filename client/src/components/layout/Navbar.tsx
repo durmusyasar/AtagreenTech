@@ -1,6 +1,6 @@
-import { GlobalOutlined, LogoutOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons'
+import { GlobalOutlined, LockOutlined, LogoutOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons'
 import { Button, Dropdown, Flex, Select, Tag, Tooltip, Typography } from 'antd'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { BrandMark } from '../BrandMark'
 import { commandPaletteShortcutLabel } from '../command-palette/commandPaletteSearch'
 import { useAuth } from '../../core/context/useAuth'
@@ -20,6 +20,7 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
   const { claims, signOut } = useAuth()
   const { tenant } = useTenant()
   const { language, setLanguage, t } = useLanguage()
+  const navigate = useNavigate()
   const shortcut = commandPaletteShortcutLabel()
 
   return (
@@ -66,6 +67,12 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
           trigger={['click']}
           menu={{
             items: [
+              {
+                key: 'security',
+                icon: <LockOutlined />,
+                label: t('header.security'),
+                onClick: () => navigate('/account/security'),
+              },
               {
                 key: 'sign-out',
                 icon: <LogoutOutlined />,

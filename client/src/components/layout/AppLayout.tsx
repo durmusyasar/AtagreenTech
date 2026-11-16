@@ -3,6 +3,7 @@ import {
   BarChartOutlined,
   ColumnWidthOutlined,
   DashboardOutlined,
+  LockOutlined,
   SafetyCertificateOutlined,
   ShopOutlined,
   SwapOutlined,
@@ -28,6 +29,7 @@ const NAVIGATION: { path: string; label: MessageKey; icon: ReactNode; adminOnly?
   { path: '/warehouses', label: 'menu.warehouses', icon: <ShopOutlined /> },
   { path: '/stock-movements', label: 'menu.stockMovements', icon: <SwapOutlined /> },
   { path: '/stock-balances', label: 'menu.stockBalances', icon: <BarChartOutlined /> },
+  { path: '/account/security', label: 'menu.security', icon: <LockOutlined /> },
   { path: '/admin/users', label: 'menu.users', icon: <TeamOutlined />, adminOnly: true },
   { path: '/admin/roles', label: 'menu.roles', icon: <SafetyCertificateOutlined />, adminOnly: true },
 ]

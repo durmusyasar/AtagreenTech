@@ -8,6 +8,7 @@ import {
   ShopOutlined,
   SwapOutlined,
   TagsOutlined,
+  LockOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
@@ -122,6 +123,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         keywords: 'balance bakiye inventory',
         icon: <BarChartOutlined />,
         run: () => go('/stock-balances'),
+      },
+      {
+        id: 'security',
+        titleKey: 'menu.security',
+        categoryKey: 'command.category.pages',
+        keywords: 'security güvenlik mfa password şifre session oturum',
+        icon: <LockOutlined />,
+        run: () => go('/account/security'),
       },
       ...(isAdmin
         ? [
