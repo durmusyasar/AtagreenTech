@@ -10,4 +10,5 @@ public static class AuthErrorCodes
     public const string RateLimitExceeded = "AUTH_RATE_LIMIT_EXCEEDED";
     public const string MfaRequired = "AUTH_MFA_REQUIRED";
     public const string MfaInvalid = "AUTH_MFA_INVALID";
+    public const string SsoNotImplemented = "SSO_NOT_IMPLEMENTED";
 }

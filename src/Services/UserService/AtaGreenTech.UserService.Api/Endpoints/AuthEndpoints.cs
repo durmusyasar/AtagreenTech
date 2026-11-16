@@ -14,6 +14,7 @@ using AtaGreenTech.UserService.Application.Features.Auth.Commands.SetupMfa;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.VerifyEmail;
 using AtaGreenTech.UserService.Application.Features.Auth.Commands.VerifyMfa;
 using AtaGreenTech.UserService.Application.Features.Auth.Queries.GetMe;
+using AtaGreenTech.UserService.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
 using OmniSync.Core.Infrastructure.Endpoints;
@@ -21,7 +22,7 @@ using OmniSync.Core.Infrastructure.Endpoints;
 namespace AtaGreenTech.UserService.Api.Endpoints;
 
 /// <summary>
-/// <c>/api/v1/auth</c>: oturum, MFA, e-posta doğrulama ve şifre yönetimi. Tenant host'tan çözülür.
+/// <c>/api/v1/auth</c>: oturum, MFA, SSO iskeleti, e-posta doğrulama ve şifre yönetimi. Tenant host'tan çözülür.
 /// </summary>
 public sealed class AuthEndpoints : IEndpointModule
 {
@@ -53,6 +54,10 @@ public sealed class AuthEndpoints : IEndpointModule
         group.MapPost("/mfa/setup", SetupMfaAsync).RequireAuthorization();
         group.MapPost("/mfa/verify", VerifyMfaAsync).RequireAuthorization();
         group.MapPost("/mfa/disable", DisableMfaAsync).RequireAuthorization();
+
+        // V1 OIDC SSO placeholder — feature-flag kapalı / henüz implemente değil → 501.
+        group.MapGet("/sso/{provider}/login", SsoLoginAsync).AllowAnonymous();
+        group.MapPost("/sso/{provider}/callback", SsoCallbackAsync).AllowAnonymous();
     }
 
     private static async Task<IResult> LoginAsync(
@@ -253,6 +258,52 @@ public sealed class AuthEndpoints : IEndpointModule
             return AuthError(AuthErrorCodes.InvalidCredentials, ex.Message);
         }
     }
+
+    private static async Task<IResult> SsoLoginAsync(
+        string provider,
+        string? redirectUri,
+        IOidcAuthService oidcService,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            var result = await oidcService.GetAuthorizationUrlAsync(
+                provider,
+                redirectUri ?? string.Empty,
+                cancellationToken
+            );
+            return TypedResults.Ok(result);
+        }
+        catch (NotImplementedException ex)
+        {
+            return SsoNotImplemented(ex.Message);
+        }
+    }
+
+    private static async Task<IResult> SsoCallbackAsync(
+        string provider,
+        OidcCallbackRequest request,
+        IOidcAuthService oidcService,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            var result = await oidcService.HandleCallbackAsync(provider, request, cancellationToken);
+            return TypedResults.Ok(result);
+        }
+        catch (NotImplementedException ex)
+        {
+            return SsoNotImplemented(ex.Message);
+        }
+    }
+
+    private static IResult SsoNotImplemented(string message) =>
+        Results.Json(
+            new ErrorResponse(AuthErrorCodes.SsoNotImplemented, message),
+            statusCode: StatusCodes.Status501NotImplemented
+        );
 
     private static IResult ToMessageResult(Application.Features.Auth.MessageResult result) =>
         result.Succeeded
