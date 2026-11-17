@@ -1,15 +1,15 @@
 import { LoginOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
-import { Alert, App, Button, Card, Flex, Form, Input, Select, Typography } from 'antd'
+import { Alert, App, Button, Card, Flex, Form, Input, Typography } from 'antd'
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { BrandMark } from '../../components/BrandMark'
+import { LanguageSwitcher } from '../../components/LanguageSwitcher'
 import { ApiError } from '../../core/api/apiError'
 import { useAuth } from '../../core/context/useAuth'
 import { useLanguage } from '../../core/context/useLanguage'
 import { useTenant } from '../../core/context/useTenant'
 import { useAppMutation } from '../../core/hooks/useAppMutation'
 import { resolveAuthErrorMessage } from '../../core/i18n/authErrors'
-import { LANGUAGE_LABELS, SUPPORTED_LANGUAGES, type Language } from '../../core/i18n/languages'
 import { TENANT_SELECTION_ENABLED, tenantAddressPattern } from '../../core/tenant'
 import { authService } from '../../services/authService'
 import { AuthErrorCodes, type LoginRequest, type LoginResult } from '../../types/auth'
@@ -30,7 +30,7 @@ interface LoginForm {
 export function LoginPage() {
   const { isAuthenticated } = useAuth()
   const { tenant, isTenantFromHost } = useTenant()
-  const { language, setLanguage, t } = useLanguage()
+  const { language, t } = useLanguage()
   const { message } = App.useApp()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -120,14 +120,7 @@ export function LoginPage() {
               {step === 'CREDENTIALS' ? t('login.description') : t('login.mfaTitle')}
             </Typography.Text>
           </Flex>
-          <Select<Language>
-            size="small"
-            aria-label={t('header.language')}
-            value={language}
-            onChange={setLanguage}
-            options={SUPPORTED_LANGUAGES.map((code) => ({ value: code, label: LANGUAGE_LABELS[code] }))}
-            style={{ width: 120, flexShrink: 0 }}
-          />
+          <LanguageSwitcher size="small" />
         </Flex>
 
         {!tenantReady ? (

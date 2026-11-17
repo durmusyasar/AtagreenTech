@@ -1,11 +1,12 @@
-import { DEFAULT_LANGUAGE, isSupportedLanguage, type Language } from './i18n/languages'
+import { DEFAULT_LANGUAGE, I18N_LANGUAGE_STORAGE_KEY, isSupportedLanguage, type Language } from './i18n/languages'
 import { resolveTenantFromHost, TENANT_SELECTION_ENABLED } from './tenant'
 
 const ACCESS_TOKEN_KEY = 'atagreen.accessToken'
 const REFRESH_TOKEN_KEY = 'atagreen.refreshToken'
 const EXPIRES_AT_KEY = 'atagreen.expiresAt'
 const TENANT_KEY = 'atagreen.tenant'
-const LANGUAGE_KEY = 'atagreen.language'
+/** @deprecated Eski anahtar; okuma geriye dönük, yazma `omnisync_lang`. */
+const LEGACY_LANGUAGE_KEY = 'atagreen.language'
 
 /** Sessions API'nin "current session" tespiti için (Issue #35). */
 export const REFRESH_TOKEN_HEADER = 'X-Refresh-Token'
@@ -91,7 +92,8 @@ export const sessionStore = {
   },
 
   setLanguage(language: Language): void {
-    write(localStorage, LANGUAGE_KEY, language)
+    write(localStorage, I18N_LANGUAGE_STORAGE_KEY, language)
+    write(localStorage, LEGACY_LANGUAGE_KEY, null)
     update({ language })
   },
 }
@@ -102,7 +104,8 @@ function update(changes: Partial<SessionState>): void {
 }
 
 function readLanguage(): Language {
-  const stored = read(localStorage, LANGUAGE_KEY)
+  const stored =
+    read(localStorage, I18N_LANGUAGE_STORAGE_KEY) ?? read(localStorage, LEGACY_LANGUAGE_KEY)
   return isSupportedLanguage(stored) ? stored : DEFAULT_LANGUAGE
 }
 

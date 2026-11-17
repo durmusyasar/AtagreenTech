@@ -1,6 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
+import '../../i18n'
 import { ApiError } from '../api/apiError'
 import { isKnownAuthErrorCode, resolveAuthErrorMessage } from './authErrors'
+
+beforeAll(async () => {
+  const i18n = (await import('../../i18n')).default
+  await i18n.init()
+})
 
 describe('resolveAuthErrorMessage', () => {
   it('maps AUTH_* codes for TR and EN', () => {
