@@ -3,6 +3,7 @@ import { Button, Dropdown, Flex, Tag, Tooltip, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import { BrandMark } from '../BrandMark'
 import { LanguageSwitcher } from '../LanguageSwitcher'
+import { ThemeSwitcher } from '../ThemeSwitcher'
 import { commandPaletteShortcutLabel } from '../command-palette/commandPaletteSearch'
 import { useAuth } from '../../core/context/useAuth'
 import { useLanguage } from '../../core/context/useLanguage'
@@ -54,7 +55,10 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
           </Tooltip>
         )}
 
-        <LanguageSwitcher size="small" />
+        <Flex align="center" gap={2}>
+          <ThemeSwitcher variant="toggle" />
+          <LanguageSwitcher size="small" />
+        </Flex>
 
         <Dropdown
           trigger={['click']}

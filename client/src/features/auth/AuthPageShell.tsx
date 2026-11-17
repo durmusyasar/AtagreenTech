@@ -1,8 +1,8 @@
-import { Card, Flex, Select, Typography } from 'antd'
+import { Card, Flex, Typography } from 'antd'
 import type { ReactNode } from 'react'
 import { BrandMark } from '../../components/BrandMark'
-import { useLanguage } from '../../core/context/useLanguage'
-import { LANGUAGE_LABELS, SUPPORTED_LANGUAGES, type Language } from '../../core/i18n/languages'
+import { LanguageSwitcher } from '../../components/LanguageSwitcher'
+import { ThemeSwitcher } from '../../components/ThemeSwitcher'
 
 interface AuthPageShellProps {
   title: string
@@ -10,13 +10,19 @@ interface AuthPageShellProps {
   children: ReactNode
 }
 
-/** Public auth ekranları için ortak kart + marka + dil seçici. */
+/** Public auth ekranları için ortak kart + marka + tema / dil seçici. */
 export function AuthPageShell({ title, description, children }: AuthPageShellProps) {
-  const { language, setLanguage, t } = useLanguage()
-
   return (
-    <Flex align="center" justify="center" style={{ minHeight: '100vh', padding: 24 }}>
-      <Card style={{ width: '100%', maxWidth: 480 }}>
+    <Flex
+      align="center"
+      justify="center"
+      className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100"
+      style={{ padding: 24 }}
+    >
+      <Card
+        className="border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        style={{ width: '100%', maxWidth: 480 }}
+      >
         <Flex align="flex-start" justify="space-between" gap={12} style={{ marginBottom: 24 }}>
           <Flex vertical gap={8} style={{ minWidth: 0 }}>
             <BrandMark size={32} nameStyle={{ fontSize: 20, margin: 0 }} />
@@ -25,14 +31,10 @@ export function AuthPageShell({ title, description, children }: AuthPageShellPro
             </Typography.Title>
             {description ? <Typography.Text type="secondary">{description}</Typography.Text> : null}
           </Flex>
-          <Select<Language>
-            size="small"
-            aria-label={t('header.language')}
-            value={language}
-            onChange={setLanguage}
-            options={SUPPORTED_LANGUAGES.map((code) => ({ value: code, label: LANGUAGE_LABELS[code] }))}
-            style={{ width: 120, flexShrink: 0 }}
-          />
+          <Flex align="center" gap={2} style={{ flexShrink: 0 }}>
+            <ThemeSwitcher variant="toggle" />
+            <LanguageSwitcher size="small" />
+          </Flex>
         </Flex>
         {children}
       </Card>

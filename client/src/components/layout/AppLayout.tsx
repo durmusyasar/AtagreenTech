@@ -16,6 +16,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { createNavigationItems } from '../../config/navigation'
 import { useLanguage } from '../../core/context/useLanguage'
 import { usePermissions } from '../../core/hooks/usePermissions'
+import { useThemeStore } from '../../stores/themeStore'
 import { BrandMark } from '../BrandMark'
 import { CommandPalette } from '../command-palette/CommandPalette'
 import { Footer } from './Footer'
@@ -47,6 +48,7 @@ export function AppLayout() {
   const { t } = useLanguage()
   const access = usePermissions()
   const { token } = theme.useToken()
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme)
   const openCommandPalette = useCallback(() => setCommandOpen(true), [])
 
   const visibleNav = useMemo(
@@ -62,7 +64,13 @@ export function AppLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Layout.Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} breakpoint="lg" theme="light">
+      <Layout.Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        breakpoint="lg"
+        theme={resolvedTheme === 'dark' ? 'dark' : 'light'}
+      >
         <div className="app-logo">
           <BrandMark size={28} showName={!collapsed} nameStyle={{ color: token.colorPrimary }} />
         </div>
