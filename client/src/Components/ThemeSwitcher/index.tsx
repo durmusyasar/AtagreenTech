@@ -7,9 +7,12 @@ const MODE_OPTIONS: { label: string; value: ThemeMode }[] = [
   { label: 'System', value: 'system' },
 ]
 
+const CONTROL_SURFACE =
+  'appearance-none rounded-xl border border-subtle bg-surface shadow-sm transition-colors duration-150 hover:bg-elevated focus:outline-none focus:ring-2 focus:ring-brand/30'
+
 /**
- * Tema seçici. Varsayılan `toggle`: cam efektli pill ikon.
- * `segmented`: light / dark / system (ayar panelleri için).
+ * Tema seçici. Varsayılan `toggle`: dil dropdown ile aynı yüzey yüksekliği.
+ * `segmented`: light / dark / system.
  */
 export function ThemeSwitcher({ variant = 'toggle', className = '' }: ThemeSwitcherProps) {
   const { theme, resolvedTheme, setTheme, toggleTheme } = useThemeStore()
@@ -20,7 +23,7 @@ export function ThemeSwitcher({ variant = 'toggle', className = '' }: ThemeSwitc
       <div
         role="group"
         aria-label="Theme mode selector"
-        className={`inline-flex h-9 items-center gap-1 rounded-xl border border-subtle bg-elevated/70 p-1 shadow-sm backdrop-blur-md ${className}`.trim()}
+        className={`inline-flex h-9 items-center gap-1 p-1 ${CONTROL_SURFACE} ${className}`.trim()}
       >
         {MODE_OPTIONS.map((option) => {
           const active = theme === option.value
@@ -31,9 +34,9 @@ export function ThemeSwitcher({ variant = 'toggle', className = '' }: ThemeSwitc
               onClick={() => {
                 if (option.value !== theme) setTheme(option.value)
               }}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-200 ${
+              className={`appearance-none rounded-lg px-2.5 py-1 text-xs font-semibold transition-all duration-200 ${
                 active
-                  ? 'bg-surface text-brand shadow-sm ring-1 ring-subtle'
+                  ? 'bg-elevated text-brand shadow-sm ring-1 ring-subtle'
                   : 'text-secondary hover:text-primary'
               }`}
             >
@@ -51,7 +54,7 @@ export function ThemeSwitcher({ variant = 'toggle', className = '' }: ThemeSwitc
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
       title={isDark ? 'Açık Tema' : 'Koyu Tema'}
-      className={`group relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-subtle bg-elevated/70 text-secondary shadow-sm backdrop-blur-md transition-all duration-200 hover:bg-elevated hover:text-primary focus:outline-none focus:ring-2 focus:ring-brand/30 ${className}`.trim()}
+      className={`group relative inline-flex h-9 w-9 items-center justify-center text-secondary hover:text-primary ${CONTROL_SURFACE} ${className}`.trim()}
     >
       {isDark ? (
         <svg

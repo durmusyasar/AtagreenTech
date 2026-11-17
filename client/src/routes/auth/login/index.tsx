@@ -37,7 +37,7 @@ export function LoginPage() {
 
   return (
     <PublicAuthLayout>
-      <div className="w-full max-w-[420px] space-y-6 rounded-2xl border border-subtle bg-surface p-7 shadow-xl shadow-black/5 sm:p-8 dark:shadow-black/30">
+      <div className="w-full max-w-[420px] space-y-6 rounded-2xl border border-subtle bg-surface p-7 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5 sm:p-8 dark:shadow-black/40 dark:ring-white/5">
         <div className="space-y-1.5">
           <h1 className="text-2xl font-semibold tracking-tight text-primary">
             {step === 'CREDENTIALS' ? t('login.title') : t('login.mfaSubtitle')}
