@@ -1,7 +1,7 @@
 import type { FormInstance } from 'antd'
 import { useState } from 'react'
-import { ApiError } from '../../core/api/apiError'
-import { mapServerFieldErrors, type ServerFieldError, type TranslationErrorMapping } from './serverErrors'
+import { ApiError } from '@/core/api/apiError'
+import { mapServerFieldErrors, type ServerFieldError, type TranslationErrorMapping } from '@/Components/forms/serverErrors'
 
 /** Hatanın gösterileceği form alanı; `undefined` ise hata formun üstündeki uyarıda gösterilir. */
 export type BusinessRuleField = string | ((error: ApiError) => string | undefined)

@@ -1,5 +1,5 @@
 import type { AxiosRequestConfig } from 'axios'
-import { axiosClient } from '../api/axiosClient'
+import { axiosClient } from '@/core/api/axiosClient'
 
 /** GET yanıt gövdesini döndüren TanStack `queryFn`. `signal` iptali axios'a iletilir. */
 export function createGetQueryFn<TData>(

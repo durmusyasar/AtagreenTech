@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../../core/context/useAuth'
-import { canAccess } from '../../core/permissions'
-import type { RequireAuthProps } from './type'
+import { useAuth } from '@/core/context/useAuth'
+import { canAccess } from '@/core/permissions'
+import type { RequireAuthProps } from '@/Components/Guards/type'
 
 /**
  * Oturum yoksa `/login`'e, rol/izin yetmezse `/unauthorized`'a yönlendirir.

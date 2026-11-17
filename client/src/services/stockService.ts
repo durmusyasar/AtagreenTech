@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { AxiosRequestConfig } from 'axios'
-import { axiosClient } from '../core/api/axiosClient'
-import type { PagedResult } from '../types/api'
+import { axiosClient } from '@/core/api/axiosClient'
+import type { PagedResult } from '@/types/api'
 import type {
   InboundMovementRequest,
   OutboundMovementRequest,
@@ -10,8 +10,8 @@ import type {
   StockMovement,
   StockMovementQuery,
   TransferMovementRequest,
-} from '../types/stock'
-import { queryKeys } from './queryKeys'
+} from '@/types/stock'
+import { queryKeys } from '@/services/queryKeys'
 
 const MOVEMENTS = '/stock-movements'
 const BALANCES = '/stock-balances'

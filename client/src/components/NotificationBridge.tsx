@@ -1,6 +1,6 @@
 import { App } from 'antd'
 import { useEffect } from 'react'
-import { registerMessageInstance } from '../core/api/notifier'
+import { registerMessageInstance } from '@/core/api/notifier'
 
 /** API hatalarının bildirimleri antd `App` bağlamındaki message örneğiyle gösterilsin diye onu kaydeder. */
 export function NotificationBridge() {

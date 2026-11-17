@@ -1,9 +1,9 @@
 import type { FormInstance, FormProps } from 'antd'
 import { useState } from 'react'
-import type { FieldPath } from '../forms/serverErrors'
-import { useServerErrors, type ServerErrorOptions } from '../forms/useServerErrors'
-import { useLanguage } from '../../core/context/useLanguage'
-import { hasText, MINIMUM_TRANSLATIONS, type TranslationValues } from './translationForm'
+import type { FieldPath } from '@/Components/forms/serverErrors'
+import { useServerErrors, type ServerErrorOptions } from '@/Components/forms/useServerErrors'
+import { useLanguage } from '@/core/context/useLanguage'
+import { hasText, MINIMUM_TRANSLATIONS, type TranslationValues } from '@/Components/translations/translationForm'
 
 interface TranslationFormOptions extends Omit<ServerErrorOptions, 'onFieldErrors'> {
   languages: string[]

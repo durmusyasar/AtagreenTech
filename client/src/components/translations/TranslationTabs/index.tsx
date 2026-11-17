@@ -1,7 +1,7 @@
 import { Badge, Space, Tabs, Typography } from 'antd'
-import { useLanguage } from '../../../core/context/useLanguage'
-import { DEFAULT_LANGUAGE, isSupportedLanguage, LANGUAGE_LABELS } from '../../../core/i18n/languages'
-import type { TranslationTabsProps } from './type'
+import { useLanguage } from '@/core/context/useLanguage'
+import { DEFAULT_LANGUAGE, isSupportedLanguage, LANGUAGE_LABELS } from '@/core/i18n/languages'
+import type { TranslationTabsProps } from '@/Components/translations/TranslationTabs/type'
 
 /**
  * Dil başına bir sekme. Tüm sekmeler baştan render edilir: aksi halde hiç açılmamış bir sekmedeki alanlar forma

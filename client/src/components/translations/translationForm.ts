@@ -1,5 +1,5 @@
 import type { FormRule } from 'antd'
-import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '../../core/i18n/languages'
+import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '@/core/i18n/languages'
 
 /** Backend'deki `TranslationSetGuard.MinimumTranslationCount`. */
 export const MINIMUM_TRANSLATIONS = 2

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_TENANT_THEME, derivePrimarySurfaces } from './tenantTheme'
+import { DEFAULT_TENANT_THEME, derivePrimarySurfaces } from '@/core/theme/tenantTheme'
 
 describe('derivePrimarySurfaces', () => {
   it('keeps the known green primary close to the previous static theme', () => {

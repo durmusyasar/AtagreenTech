@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { commandPaletteShortcutLabel, filterByQuery, isCommandPaletteToggle } from './commandPaletteSearch'
+import { commandPaletteShortcutLabel, filterByQuery, isCommandPaletteToggle } from '@/Components/command-palette/commandPaletteSearch'
 
 describe('filterByQuery', () => {
   const items = [

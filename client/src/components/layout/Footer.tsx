@@ -1,7 +1,7 @@
 import { Layout, theme, Typography } from 'antd'
-import { APP_VERSION } from '../../core/appVersion'
-import { useLanguage } from '../../core/context/useLanguage'
-import { useTenantTheme } from '../../core/context/useTenantTheme'
+import { APP_VERSION } from '@/core/appVersion'
+import { useLanguage } from '@/core/context/useLanguage'
+import { useTenantTheme } from '@/core/context/useTenantTheme'
 
 /** Modül yükleme yılı; render sırasında `Date` çağrılmasın diye sabitlenir. */
 const COPYRIGHT_YEAR = new Date().getFullYear()

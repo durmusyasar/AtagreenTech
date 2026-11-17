@@ -1,6 +1,6 @@
 import { useMutation, type UseMutationOptions, type UseMutationResult } from '@tanstack/react-query'
-import type { ApiError } from '../api/apiError'
-import { executeMutationRequest, type AppMutationMethod } from './appRequest'
+import type { ApiError } from '@/core/api/apiError'
+import { executeMutationRequest, type AppMutationMethod } from '@/core/hooks/appRequest'
 
 export type UseAppMutationOptions<TData, TVariables> = Omit<
   UseMutationOptions<TData, ApiError, TVariables>,

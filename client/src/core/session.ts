@@ -1,5 +1,5 @@
-import { DEFAULT_LANGUAGE, I18N_LANGUAGE_STORAGE_KEY, isSupportedLanguage, type Language } from './i18n/languages'
-import { resolveTenantFromHost, TENANT_SELECTION_ENABLED } from './tenant'
+import { DEFAULT_LANGUAGE, I18N_LANGUAGE_STORAGE_KEY, isSupportedLanguage, type Language } from '@/core/i18n/languages'
+import { resolveTenantFromHost, TENANT_SELECTION_ENABLED } from '@/core/tenant'
 
 const ACCESS_TOKEN_KEY = 'atagreen.accessToken'
 const REFRESH_TOKEN_KEY = 'atagreen.refreshToken'

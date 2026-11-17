@@ -1,5 +1,5 @@
-import { usePermissions } from '../../core/hooks/usePermissions'
-import type { PermissionGuardProps } from './type'
+import { usePermissions } from '@/core/hooks/usePermissions'
+import type { PermissionGuardProps } from '@/Components/Guards/type'
 
 /**
  * Sayfa içi buton/bölümleri rol veya granüler izne göre koşullu render eder.

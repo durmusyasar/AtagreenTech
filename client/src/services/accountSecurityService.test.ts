@@ -14,8 +14,8 @@ vi.mock('../core/session', () => ({
   },
 }))
 
-import { axiosClient } from '../core/api/axiosClient'
-import { accountSecurityService } from './accountSecurityService'
+import { axiosClient } from '@/core/api/axiosClient'
+import { accountSecurityService } from '@/services/accountSecurityService'
 
 const mockedGet = vi.mocked(axiosClient.get)
 const mockedPost = vi.mocked(axiosClient.post)

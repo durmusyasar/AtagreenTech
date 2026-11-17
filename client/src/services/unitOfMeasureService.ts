@@ -1,13 +1,13 @@
 import { queryOptions } from '@tanstack/react-query'
 import type { AxiosRequestConfig } from 'axios'
-import { axiosClient } from '../core/api/axiosClient'
-import type { Language } from '../core/i18n/languages'
+import { axiosClient } from '@/core/api/axiosClient'
+import type { Language } from '@/core/i18n/languages'
 import type {
   CreateUnitOfMeasureRequest,
   UnitOfMeasure,
   UpdateUnitOfMeasureRequest,
-} from '../types/unitOfMeasure'
-import { queryKeys } from './queryKeys'
+} from '@/types/unitOfMeasure'
+import { queryKeys } from '@/services/queryKeys'
 
 const BASE = '/units-of-measure'
 

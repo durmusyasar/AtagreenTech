@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { useAuth } from '../context/useAuth'
-import { canAccess, hasAnyPermission, hasAnyRole, hasPermission } from '../permissions'
+import { useAuth } from '@/core/context/useAuth'
+import { canAccess, hasAnyPermission, hasAnyRole, hasPermission } from '@/core/permissions'
 
 export interface PermissionsApi {
   roles: string[]

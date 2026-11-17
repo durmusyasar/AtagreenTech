@@ -1,14 +1,14 @@
 import { LockOutlined, LogoutOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons'
 import { Button, Dropdown, Flex, Tag, Tooltip, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
-import { BrandMark } from '../../BrandMark'
-import { LanguageSwitcher } from '../../LanguageSwitcher'
-import { ThemeSwitcher } from '../../ThemeSwitcher'
-import { commandPaletteShortcutLabel } from '../../command-palette/commandPaletteSearch'
-import { useAuth } from '../../../core/context/useAuth'
-import { useLanguage } from '../../../core/context/useLanguage'
-import { useTenant } from '../../../core/context/useTenant'
-import type { NavbarProps } from './type'
+import { BrandMark } from '@/Components/BrandMark'
+import { LanguageSwitcher } from '@/Components/LanguageSwitcher'
+import { ThemeSwitcher } from '@/Components/ThemeSwitcher'
+import { commandPaletteShortcutLabel } from '@/Components/command-palette/commandPaletteSearch'
+import { useAuth } from '@/core/context/useAuth'
+import { useLanguage } from '@/core/context/useLanguage'
+import { useTenant } from '@/core/context/useTenant'
+import type { NavbarProps } from '@/Components/layout/Navbar/type'
 
 /**
  * Üst çubuk: tenant markası, komut paleti, dil seçici (TR/EN) ve kullanıcı / çıkış.

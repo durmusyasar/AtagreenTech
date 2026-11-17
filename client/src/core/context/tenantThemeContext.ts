@@ -1,6 +1,6 @@
 import { createContext } from 'react'
-import { DEFAULT_TENANT_THEME } from '../theme/tenantTheme'
-import type { TenantConfig } from '../../types/tenant'
+import { DEFAULT_TENANT_THEME } from '@/core/theme/tenantTheme'
+import type { TenantConfig } from '@/types/tenant'
 
 export interface TenantThemeContextValue {
   config: TenantConfig

@@ -1,10 +1,10 @@
 import axios from 'axios'
-import { ApiError, toApiError } from '../core/api/apiError'
-import { axiosClient } from '../core/api/axiosClient'
-import { refreshAccessToken } from '../core/api/refreshAccessToken'
-import { sessionStore } from '../core/session'
-import type { AuthTokens, LoginRequest, LoginResult } from '../types/auth'
-import { sessionService } from './sessionService'
+import { ApiError, toApiError } from '@/core/api/apiError'
+import { axiosClient } from '@/core/api/axiosClient'
+import { refreshAccessToken } from '@/core/api/refreshAccessToken'
+import { sessionStore } from '@/core/session'
+import type { AuthTokens, LoginRequest, LoginResult } from '@/types/auth'
+import { sessionService } from '@/services/sessionService'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 

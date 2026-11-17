@@ -1,6 +1,6 @@
 import { Typography } from 'antd'
-import { useTenantTheme } from '../../core/context/useTenantTheme'
-import type { BrandMarkProps } from './type'
+import { useTenantTheme } from '@/core/context/useTenantTheme'
+import type { BrandMarkProps } from '@/Components/BrandMark/type'
 
 /** Tenant logosunu (ve isteğe bağlı adını) gösterir; config yoksa varsayılan favicon kullanılır. */
 export function BrandMark({ size = 24, showName = true, nameStyle, className }: BrandMarkProps) {

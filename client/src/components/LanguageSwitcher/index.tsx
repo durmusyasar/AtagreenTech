@@ -1,9 +1,9 @@
 import { GlobalOutlined } from '@ant-design/icons'
 import { Segmented } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { useLanguage } from '../../core/context/useLanguage'
-import type { Language } from '../../core/i18n/languages'
-import type { LanguageSwitcherProps } from './type'
+import { useLanguage } from '@/core/context/useLanguage'
+import type { Language } from '@/core/i18n/languages'
+import type { LanguageSwitcherProps } from '@/Components/LanguageSwitcher/type'
 
 /**
  * TR/EN dil seçici. Tercih `omnisync_lang` (i18next) + sessionStore üzerinden kalıcıdır.

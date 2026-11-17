@@ -1,6 +1,6 @@
-import { ApiError } from '../core/api/apiError'
-import type { Language } from '../core/i18n/languages'
-import i18n from './index'
+import { ApiError } from '@/core/api/apiError'
+import type { Language } from '@/core/i18n/languages'
+import i18n from '@/i18n/index'
 
 const KNOWN_AUTH_ERROR_CODES = new Set([
   'AUTH_INVALID_CREDENTIALS',

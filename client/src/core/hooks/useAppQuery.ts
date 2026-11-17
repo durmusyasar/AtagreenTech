@@ -5,8 +5,8 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query'
 import type { AxiosRequestConfig } from 'axios'
-import type { ApiError } from '../api/apiError'
-import { createGetQueryFn } from './appRequest'
+import type { ApiError } from '@/core/api/apiError'
+import { createGetQueryFn } from '@/core/hooks/appRequest'
 
 /**
  * URL + queryKey ile GET sorgusu. Axios istemcisi tenant / dil / yetki başlıklarını ekler; hatalar

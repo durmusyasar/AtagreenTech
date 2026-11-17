@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupPermissionsByModule } from './permissionGroups'
+import { groupPermissionsByModule } from '@/core/permissionGroups'
 
 describe('groupPermissionsByModule', () => {
   it('groups by permission prefix and keeps known module order', () => {

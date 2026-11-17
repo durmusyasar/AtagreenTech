@@ -1,6 +1,6 @@
-import { axiosClient } from '../core/api/axiosClient'
-import type { TenantConfig } from '../types/tenant'
-import { queryKeys } from './queryKeys'
+import { axiosClient } from '@/core/api/axiosClient'
+import type { TenantConfig } from '@/types/tenant'
+import { queryKeys } from '@/services/queryKeys'
 
 /** Tenant marka ayarları. Oturum gerekmez; Host / X-Tenant ile çözülen tenant kullanılır. */
 export const tenantService = {

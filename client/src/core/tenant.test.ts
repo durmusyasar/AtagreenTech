@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveTenantFromHost, tenantAddressPattern } from './tenant'
+import { resolveTenantFromHost, tenantAddressPattern } from '@/core/tenant'
 
 describe('resolveTenantFromHost', () => {
   it.each([

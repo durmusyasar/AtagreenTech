@@ -22,11 +22,11 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createNavigationItems } from '../../../config/navigation'
-import { useLanguage } from '../../../core/context/useLanguage'
-import { usePermissions } from '../../../core/hooks/usePermissions'
-import { filterByQuery, isCommandPaletteToggle } from '../commandPaletteSearch'
-import type { CommandPaletteProps, PaletteCommand } from './type'
+import { createNavigationItems } from '@/config/navigation'
+import { useLanguage } from '@/core/context/useLanguage'
+import { usePermissions } from '@/core/hooks/usePermissions'
+import { filterByQuery, isCommandPaletteToggle } from '@/Components/command-palette/commandPaletteSearch'
+import type { CommandPaletteProps, PaletteCommand } from '@/Components/command-palette/CommandPalette/type'
 
 const NAV_ICONS = {
   dashboard: <DashboardOutlined />,

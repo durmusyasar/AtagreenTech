@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mapServerFieldErrors } from './serverErrors'
+import { mapServerFieldErrors } from '@/Components/forms/serverErrors'
 
 describe('mapServerFieldErrors', () => {
   const translations = { sent: [{ languageCode: 'tr' }, { languageCode: 'en' }], fields: ['name', 'description'] }

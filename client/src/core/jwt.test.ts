@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isExpired, readTokenClaims } from './jwt'
+import { isExpired, readTokenClaims } from '@/core/jwt'
 
 function token(payload: object): string {
   const encode = (value: object) =>

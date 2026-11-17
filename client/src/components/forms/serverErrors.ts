@@ -1,4 +1,4 @@
-import { toFieldPath } from '../../core/api/apiError'
+import { toFieldPath } from '@/core/api/apiError'
 
 export type FieldPath = (string | number)[]
 

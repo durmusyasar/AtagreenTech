@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import '../../i18n'
-import { ApiError } from '../api/apiError'
-import { isKnownAuthErrorCode, resolveAuthErrorMessage } from './authErrors'
+import { ApiError } from '@/core/api/apiError'
+import { isKnownAuthErrorCode, resolveAuthErrorMessage } from '@/core/i18n/authErrors'
 
 beforeAll(async () => {
   const i18n = (await import('../../i18n')).default

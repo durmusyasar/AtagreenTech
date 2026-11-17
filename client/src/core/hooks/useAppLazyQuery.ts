@@ -5,8 +5,8 @@ import {
   type QueryKey,
 } from '@tanstack/react-query'
 import type { AxiosRequestConfig } from 'axios'
-import type { ApiError } from '../api/apiError'
-import { createGetQueryFn } from './appRequest'
+import type { ApiError } from '@/core/api/apiError'
+import { createGetQueryFn } from '@/core/hooks/appRequest'
 
 export type UseAppLazyQueryOptions<TData, TVariables extends object = Record<string, unknown>> = Omit<
   FetchQueryOptions<TData, ApiError, TData, QueryKey>,

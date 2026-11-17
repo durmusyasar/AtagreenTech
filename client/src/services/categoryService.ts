@@ -1,10 +1,10 @@
 import { queryOptions } from '@tanstack/react-query'
-import { axiosClient } from '../core/api/axiosClient'
-import type { Language } from '../core/i18n/languages'
-import type { PagedResult } from '../types/api'
-import type { Category, CategoryQuery } from '../types/category'
-import { fetchAllPages } from './paging'
-import { queryKeys } from './queryKeys'
+import { axiosClient } from '@/core/api/axiosClient'
+import type { Language } from '@/core/i18n/languages'
+import type { PagedResult } from '@/types/api'
+import type { Category, CategoryQuery } from '@/types/category'
+import { fetchAllPages } from '@/services/paging'
+import { queryKeys } from '@/services/queryKeys'
 
 const BASE = '/categories'
 

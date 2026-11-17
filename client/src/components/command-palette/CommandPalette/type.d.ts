@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { MessageKey } from '../../../core/i18n/messages'
+import type { MessageKey } from '@/core/i18n/messages'
 
 export interface PaletteCommand {
   id: string

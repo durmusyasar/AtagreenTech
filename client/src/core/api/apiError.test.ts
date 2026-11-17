@@ -1,6 +1,6 @@
 import { AxiosError, AxiosHeaders, type AxiosResponse } from 'axios'
 import { describe, expect, it } from 'vitest'
-import { toApiError, toFieldPath } from './apiError'
+import { toApiError, toFieldPath } from '@/core/api/apiError'
 
 describe('toFieldPath', () => {
   it.each([

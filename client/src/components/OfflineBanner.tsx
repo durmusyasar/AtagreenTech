@@ -1,7 +1,7 @@
 import { DisconnectOutlined } from '@ant-design/icons'
 import { Alert } from 'antd'
-import { useLanguage } from '../core/context/useLanguage'
-import { useNetworkStatus } from '../core/hooks/useNetworkStatus'
+import { useLanguage } from '@/core/context/useLanguage'
+import { useNetworkStatus } from '@/core/hooks/useNetworkStatus'
 
 /**
  * Tarayıcı çevrimdışıyken üstte kalıcı uyarı. Login dahil tüm uygulama ağacında gösterilir.

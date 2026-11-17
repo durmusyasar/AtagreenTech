@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { sessionService } from '../services/sessionService'
-import { sessionStore } from '../core/session'
+import { sessionService } from '@/services/sessionService'
+import { sessionStore } from '@/core/session'
 
 /**
  * Sayfa yenilendiğinde sessionStorage'daki access token ile `/auth/me` doğrular.

@@ -1,5 +1,5 @@
-import i18n, { namespaces } from '../../i18n'
-import type { Language } from './languages'
+import i18n, { namespaces } from '@/i18n'
+import type { Language } from '@/core/i18n/languages'
 
 /** Tüm namespace'lerdeki düz çeviri anahtarları (geriye dönük `t('menu.dashboard')` uyumu). */
 export type MessageKey = string

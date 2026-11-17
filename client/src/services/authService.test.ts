@@ -29,12 +29,12 @@ vi.mock('./sessionService', () => ({
   },
 }))
 
-import { ApiError } from '../core/api/apiError'
-import { axiosClient } from '../core/api/axiosClient'
-import { sessionStore } from '../core/session'
-import { AuthErrorCodes } from '../types/auth'
-import { authService } from './authService'
-import { sessionService } from './sessionService'
+import { ApiError } from '@/core/api/apiError'
+import { axiosClient } from '@/core/api/axiosClient'
+import { sessionStore } from '@/core/session'
+import { AuthErrorCodes } from '@/types/auth'
+import { authService } from '@/services/authService'
+import { sessionService } from '@/services/sessionService'
 
 const mockedPost = vi.mocked(axiosClient.post)
 const mockedSignIn = vi.mocked(sessionStore.signIn)

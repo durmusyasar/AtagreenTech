@@ -1,4 +1,4 @@
-import type { PageRequest } from './api'
+import type { PageRequest } from '@/types/api'
 
 export interface Warehouse {
   id: string

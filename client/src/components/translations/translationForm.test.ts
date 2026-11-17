@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { collectTranslations, formLanguages, hasText, toTranslationValues } from './translationForm'
+import { collectTranslations, formLanguages, hasText, toTranslationValues } from '@/Components/translations/translationForm'
 
 describe('formLanguages', () => {
   it('lists the default language first, then supported languages', () => {

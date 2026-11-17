@@ -1,7 +1,7 @@
 import { MoonOutlined, SunOutlined } from '@ant-design/icons'
 import { Button, Segmented } from 'antd'
-import { useThemeStore, type ThemeMode } from '../../stores/themeStore'
-import type { ThemeSwitcherProps } from './type'
+import { useThemeStore, type ThemeMode } from '@/stores/themeStore'
+import type { ThemeSwitcherProps } from '@/Components/ThemeSwitcher/type'
 
 const MODE_OPTIONS: { label: string; value: ThemeMode }[] = [
   { label: 'Light', value: 'light' },

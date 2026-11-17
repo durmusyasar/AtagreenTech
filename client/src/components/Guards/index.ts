@@ -1,4 +1,4 @@
-export { RequireAuth } from './RequireAuth'
-export { PermissionGuard } from './PermissionGuard'
-export { RequireAdmin } from './RequireAdmin'
-export type { RequireAuthProps, PermissionGuardProps, RequireAdminProps } from './type'
+export { RequireAuth } from '@/Components/Guards/RequireAuth'
+export { PermissionGuard } from '@/Components/Guards/PermissionGuard'
+export { RequireAdmin } from '@/Components/Guards/RequireAdmin'
+export type { RequireAuthProps, PermissionGuardProps, RequireAdminProps } from '@/Components/Guards/type'
