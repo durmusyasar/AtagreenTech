@@ -8,7 +8,7 @@ import type { AuthPageShellProps } from '@/Components/AuthPageShell/type'
 export function AuthPageShell({ title, description, children }: AuthPageShellProps) {
   return (
     <PublicAuthLayout>
-      <div className="w-full max-w-[480px] space-y-5 rounded-2xl border border-subtle bg-surface p-7 shadow-xl shadow-black/5 sm:p-8 dark:shadow-black/30">
+      <div className="w-full max-w-[480px] space-y-5 rounded-2xl border border-subtle bg-surface p-7 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5 sm:p-8 dark:shadow-black/40 dark:ring-white/5">
         <div className="space-y-1.5">
           <h1 className="text-2xl font-semibold tracking-tight text-primary">{title}</h1>
           {description ? <p className="text-sm leading-relaxed text-secondary">{description}</p> : null}

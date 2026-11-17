@@ -4,37 +4,37 @@
 
 @layer base {
   :root {
-    /* Light Mode — Atagreen Emerald / Slate */
-    --bg-canvas: 248 250 252;
-    --bg-surface: 255 255 255;
-    --bg-elevated: 241 245 249;
-    --border-subtle: 226 232 240;
+    /* Light Mode — belirgin yüzey / kenarlık kontrastı */
+    --bg-canvas: 238 242 246; /* #EEF2F6 */
+    --bg-surface: 255 255 255; /* #FFFFFF */
+    --bg-elevated: 248 250 252; /* #F8FAFC */
+    --border-subtle: 203 213 225; /* #CBD5E1 */
 
-    --text-primary: 15 23 42;
-    --text-secondary: 71 85 105;
-    --text-muted: 100 116 139;
+    --text-primary: 15 23 42; /* #0F172A */
+    --text-secondary: 51 65 85; /* #334155 */
+    --text-muted: 100 116 139; /* #64748B */
 
-    --brand-primary: 22 163 74;
-    --brand-hover: 21 128 61;
-    --brand-soft: 220 252 231;
+    --brand-primary: 22 163 74; /* #16A34A */
+    --brand-hover: 21 128 61; /* #15803D */
+    --brand-soft: 220 252 231; /* #DCFCE7 */
 
     /* Ant Design / legacy bridge */
     --primary-color: #16a34a;
   }
 
   .dark {
-    --bg-canvas: 7 11 20;
-    --bg-surface: 15 23 42;
-    --bg-elevated: 30 41 59;
-    --border-subtle: 51 65 85;
+    --bg-canvas: 7 11 20; /* #070B14 */
+    --bg-surface: 15 23 42; /* #0F172A */
+    --bg-elevated: 30 41 59; /* #1E293B */
+    --border-subtle: 51 65 85; /* #334155 */
 
-    --text-primary: 248 250 252;
-    --text-secondary: 148 163 184;
-    --text-muted: 100 116 139;
+    --text-primary: 248 250 252; /* #F8FAFC */
+    --text-secondary: 148 163 184; /* #94A3B8 */
+    --text-muted: 100 116 139; /* #64748B */
 
-    --brand-primary: 34 197 94;
-    --brand-hover: 22 163 74;
-    --brand-soft: 20 83 45;
+    --brand-primary: 34 197 94; /* #22C55E */
+    --brand-hover: 22 163 74; /* #16A34A */
+    --brand-soft: 20 83 45; /* #14532D */
 
     --primary-color: #22c55e;
   }

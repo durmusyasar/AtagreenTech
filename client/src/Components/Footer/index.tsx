@@ -4,12 +4,14 @@ import type { FooterProps } from '@/Components/Footer/type'
 
 const COPYRIGHT_YEAR = new Date().getFullYear()
 
-/** Public auth sayfalarının alt bilgisi (telif, sistem durumu, sürüm). */
+/** Public auth alt bilgisi — opak surface + üst kenarlık/gölge. */
 export function Footer({ className = '' }: FooterProps) {
   const { t } = useTranslation('common')
 
   return (
-    <footer className={`w-full border-t border-subtle bg-surface px-4 py-4 sm:px-6 ${className}`.trim()}>
+    <footer
+      className={`w-full border-t border-subtle bg-surface px-4 py-4 shadow-[0_-1px_3px_rgba(15,23,42,0.04)] dark:shadow-none sm:px-8 ${className}`.trim()}
+    >
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 text-xs text-muted sm:flex-row">
         <div className="flex flex-wrap items-center justify-center gap-2">
           <span className="font-medium text-secondary">Atagreen</span>

@@ -13,6 +13,12 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
   en: 'English',
 }
 
+/** Dil seçici kısaltmaları (dropdown tetikleyici). Yeni dil eklerken burayı da güncelle. */
+export const LANGUAGE_SHORT_LABELS: Record<Language, string> = {
+  tr: 'TR',
+  en: 'EN',
+}
+
 export function isSupportedLanguage(value: unknown): value is Language {
   return typeof value === 'string' && (SUPPORTED_LANGUAGES as readonly string[]).includes(value)
 }
