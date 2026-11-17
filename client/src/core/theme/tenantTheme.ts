@@ -3,20 +3,20 @@ export const DEFAULT_TENANT_THEME = {
   tenantId: 'default',
   subdomain: 'atagreen',
   name: 'AtaGreen Stok',
-  primaryColor: '#2e7d32',
+  primaryColor: '#16a34a',
   logoUrl: '/favicon.svg',
   faviconUrl: '/favicon.svg',
 } as const
 
 /**
  * HEX birincil renkten Ant Design `colorPrimaryBg` / `colorPrimaryBgHover` tonlarını üretir.
- * Sabit #2e7d32 için önceki tema ile uyumlu açık yeşiller döner; diğer renklerde beyaza karıştırır.
+ * Varsayılan AtaGreen yeşili için sabit soft tonlar döner; diğer renklerde beyaza karıştırır.
  */
 export function derivePrimarySurfaces(primaryHex: string): { colorPrimaryBg: string; colorPrimaryBgHover: string } {
   const rgb = parseHex(primaryHex)
-  // Geçersiz veya varsayılan AtaGreen yeşili: önceki sabit açık tonlar (Material green-50/100).
+  // Geçersiz veya varsayılan AtaGreen yeşili: brand-soft ile uyumlu açık tonlar.
   if (!rgb || primaryHex.trim().toLowerCase() === DEFAULT_TENANT_THEME.primaryColor) {
-    return { colorPrimaryBg: '#e8f5e9', colorPrimaryBgHover: '#c8e6c9' }
+    return { colorPrimaryBg: '#dcfce7', colorPrimaryBgHover: '#bbf7d0' }
   }
 
   return {

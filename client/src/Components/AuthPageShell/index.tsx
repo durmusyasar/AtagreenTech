@@ -1,37 +1,27 @@
-import { Card, Flex, Typography } from 'antd'
-import { BrandMark } from '@/Components/BrandMark'
-import { LanguageSwitcher } from '@/Components/LanguageSwitcher'
-import { ThemeSwitcher } from '@/Components/ThemeSwitcher'
+import { useTenant } from '@/core/context/useTenant'
+import { PublicAuthLayout } from '@/Components/PublicAuthLayout'
 import type { AuthPageShellProps } from '@/Components/AuthPageShell/type'
 
-/** Public auth ekranları için ortak kart + marka + tema / dil seçici. */
+/**
+ * Public auth kartı: PublicAuthLayout (Navbar + Footer) içinde başlık + içerik.
+ * Tema / dil seçiciler üst Navbar'dadır.
+ */
 export function AuthPageShell({ title, description, children }: AuthPageShellProps) {
+  const { tenant, isTenantFromHost } = useTenant()
+  const tenantName = isTenantFromHost ? (tenant ?? undefined) : undefined
+
   return (
-    <Flex
-      align="center"
-      justify="center"
-      className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100"
-      style={{ padding: 24 }}
-    >
-      <Card
-        className="border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-        style={{ width: '100%', maxWidth: 480 }}
-      >
-        <Flex align="flex-start" justify="space-between" gap={12} style={{ marginBottom: 24 }}>
-          <Flex vertical gap={8} style={{ minWidth: 0 }}>
-            <BrandMark size={32} nameStyle={{ fontSize: 20, margin: 0 }} />
-            <Typography.Title level={4} style={{ margin: 0 }}>
-              {title}
-            </Typography.Title>
-            {description ? <Typography.Text type="secondary">{description}</Typography.Text> : null}
-          </Flex>
-          <Flex align="center" gap={2} style={{ flexShrink: 0 }}>
-            <ThemeSwitcher variant="toggle" />
-            <LanguageSwitcher size="small" />
-          </Flex>
-        </Flex>
+    <PublicAuthLayout tenantName={tenantName}>
+      <div className="w-full max-w-[480px] space-y-5 rounded-2xl border border-subtle bg-surface p-7 shadow-xl shadow-black/5 sm:p-8 dark:shadow-black/30">
+        <div className="space-y-1.5">
+          <div className="mb-1 inline-flex items-center gap-2 rounded-md bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
+            OmniSyncCore IAM
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-primary">{title}</h1>
+          {description ? <p className="text-sm leading-relaxed text-secondary">{description}</p> : null}
+        </div>
         {children}
-      </Card>
-    </Flex>
+      </div>
+    </PublicAuthLayout>
   )
 }
