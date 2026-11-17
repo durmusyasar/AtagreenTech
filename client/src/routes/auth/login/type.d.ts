@@ -8,8 +8,16 @@ export interface LoginForm {
   mfaInput?: string
 }
 
+export interface LoginFieldErrors {
+  email?: string
+  password?: string
+  mfaInput?: string
+}
+
 export interface MfaVerificationStepProps {
   mode: MfaInputMode
   onToggleMode: () => void
   onBack: () => void
+  /** Zod alan hatası (dil değişiminde güncellenir). */
+  error?: string
 }
