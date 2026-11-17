@@ -2,20 +2,20 @@ import { ConfigProvider, theme as antdTheme } from 'antd'
 import enUS from 'antd/locale/en_US'
 import trTR from 'antd/locale/tr_TR'
 import { useEffect, type ReactNode } from 'react'
-import { tenantConfigQuery } from '../../services/tenantService'
-import { useThemeStore } from '../../stores/themeStore'
-import type { TenantConfig } from '../../types/tenant'
-import { useAppQuery } from '../hooks/useAppQuery'
-import type { Language } from '../i18n/languages'
+import { tenantConfigQuery } from '@/services/tenantService'
+import { useThemeStore } from '@/stores/themeStore'
+import type { TenantConfig } from '@/types/tenant'
+import { useAppQuery } from '@/core/hooks/useAppQuery'
+import type { Language } from '@/core/i18n/languages'
 import {
   applyCssPrimary,
   applyDocumentTitle,
   applyFavicon,
   DEFAULT_TENANT_THEME,
   derivePrimarySurfaces,
-} from '../theme/tenantTheme'
-import { TenantThemeContext } from './tenantThemeContext'
-import { useLanguage } from './useLanguage'
+} from '@/core/theme/tenantTheme'
+import { TenantThemeContext } from '@/core/context/tenantThemeContext'
+import { useLanguage } from '@/core/context/useLanguage'
 
 const ANTD_LOCALES = { tr: trTR, en: enUS } satisfies Record<Language, unknown>
 

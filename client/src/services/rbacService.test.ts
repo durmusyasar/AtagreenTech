@@ -7,8 +7,8 @@ vi.mock('../core/api/axiosClient', () => ({
   },
 }))
 
-import { axiosClient } from '../core/api/axiosClient'
-import { rbacService } from './rbacService'
+import { axiosClient } from '@/core/api/axiosClient'
+import { rbacService } from '@/services/rbacService'
 
 const mockedGet = vi.mocked(axiosClient.get)
 const mockedPut = vi.mocked(axiosClient.put)

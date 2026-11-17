@@ -1,9 +1,9 @@
 import { queryOptions } from '@tanstack/react-query'
-import { ApiError, toApiError } from '../core/api/apiError'
-import { axiosClient } from '../core/api/axiosClient'
-import { sessionStore } from '../core/session'
-import type { ChangePasswordRequest, MfaSetupData, ActiveSessionItem } from '../types/security'
-import { queryKeys } from './queryKeys'
+import { ApiError, toApiError } from '@/core/api/apiError'
+import { axiosClient } from '@/core/api/axiosClient'
+import { sessionStore } from '@/core/session'
+import type { ChangePasswordRequest, MfaSetupData, ActiveSessionItem } from '@/types/security'
+import { queryKeys } from '@/services/queryKeys'
 
 const skipNotify = { skipErrorNotification: true } as const
 

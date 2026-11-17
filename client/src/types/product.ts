@@ -1,4 +1,4 @@
-import type { PageRequest } from './api'
+import type { PageRequest } from '@/types/api'
 
 /** Backend'deki `CurrencyCode.Supported`: ISO 4217 kodları. */
 export const CURRENCIES = ['TRY', 'USD', 'EUR'] as const

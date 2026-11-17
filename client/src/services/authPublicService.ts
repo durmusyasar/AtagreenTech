@@ -1,6 +1,6 @@
-import { ApiError, toApiError } from '../core/api/apiError'
-import { axiosClient } from '../core/api/axiosClient'
-import { sessionStore } from '../core/session'
+import { ApiError, toApiError } from '@/core/api/apiError'
+import { axiosClient } from '@/core/api/axiosClient'
+import { sessionStore } from '@/core/session'
 
 export interface AcceptInvitePayload {
   token: string

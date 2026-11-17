@@ -252,5 +252,10 @@
   "error.Inventory.WarehouseCodeAlreadyExists": "{{0}} kodlu bir depo zaten var.",
   "error.Inventory.TransferWarehousesMustDiffer": "Transferde kaynak ve hedef depo farklı olmalıdır.",
   "appName": "OmniSyncCore",
-  "unauthorized.backToDashboard": "Ana panele dön"
+  "unauthorized.backToDashboard": "Ana panele dön",
+  "actions.previous": "Önceki",
+  "actions.next": "Sonraki",
+  "pagination.total": "Toplam {{count}} kayıt",
+  "pagination.pageOf": "Sayfa {{page}} / {{totalPages}}",
+  "routes.loading": "Yükleniyor..."
 }

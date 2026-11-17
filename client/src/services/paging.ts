@@ -1,4 +1,4 @@
-import type { PagedResult } from '../types/api'
+import type { PagedResult } from '@/types/api'
 
 /** Backend'deki `BaseSearchModel.MaxPageSize`. */
 export const MAX_PAGE_SIZE = 100

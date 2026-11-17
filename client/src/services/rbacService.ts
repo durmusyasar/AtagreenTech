@@ -1,8 +1,8 @@
 import { queryOptions } from '@tanstack/react-query'
-import { axiosClient } from '../core/api/axiosClient'
-import type { AssignUserRolesRequest, PermissionItem, RoleDetail, UpdateRolePermissionsRequest } from '../types/rbac'
-import type { UserItem } from '../types/user'
-import { queryKeys } from './queryKeys'
+import { axiosClient } from '@/core/api/axiosClient'
+import type { AssignUserRolesRequest, PermissionItem, RoleDetail, UpdateRolePermissionsRequest } from '@/types/rbac'
+import type { UserItem } from '@/types/user'
+import { queryKeys } from '@/services/queryKeys'
 
 export const rbacService = {
   async getRoles(signal?: AbortSignal): Promise<RoleDetail[]> {

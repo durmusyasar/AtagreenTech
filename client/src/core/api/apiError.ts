@@ -1,7 +1,7 @@
 import { isAxiosError } from 'axios'
-import type { Language } from '../i18n/languages'
-import { hasMessage, translate, type MessageKey } from '../i18n/messages'
-import type { ProblemDetails } from '../../types/api'
+import type { Language } from '@/core/i18n/languages'
+import { hasMessage, translate, type MessageKey } from '@/core/i18n/messages'
+import type { ProblemDetails } from '@/types/api'
 
 /**
  * Bir API çağrısının başarısızlığı. `status` ağ hatalarında `null`'dır. Formlar `fieldErrors`'ı (ör.

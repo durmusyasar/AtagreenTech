@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { TenantThemeContext } from './tenantThemeContext'
+import { TenantThemeContext } from '@/core/context/tenantThemeContext'
 
 /** Aktif tenant markası (logo, renk, ad) ve yükleme durumu. */
 export function useTenantTheme() {

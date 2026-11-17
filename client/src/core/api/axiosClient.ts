@@ -1,10 +1,10 @@
 import axios, { isAxiosError, isCancel, type InternalAxiosRequestConfig } from 'axios'
-import { translate } from '../i18n/messages'
-import { REFRESH_TOKEN_HEADER, sessionStore } from '../session'
-import { toApiError } from './apiError'
-import { delay, NETWORK_RETRY_DELAY_MS, nextRetryConfig, shouldRetryNetworkError } from './networkRetry'
-import { notify } from './notifier'
-import { refreshAccessToken } from './refreshAccessToken'
+import { translate } from '@/core/i18n/messages'
+import { REFRESH_TOKEN_HEADER, sessionStore } from '@/core/session'
+import { toApiError } from '@/core/api/apiError'
+import { delay, NETWORK_RETRY_DELAY_MS, nextRetryConfig, shouldRetryNetworkError } from '@/core/api/networkRetry'
+import { notify } from '@/core/api/notifier'
+import { refreshAccessToken } from '@/core/api/refreshAccessToken'
 
 declare module 'axios' {
   interface AxiosRequestConfig {

@@ -1,6 +1,6 @@
 import { AxiosError, AxiosHeaders } from 'axios'
 import { describe, expect, it } from 'vitest'
-import { nextRetryConfig, shouldRetryNetworkError } from './networkRetry'
+import { nextRetryConfig, shouldRetryNetworkError } from '@/core/api/networkRetry'
 
 function networkError(method = 'get', networkRetryCount?: number): AxiosError {
   return new AxiosError('Network Error', 'ERR_NETWORK', {

@@ -252,5 +252,10 @@
   "error.Inventory.WarehouseCodeAlreadyExists": "A warehouse with code {{0}} already exists.",
   "error.Inventory.TransferWarehousesMustDiffer": "Source and target warehouses must differ for a transfer.",
   "appName": "OmniSyncCore",
-  "unauthorized.backToDashboard": "Back to dashboard"
+  "unauthorized.backToDashboard": "Back to dashboard",
+  "actions.previous": "Previous",
+  "actions.next": "Next",
+  "pagination.total": "Total {{count}} records",
+  "pagination.pageOf": "Page {{page}} / {{totalPages}}",
+  "routes.loading": "Loading..."
 }

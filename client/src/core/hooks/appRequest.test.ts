@@ -11,9 +11,9 @@ vi.mock('../api/axiosClient', () => ({
   },
 }))
 
-import { axiosClient } from '../api/axiosClient'
-import { createGetQueryFn, executeMutationRequest } from './appRequest'
-import { fetchAppQuery } from './useAppLazyQuery'
+import { axiosClient } from '@/core/api/axiosClient'
+import { createGetQueryFn, executeMutationRequest } from '@/core/hooks/appRequest'
+import { fetchAppQuery } from '@/core/hooks/useAppLazyQuery'
 
 const mocked = vi.mocked(axiosClient)
 

@@ -1,4 +1,4 @@
-import type { PageRequest } from './api'
+import type { PageRequest } from '@/types/api'
 
 /** `GET /api/v1/users` satırı (`UserDto`). */
 export interface UserItem {

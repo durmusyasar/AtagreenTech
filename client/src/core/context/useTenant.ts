@@ -1,4 +1,4 @@
-import { useSession } from './useSession'
+import { useSession } from '@/core/context/useSession'
 
 export interface TenantContextValue {
   tenant: string | null

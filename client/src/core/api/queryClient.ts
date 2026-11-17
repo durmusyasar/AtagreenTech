@@ -1,6 +1,6 @@
 import { QueryClient, type QueryKey } from '@tanstack/react-query'
-import type { SessionState } from '../session'
-import { ApiError } from './apiError'
+import type { SessionState } from '@/core/session'
+import { ApiError } from '@/core/api/apiError'
 
 declare module '@tanstack/react-query' {
   interface Register {

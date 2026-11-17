@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from 'react'
-import { authService } from '../../services/authService'
-import { readTokenClaims, type TokenClaims } from '../jwt'
-import { sessionStore, type SignInSession } from '../session'
-import { useSession } from './useSession'
+import { authService } from '@/services/authService'
+import { readTokenClaims, type TokenClaims } from '@/core/jwt'
+import { sessionStore, type SignInSession } from '@/core/session'
+import { useSession } from '@/core/context/useSession'
 
 export interface AuthContextValue {
   token: string | null

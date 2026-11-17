@@ -1,4 +1,4 @@
-import type { PermissionItem } from '../types/rbac'
+import type { PermissionItem } from '@/types/rbac'
 
 export interface PermissionModuleGroup {
   moduleKey: string

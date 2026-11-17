@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
-import { axiosClient } from '../core/api/axiosClient'
-import type { CurrentSession } from '../types/session'
-import { queryKeys } from './queryKeys'
+import { axiosClient } from '@/core/api/axiosClient'
+import type { CurrentSession } from '@/types/session'
+import { queryKeys } from '@/services/queryKeys'
 
 export const sessionService = {
   /** Giriş yapmış kullanıcının profili (`GET /auth/me`). */

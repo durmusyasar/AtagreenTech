@@ -1,6 +1,6 @@
 import axios from 'axios'
-import { sessionStore } from '../session'
-import type { AuthTokens } from '../../types/auth'
+import { sessionStore } from '@/core/session'
+import type { AuthTokens } from '@/types/auth'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 

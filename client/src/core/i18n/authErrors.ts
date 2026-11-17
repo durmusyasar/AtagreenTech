@@ -1,5 +1,5 @@
-import type { Language } from './languages'
-import { isKnownAuthErrorCode, resolveApiError } from '../../i18n/resolveApiError'
+import type { Language } from '@/core/i18n/languages'
+import { isKnownAuthErrorCode, resolveApiError } from '@/i18n/resolveApiError'
 
 export { isKnownAuthErrorCode, resolveApiError }
 

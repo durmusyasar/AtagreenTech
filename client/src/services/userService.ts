@@ -1,8 +1,8 @@
 import { queryOptions } from '@tanstack/react-query'
-import { axiosClient } from '../core/api/axiosClient'
-import type { PagedResult } from '../types/api'
-import type { InviteUserRequest, UpdateUserRequest, UserItem, UserListQuery } from '../types/user'
-import { queryKeys } from './queryKeys'
+import { axiosClient } from '@/core/api/axiosClient'
+import type { PagedResult } from '@/types/api'
+import type { InviteUserRequest, UpdateUserRequest, UserItem, UserListQuery } from '@/types/user'
+import { queryKeys } from '@/services/queryKeys'
 
 const BASE = '/users'
 

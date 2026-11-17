@@ -1,5 +1,5 @@
-import type { Language } from '../core/i18n/languages'
-import type { PageRequest } from './api'
+import type { Language } from '@/core/i18n/languages'
+import type { PageRequest } from '@/types/api'
 
 export type MovementType = 'Inbound' | 'Outbound' | 'Transfer'
 

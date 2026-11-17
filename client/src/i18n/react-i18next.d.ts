@@ -1,5 +1,5 @@
 import 'i18next'
-import type { defaultNS, resources } from './index'
+import type { defaultNS, resources } from '@/i18n/index'
 
 declare module 'i18next' {
   interface CustomTypeOptions {

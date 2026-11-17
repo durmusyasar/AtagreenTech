@@ -1,10 +1,10 @@
 import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { Language } from '../i18n/languages'
-import { isSupportedLanguage } from '../i18n/languages'
-import { translate, type MessageKey } from '../i18n/messages'
-import { sessionStore } from '../session'
-import { useSession } from './useSession'
+import type { Language } from '@/core/i18n/languages'
+import { isSupportedLanguage } from '@/core/i18n/languages'
+import { translate, type MessageKey } from '@/core/i18n/messages'
+import { sessionStore } from '@/core/session'
+import { useSession } from '@/core/context/useSession'
 
 export interface LanguageContextValue {
   /** Arayüz dili; listelerde kayıtların adı da bu dile göre istenir (`?language=`). */

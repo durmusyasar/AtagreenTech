@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canAccess, hasAnyPermission, hasAnyRole, hasPermission } from './permissions'
+import { canAccess, hasAnyPermission, hasAnyRole, hasPermission } from '@/core/permissions'
 
 describe('hasPermission', () => {
   it('matches exact, module wildcard, and system wildcard', () => {

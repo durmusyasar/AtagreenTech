@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
-import { ApiError } from './apiError'
-import { clearOnSessionChange, invalidate, shouldRetry } from './queryClient'
+import { ApiError } from '@/core/api/apiError'
+import { clearOnSessionChange, invalidate, shouldRetry } from '@/core/api/queryClient'
 
 const apiError = (status: number | null) => new ApiError({ message: 'x', status, code: 'x' })
 
