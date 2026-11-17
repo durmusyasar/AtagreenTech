@@ -1,12 +1,12 @@
-import { GlobalOutlined, LockOutlined, LogoutOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons'
-import { Button, Dropdown, Flex, Select, Tag, Tooltip, Typography } from 'antd'
+import { LockOutlined, LogoutOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons'
+import { Button, Dropdown, Flex, Tag, Tooltip, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import { BrandMark } from '../BrandMark'
+import { LanguageSwitcher } from '../LanguageSwitcher'
 import { commandPaletteShortcutLabel } from '../command-palette/commandPaletteSearch'
 import { useAuth } from '../../core/context/useAuth'
 import { useLanguage } from '../../core/context/useLanguage'
 import { useTenant } from '../../core/context/useTenant'
-import { LANGUAGE_LABELS, SUPPORTED_LANGUAGES, type Language } from '../../core/i18n/languages'
 
 interface NavbarProps {
   onOpenCommandPalette?: () => void
@@ -19,7 +19,7 @@ interface NavbarProps {
 export function Navbar({ onOpenCommandPalette }: NavbarProps) {
   const { claims, signOut } = useAuth()
   const { tenant } = useTenant()
-  const { language, setLanguage, t } = useLanguage()
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const shortcut = commandPaletteShortcutLabel()
 
@@ -54,14 +54,7 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
           </Tooltip>
         )}
 
-        <Select<Language>
-          aria-label={t('header.language')}
-          value={language}
-          onChange={setLanguage}
-          suffixIcon={<GlobalOutlined />}
-          options={SUPPORTED_LANGUAGES.map((code) => ({ value: code, label: LANGUAGE_LABELS[code] }))}
-          style={{ width: 128 }}
-        />
+        <LanguageSwitcher size="small" />
 
         <Dropdown
           trigger={['click']}
