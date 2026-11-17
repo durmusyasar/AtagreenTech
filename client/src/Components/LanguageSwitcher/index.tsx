@@ -105,7 +105,7 @@ export function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
         <div
           id={listboxId}
           role="listbox"
-          className="absolute right-0 top-full z-50 mt-2.5 origin-top-right rounded-2xl border border-subtle/70 bg-surface/95 p-1 shadow-xl shadow-slate-900/[0.08] ring-1 ring-black/[0.03] backdrop-blur-xl dark:shadow-black/50 dark:ring-white/[0.06]"
+          className="absolute right-0 top-full z-50 mt-1 origin-top-right rounded-2xl border border-subtle/70 bg-surface/95 p-1 shadow-xl shadow-slate-900/[0.08] ring-1 ring-black/[0.03] backdrop-blur-xl dark:shadow-black/50 dark:ring-white/[0.06]"
         >
           <div className="flex flex-col gap-0.5">
             {LANGUAGE_OPTIONS.map((lang) => {
