@@ -1,102 +1,97 @@
-import { Alert, Button, Form, Input, Typography } from 'antd'
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiError } from '@/core/api/apiError'
-import { useLanguage } from '@/core/context/useLanguage'
-import { useAppMutation } from '@/core/hooks/useAppMutation'
-import { checkPasswordStrength } from '@/core/passwordPolicy'
-import { authPublicService } from '@/services/authPublicService'
+import { Link } from 'react-router-dom'
 import { AuthPageShell } from '@/Components/AuthPageShell'
+import { FloatingInput } from '@/Components/FloatingInput'
 import { PasswordStrengthList } from '@/Components/PasswordStrengthList'
-import type { ResetPasswordForm } from '@/routes/auth/reset-password/type'
+import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
+import { useResetPassword } from '@/routes/auth/reset-password/hooks/useResetPassword'
 
 export function ResetPasswordPage() {
-  const { t } = useLanguage()
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const token = searchParams.get('token')?.trim() ?? ''
-  const [formError, setFormError] = useState<string>()
-  const [password, setPassword] = useState('')
-  const [form] = Form.useForm<ResetPasswordForm>()
-
-  const reset = useAppMutation({
-    mutationFn: authPublicService.resetPassword,
-    onSuccess: () => navigate('/login?reset=1', { replace: true }),
-    onError: (error) => {
-      setFormError(
-        error instanceof ApiError && error.message ? error.message : t('reset.failed'),
-      )
-    },
-  })
-
-  const submit = (values: ResetPasswordForm) => {
-    setFormError(undefined)
-    if (!token) {
-      setFormError(t('reset.missingToken'))
-      return
-    }
-    if (!checkPasswordStrength(values.newPassword).isValid) {
-      setFormError(t('password.policyFailed'))
-      return
-    }
-    reset.mutate({ token, newPassword: values.newPassword })
-  }
+  const {
+    t,
+    token,
+    newPassword,
+    setNewPassword,
+    confirmPassword,
+    setConfirmPassword,
+    fieldErrors,
+    serverError,
+    isSubmitting,
+    handleSubmit,
+  } = useResetPassword()
+  const [showPass, setShowPass] = useState(false)
 
   return (
     <AuthPageShell title={t('reset.title')}>
-      {!token && (
-        <Alert type="error" showIcon style={{ marginBottom: 16 }} message={t('reset.missingToken')} />
-      )}
-
-      <Form<ResetPasswordForm>
-        form={form}
-        layout="vertical"
-        requiredMark={false}
-        onFinish={submit}
-        initialValues={{ newPassword: '', confirmPassword: '' }}
-      >
-        <Form.Item
-          name="newPassword"
-          label={t('reset.newPassword')}
-          rules={[{ required: true, message: t('login.passwordRequired') }]}
+      {!token ? (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
         >
-          <Input.Password
+          {t('reset.missingToken')}
+        </div>
+      ) : null}
+
+      {serverError ? (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
+        >
+          {serverError}
+        </div>
+      ) : null}
+
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <div className="space-y-2">
+          <FloatingInput
+            id="new-password"
+            type={showPass ? 'text' : 'password'}
             autoComplete="new-password"
-            onChange={(e) => setPassword(e.target.value)}
+            label={t('reset.newPassword')}
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            error={fieldErrors.newPassword ? t(fieldErrors.newPassword) : undefined}
+            disabled={!token}
+            endAdornment={
+              <PasswordVisibilityToggle
+                visible={showPass}
+                onToggle={() => setShowPass((value) => !value)}
+                showLabel={t('login.showPassword')}
+                hideLabel={t('login.hidePassword')}
+              />
+            }
           />
-        </Form.Item>
-        <PasswordStrengthList password={password} />
+          <PasswordStrengthList password={newPassword} />
+        </div>
 
-        <Form.Item
-          name="confirmPassword"
+        <FloatingInput
+          id="confirm-password"
+          type={showPass ? 'text' : 'password'}
+          autoComplete="new-password"
           label={t('reset.confirmPassword')}
-          dependencies={['newPassword']}
-          rules={[
-            { required: true, message: t('invite.confirmPasswordRequired') },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue('newPassword') === value) return Promise.resolve()
-                return Promise.reject(new Error(t('password.mismatch')))
-              },
-            }),
-          ]}
-          style={{ marginTop: 16 }}
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
+          error={fieldErrors.confirmPassword ? t(fieldErrors.confirmPassword) : undefined}
+          disabled={!token}
+        />
+
+        <button
+          type="submit"
+          disabled={isSubmitting || !token}
+          className="mt-2 w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-brand/25 transition-all duration-150 hover:bg-brand-hover disabled:opacity-50"
         >
-          <Input.Password autoComplete="new-password" />
-        </Form.Item>
+          {isSubmitting ? t('reset.submitting') : t('reset.submit')}
+        </button>
 
-        {formError && (
-          <Alert type="error" showIcon role="alert" style={{ marginBottom: 16 }} message={formError} />
-        )}
-
-        <Button type="primary" htmlType="submit" loading={reset.isPending} disabled={!token} block>
-          {reset.isPending ? t('reset.submitting') : t('reset.submit')}
-        </Button>
-
-        <Typography.Paragraph style={{ marginTop: 16, marginBottom: 0, textAlign: 'center' }}>
-          <Link to="/login">{t('auth.backToLogin')}</Link>
-        </Typography.Paragraph>
-      </Form>
+        <div className="pt-1 text-center">
+          <Link
+            to="/login"
+            className="text-xs font-medium text-secondary transition-colors hover:text-primary"
+          >
+            ← {t('auth.backToLogin')}
+          </Link>
+        </div>
+      </form>
     </AuthPageShell>
   )
 }

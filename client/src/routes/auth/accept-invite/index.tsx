@@ -1,130 +1,124 @@
-import { Alert, Button, Col, Form, Input, Row, Typography } from 'antd'
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiError } from '@/core/api/apiError'
-import { useLanguage } from '@/core/context/useLanguage'
-import { useAppMutation } from '@/core/hooks/useAppMutation'
-import { checkPasswordStrength } from '@/core/passwordPolicy'
-import { authPublicService } from '@/services/authPublicService'
+import { Link } from 'react-router-dom'
 import { AuthPageShell } from '@/Components/AuthPageShell'
+import { FloatingInput } from '@/Components/FloatingInput'
 import { PasswordStrengthList } from '@/Components/PasswordStrengthList'
-import type { AcceptInviteForm } from '@/routes/auth/accept-invite/type'
+import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
+import { useAcceptInvite } from '@/routes/auth/accept-invite/hooks/useAcceptInvite'
 
 export function AcceptInvitePage() {
-  const { t } = useLanguage()
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const token = searchParams.get('token')?.trim() ?? ''
-  const [formError, setFormError] = useState<string>()
-  const [password, setPassword] = useState('')
-  const [form] = Form.useForm<AcceptInviteForm>()
-
-  const accept = useAppMutation({
-    mutationFn: authPublicService.acceptInvite,
-    onSuccess: () => navigate('/login?invited=1', { replace: true }),
-    onError: (error) => {
-      setFormError(
-        error instanceof ApiError && error.message
-          ? error.message
-          : t('invite.failed'),
-      )
-    },
-  })
-
-  const submit = (values: AcceptInviteForm) => {
-    setFormError(undefined)
-    if (!token) {
-      setFormError(t('invite.missingToken'))
-      return
-    }
-    if (!checkPasswordStrength(values.password).isValid) {
-      setFormError(t('password.policyFailed'))
-      return
-    }
-    accept.mutate({
-      token,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      password: values.password,
-    })
-  }
+  const {
+    t,
+    token,
+    firstName,
+    setFirstName,
+    lastName,
+    setLastName,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    fieldErrors,
+    serverError,
+    isSubmitting,
+    handleSubmit,
+  } = useAcceptInvite()
+  const [showPass, setShowPass] = useState(false)
 
   return (
     <AuthPageShell title={t('invite.title')} description={t('invite.description')}>
-      {!token && (
-        <Alert type="error" showIcon style={{ marginBottom: 16 }} message={t('invite.missingToken')} />
-      )}
-
-      <Form<AcceptInviteForm>
-        form={form}
-        layout="vertical"
-        requiredMark={false}
-        onFinish={submit}
-        initialValues={{ firstName: '', lastName: '', password: '', confirmPassword: '' }}
-      >
-        <Row gutter={12}>
-          <Col span={12}>
-            <Form.Item
-              name="firstName"
-              label={t('invite.firstName')}
-              rules={[{ required: true, whitespace: true, message: t('invite.firstNameRequired') }]}
-            >
-              <Input autoComplete="given-name" />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              name="lastName"
-              label={t('invite.lastName')}
-              rules={[{ required: true, whitespace: true, message: t('invite.lastNameRequired') }]}
-            >
-              <Input autoComplete="family-name" />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Form.Item
-          name="password"
-          label={t('invite.password')}
-          rules={[{ required: true, message: t('login.passwordRequired') }]}
+      {!token ? (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
         >
-          <Input.Password
-            autoComplete="new-password"
-            onChange={(e) => setPassword(e.target.value)}
+          {t('invite.missingToken')}
+        </div>
+      ) : null}
+
+      {serverError ? (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
+        >
+          {serverError}
+        </div>
+      ) : null}
+
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+          <FloatingInput
+            id="invite-first-name"
+            type="text"
+            autoComplete="given-name"
+            label={t('invite.firstName')}
+            value={firstName}
+            onChange={(event) => setFirstName(event.target.value)}
+            error={fieldErrors.firstName ? t(fieldErrors.firstName) : undefined}
+            disabled={!token}
           />
-        </Form.Item>
-        <PasswordStrengthList password={password} />
+          <FloatingInput
+            id="invite-last-name"
+            type="text"
+            autoComplete="family-name"
+            label={t('invite.lastName')}
+            value={lastName}
+            onChange={(event) => setLastName(event.target.value)}
+            error={fieldErrors.lastName ? t(fieldErrors.lastName) : undefined}
+            disabled={!token}
+          />
+        </div>
 
-        <Form.Item
-          name="confirmPassword"
+        <div className="space-y-2">
+          <FloatingInput
+            id="invite-password"
+            type={showPass ? 'text' : 'password'}
+            autoComplete="new-password"
+            label={t('invite.password')}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            error={fieldErrors.password ? t(fieldErrors.password) : undefined}
+            disabled={!token}
+            endAdornment={
+              <PasswordVisibilityToggle
+                visible={showPass}
+                onToggle={() => setShowPass((value) => !value)}
+                showLabel={t('login.showPassword')}
+                hideLabel={t('login.hidePassword')}
+              />
+            }
+          />
+          <PasswordStrengthList password={password} />
+        </div>
+
+        <FloatingInput
+          id="invite-confirm-password"
+          type={showPass ? 'text' : 'password'}
+          autoComplete="new-password"
           label={t('invite.confirmPassword')}
-          dependencies={['password']}
-          rules={[
-            { required: true, message: t('invite.confirmPasswordRequired') },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue('password') === value) return Promise.resolve()
-                return Promise.reject(new Error(t('password.mismatch')))
-              },
-            }),
-          ]}
-          style={{ marginTop: 16 }}
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
+          error={fieldErrors.confirmPassword ? t(fieldErrors.confirmPassword) : undefined}
+          disabled={!token}
+        />
+
+        <button
+          type="submit"
+          disabled={isSubmitting || !token}
+          className="mt-2 w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-brand/25 transition-all duration-150 hover:bg-brand-hover disabled:opacity-50"
         >
-          <Input.Password autoComplete="new-password" />
-        </Form.Item>
+          {isSubmitting ? t('invite.submitting') : t('invite.submit')}
+        </button>
 
-        {formError && (
-          <Alert type="error" showIcon role="alert" style={{ marginBottom: 16 }} message={formError} />
-        )}
-
-        <Button type="primary" htmlType="submit" loading={accept.isPending} disabled={!token} block>
-          {accept.isPending ? t('invite.submitting') : t('invite.submit')}
-        </Button>
-
-        <Typography.Paragraph style={{ marginTop: 16, marginBottom: 0, textAlign: 'center' }}>
-          <Link to="/login">{t('auth.backToLogin')}</Link>
-        </Typography.Paragraph>
-      </Form>
+        <div className="pt-1 text-center">
+          <Link
+            to="/login"
+            className="text-xs font-medium text-secondary transition-colors hover:text-primary"
+          >
+            ← {t('auth.backToLogin')}
+          </Link>
+        </div>
+      </form>
     </AuthPageShell>
   )
 }

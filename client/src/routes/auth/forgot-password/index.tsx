@@ -1,50 +1,56 @@
-import { Alert, Button, Form, Input, Typography } from 'antd'
 import { Link } from 'react-router-dom'
 import { AuthPageShell } from '@/Components/AuthPageShell'
+import { FloatingInput } from '@/Components/FloatingInput'
 import { useForgotPassword } from '@/routes/auth/forgot-password/hooks/useForgotPassword'
 
 export function ForgotPasswordPage() {
-  const { t, submittedEmail, forgot } = useForgotPassword()
+  const { t, email, setEmail, fieldErrors, submittedEmail, isSubmitting, handleSubmit } =
+    useForgotPassword()
 
   return (
     <AuthPageShell title={t('forgot.title')} description={t('forgot.description')}>
       {submittedEmail ? (
-        <>
-          <Alert
-            type="success"
-            showIcon
-            style={{ marginBottom: 16 }}
-            message={t('forgot.sent', submittedEmail)}
-          />
-          <Typography.Paragraph style={{ marginBottom: 0, textAlign: 'center' }}>
-            <Link to="/login">{t('auth.backToLogin')}</Link>
-          </Typography.Paragraph>
-        </>
-      ) : (
-        <Form
-          layout="vertical"
-          requiredMark={false}
-          onFinish={(values: { email: string }) => forgot.mutate(values.email.trim())}
-        >
-          <Form.Item
-            name="email"
-            label={t('login.email')}
-            rules={[
-              { required: true, whitespace: true, message: t('login.emailRequired') },
-              { type: 'email', message: t('login.emailInvalid') },
-            ]}
+        <div className="space-y-4">
+          <div className="space-y-1 rounded-xl border border-brand/30 bg-brand/10 p-4 text-xs leading-relaxed">
+            <p className="font-semibold text-brand">{t('forgot.submit')}</p>
+            <p className="text-secondary">{t('forgot.sent', submittedEmail)}</p>
+          </div>
+          <Link
+            to="/login"
+            className="block w-full rounded-xl bg-brand px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-brand-hover"
           >
-            <Input type="email" autoComplete="email" placeholder="admin@omnisync.com" />
-          </Form.Item>
+            {t('auth.backToLogin')}
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <FloatingInput
+            id="reset-email"
+            type="email"
+            autoComplete="email"
+            label={t('login.emailLabel')}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            error={fieldErrors.email ? t(fieldErrors.email) : undefined}
+          />
 
-          <Button type="primary" htmlType="submit" loading={forgot.isPending} block>
-            {forgot.isPending ? t('auth.sending') : t('forgot.submit')}
-          </Button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="mt-2 w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-brand/25 transition-all duration-150 hover:bg-brand-hover disabled:opacity-50"
+          >
+            {isSubmitting ? t('auth.sending') : t('forgot.submit')}
+          </button>
 
-          <Typography.Paragraph style={{ marginTop: 16, marginBottom: 0, textAlign: 'center' }}>
-            <Link to="/login">{t('auth.backToLogin')}</Link>
-          </Typography.Paragraph>
-        </Form>
+          <div className="pt-1 text-center">
+            <Link
+              to="/login"
+              className="text-xs font-medium text-secondary transition-colors hover:text-primary"
+            >
+              ← {t('auth.backToLogin')}
+            </Link>
+          </div>
+        </form>
       )}
     </AuthPageShell>
   )
