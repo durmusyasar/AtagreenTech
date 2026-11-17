@@ -98,7 +98,7 @@ export function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
         <div
           id={listboxId}
           role="listbox"
-          className="absolute right-0 z-50 mt-2 w-40 origin-top-right rounded-xl border border-subtle bg-surface p-1.5 shadow-lg shadow-slate-900/10 dark:shadow-black/40"
+          className="absolute right-0 z-50 mt-2 min-w-[4.5rem] origin-top-right rounded-xl border border-subtle bg-surface p-1.5 shadow-lg shadow-slate-900/10 dark:shadow-black/40"
         >
           {LANGUAGE_OPTIONS.map((lang) => {
             const isSelected = lang.code === currentLang.code
@@ -108,15 +108,21 @@ export function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
                 type="button"
                 role="option"
                 aria-selected={isSelected}
+                aria-label={lang.label}
+                title={lang.label}
                 onClick={() => handleSelect(lang.code)}
-                className={`appearance-none flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors ${
+                className={`group appearance-none flex w-full items-center justify-center rounded-lg px-3 py-2 text-xs transition-colors ${
                   isSelected
                     ? 'bg-brand/10 font-semibold text-brand'
                     : 'text-secondary hover:bg-elevated hover:text-primary'
                 }`}
               >
-                <span>{lang.label}</span>
-                <span className="font-mono text-[11px] opacity-75">{lang.shortLabel}</span>
+                <span className="font-semibold tracking-wide group-hover:hidden group-focus-visible:hidden">
+                  {lang.shortLabel}
+                </span>
+                <span className="hidden whitespace-nowrap group-hover:inline group-focus-visible:inline">
+                  {lang.label}
+                </span>
               </button>
             )
           })}
