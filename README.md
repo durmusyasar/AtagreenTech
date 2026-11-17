@@ -169,7 +169,8 @@ A failing TypeScript check, architecture lint (#52), integration/contract test (
 `OmniSync.Core.*` packages are private and linked to `durmusyasar/OmniSyncCore`, so this repo’s `GITHUB_TOKEN` cannot restore them (NU1301 / 403).
 
 1. Create a **classic PAT** with `read:packages` (and `repo` if the packages stay private).
-2. Add it as repository secret **`GITHUB_PACKAGES_TOKEN`**  
-   (`Settings → Secrets and variables → Actions`, or `gh secret set GITHUB_PACKAGES_TOKEN`).
+2. Add it as repository secret **`PACKAGES_READ_TOKEN`**  
+   (`Settings → Secrets and variables → Actions`, or `gh secret set PACKAGES_READ_TOKEN`).  
+   GitHub rejects secret names that start with `GITHUB_`.
 3. Re-run the failed workflow.
 

@@ -20,9 +20,9 @@ env:
   SOLUTION_PATH: 'AtaGreenTech.slnx'
   CLIENT_DIR: 'client'
   # OmniSync.Core.* paketleri OmniSyncCore reposuna bağlı; AtagreenTech GITHUB_TOKEN
-  # ile okunamaz. Repo secret: classic PAT (read:packages) zorunlu.
+  # ile okunamaz. Repo secret adı GITHUB_ ile başlayamaz → PACKAGES_READ_TOKEN.
   GITHUB_USERNAME: ${{ github.repository_owner }}
-  GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_PACKAGES_TOKEN }}
+  GITHUB_PACKAGES_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN }}
 
 jobs:
   # 1. Backend Build + Unit & E2E/Contract Testleri
@@ -37,7 +37,7 @@ jobs:
       - name: Require GitHub Packages credentials
         run: |
           if [ -z "${GITHUB_PACKAGES_TOKEN}" ]; then
-            echo "::error::Missing secret GITHUB_PACKAGES_TOKEN. Create a classic PAT with read:packages and add it as a repository secret (Settings → Secrets → Actions). OmniSync.Core packages live under OmniSyncCore and are not readable with this repo's GITHUB_TOKEN."
+            echo "::error::Missing secret PACKAGES_READ_TOKEN. Create a classic PAT with read:packages (+ repo if packages are private) and add it as repository secret PACKAGES_READ_TOKEN (Settings → Secrets → Actions). Note: secret names cannot start with GITHUB_."
             exit 1
           fi
 
@@ -160,6 +160,6 @@ jobs:
           build-args: |
             GITHUB_USERNAME=${{ github.repository_owner }}
           secrets: |
-            github_packages_token=${{ secrets.GITHUB_PACKAGES_TOKEN }}
+            github_packages_token=${{ secrets.PACKAGES_READ_TOKEN }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
