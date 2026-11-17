@@ -1,3 +1,4 @@
+import { Tooltip } from 'antd'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useLanguage } from '@/core/context/useLanguage'
 import {
@@ -103,27 +104,22 @@ export function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
           {LANGUAGE_OPTIONS.map((lang) => {
             const isSelected = lang.code === currentLang.code
             return (
-              <button
-                key={lang.code}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                aria-label={lang.label}
-                title={lang.label}
-                onClick={() => handleSelect(lang.code)}
-                className={`group appearance-none flex w-full items-center justify-center rounded-lg px-3 py-2 text-xs transition-colors ${
-                  isSelected
-                    ? 'bg-brand/10 font-semibold text-brand'
-                    : 'text-secondary hover:bg-elevated hover:text-primary'
-                }`}
-              >
-                <span className="font-semibold tracking-wide group-hover:hidden group-focus-visible:hidden">
+              <Tooltip key={lang.code} title={lang.label} placement="left" mouseEnterDelay={0.1}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  aria-label={lang.label}
+                  onClick={() => handleSelect(lang.code)}
+                  className={`appearance-none flex w-full items-center justify-center rounded-lg px-3 py-2 text-xs font-semibold tracking-wide transition-colors ${
+                    isSelected
+                      ? 'bg-brand/10 text-brand'
+                      : 'text-secondary hover:bg-elevated hover:text-primary'
+                  }`}
+                >
                   {lang.shortLabel}
-                </span>
-                <span className="hidden whitespace-nowrap group-hover:inline group-focus-visible:inline">
-                  {lang.label}
-                </span>
-              </button>
+                </button>
+              </Tooltip>
             )
           })}
         </div>
