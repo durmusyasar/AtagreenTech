@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint",
+    "type-check": "tsc --noEmit -p tsconfig.app.json",
+    "lint": "oxlint src && node scripts/assert-no-inline-tsx-types.mjs",
     "test": "vitest run",
     "preview": "vite preview"
   },

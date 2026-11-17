@@ -3,7 +3,7 @@ import { Segmented } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useLanguage } from '../../core/context/useLanguage'
 import type { Language } from '../../core/i18n/languages'
-import type { LanguageSwitcherProps } from './types'
+import type { LanguageSwitcherProps } from './type'
 
 /**
  * TR/EN dil seçici. Tercih `omnisync_lang` (i18next) + sessionStore üzerinden kalıcıdır.
