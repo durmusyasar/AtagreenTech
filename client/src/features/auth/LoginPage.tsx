@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { BrandMark } from '../../components/BrandMark'
 import { LanguageSwitcher } from '../../components/LanguageSwitcher'
+import { ThemeSwitcher } from '../../components/ThemeSwitcher'
 import { ApiError } from '../../core/api/apiError'
 import { useAuth } from '../../core/context/useAuth'
 import { useLanguage } from '../../core/context/useLanguage'
@@ -111,8 +112,16 @@ export function LoginPage() {
   }
 
   return (
-    <Flex align="center" justify="center" style={{ minHeight: '100vh', padding: 24 }}>
-      <Card style={{ width: '100%', maxWidth: 480 }}>
+    <Flex
+      align="center"
+      justify="center"
+      className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100"
+      style={{ padding: 24 }}
+    >
+      <Card
+        className="border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        style={{ width: '100%', maxWidth: 480 }}
+      >
         <Flex align="flex-start" justify="space-between" gap={12} style={{ marginBottom: 24 }}>
           <Flex vertical gap={8} style={{ minWidth: 0 }}>
             <BrandMark size={32} nameStyle={{ fontSize: 20, margin: 0 }} />
@@ -120,7 +129,10 @@ export function LoginPage() {
               {step === 'CREDENTIALS' ? t('login.description') : t('login.mfaTitle')}
             </Typography.Text>
           </Flex>
-          <LanguageSwitcher size="small" />
+          <Flex align="center" gap={2} style={{ flexShrink: 0 }}>
+            <ThemeSwitcher variant="toggle" />
+            <LanguageSwitcher size="small" />
+          </Flex>
         </Flex>
 
         {!tenantReady ? (
