@@ -2,26 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary-color: #2e7d32;
-}
+@layer base {
+  :root {
+    /* Light Mode — Atagreen Emerald / Slate */
+    --bg-canvas: 248 250 252;
+    --bg-surface: 255 255 255;
+    --bg-elevated: 241 245 249;
+    --border-subtle: 226 232 240;
 
-html,
-body,
-#root {
-  margin: 0;
-  min-height: 100%;
-}
+    --text-primary: 15 23 42;
+    --text-secondary: 71 85 105;
+    --text-muted: 100 116 139;
 
-body {
-  background: #f8fafc;
-  color: #0f172a;
-  transition: background-color 150ms ease, color 150ms ease;
-}
+    --brand-primary: 22 163 74;
+    --brand-hover: 21 128 61;
+    --brand-soft: 220 252 231;
 
-html.dark body {
-  background: #020617;
-  color: #f1f5f9;
+    /* Ant Design / legacy bridge */
+    --primary-color: #16a34a;
+  }
+
+  .dark {
+    --bg-canvas: 7 11 20;
+    --bg-surface: 15 23 42;
+    --bg-elevated: 30 41 59;
+    --border-subtle: 51 65 85;
+
+    --text-primary: 248 250 252;
+    --text-secondary: 148 163 184;
+    --text-muted: 100 116 139;
+
+    --brand-primary: 34 197 94;
+    --brand-hover: 22 163 74;
+    --brand-soft: 20 83 45;
+
+    --primary-color: #22c55e;
+  }
+
+  html,
+  body,
+  #root {
+    margin: 0;
+    min-height: 100%;
+  }
+
+  body {
+    background-color: rgb(var(--bg-canvas));
+    color: rgb(var(--text-primary));
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    transition:
+      background-color 150ms ease,
+      color 150ms ease;
+  }
 }
 
 .app-logo {

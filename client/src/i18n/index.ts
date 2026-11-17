@@ -52,6 +52,8 @@ void i18n
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: I18N_LANGUAGE_STORAGE_KEY,
       caches: ['localStorage'],
+      // tr-* → tr; diğer tüm navigator dilleri → en
+      convertDetectedLanguage: (lng: string) => (lng.toLowerCase().startsWith('tr') ? 'tr' : 'en'),
     },
     interpolation: {
       escapeValue: false,

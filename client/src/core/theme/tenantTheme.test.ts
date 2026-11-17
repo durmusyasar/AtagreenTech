@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_TENANT_THEME, derivePrimarySurfaces } from '@/core/theme/tenantTheme'
 
 describe('derivePrimarySurfaces', () => {
-  it('keeps the known green primary close to the previous static theme', () => {
-    const surfaces = derivePrimarySurfaces('#2e7d32')
-    expect(surfaces.colorPrimaryBg).toBe('#e8f5e9')
-    expect(surfaces.colorPrimaryBgHover).toBe('#c8e6c9')
+  it('keeps the default Atagreen primary on brand-soft surfaces', () => {
+    const surfaces = derivePrimarySurfaces(DEFAULT_TENANT_THEME.primaryColor)
+    expect(surfaces.colorPrimaryBg).toBe('#dcfce7')
+    expect(surfaces.colorPrimaryBgHover).toBe('#bbf7d0')
   })
 
   it('falls back when the hex is invalid', () => {

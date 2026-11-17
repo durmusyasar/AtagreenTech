@@ -33,6 +33,8 @@
   "command.category.actions": "Quick actions",
   "command.category.system": "System",
   "footer.line": "{{0}} © {{1}} — All rights reserved | Version: v{{2}}",
+  "footer.rights": "All rights reserved.",
+  "footer.systemStatus": "System Online",
   "invite.title": "Accept invite",
   "invite.description": "Complete your account with your name and a strong password.",
   "invite.firstName": "First name",

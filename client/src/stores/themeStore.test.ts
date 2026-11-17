@@ -39,4 +39,9 @@ describe('useThemeStore', () => {
     expect(raw).toBeTruthy()
     expect(JSON.parse(raw!).state.theme).toBe('dark')
   })
+
+  it('defaults to system (prefers-color-scheme) when nothing is persisted', async () => {
+    const { useThemeStore } = await import('./themeStore')
+    expect(useThemeStore.getState().theme).toBe('system')
+  })
 })

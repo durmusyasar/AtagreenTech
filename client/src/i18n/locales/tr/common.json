@@ -33,6 +33,8 @@
   "command.category.actions": "Hızlı işlemler",
   "command.category.system": "Sistem",
   "footer.line": "{{0}} © {{1}} — Tüm hakları saklıdır | Sürüm: v{{2}}",
+  "footer.rights": "Tüm hakları saklıdır.",
+  "footer.systemStatus": "Sistem Aktif",
   "invite.title": "Daveti kabul et",
   "invite.description": "Hesabınızı tamamlamak için adınızı ve güçlü bir şifre belirleyin.",
   "invite.firstName": "Ad",
