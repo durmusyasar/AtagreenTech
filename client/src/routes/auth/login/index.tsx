@@ -1,5 +1,5 @@
 import { LoginOutlined } from '@ant-design/icons'
-import { Alert, Button, Form, Input, Typography } from 'antd'
+import { Alert, Button, Form, Input } from 'antd'
 import { Link, Navigate } from 'react-router-dom'
 import { PublicAuthLayout } from '@/Components/PublicAuthLayout'
 import { useTenant } from '@/core/context/useTenant'
@@ -9,11 +9,10 @@ import { useLoginForm } from '@/routes/auth/login/hooks/useLoginForm'
 import type { LoginForm } from '@/routes/auth/login/type'
 
 /**
- * Email/şifre + MFA ikinci adım giriş ekranı.
- * PublicAuthLayout ile Navbar/Footer; form kartı merkezi tasarım token'larını kullanır.
+ * Sade login kartı: Zod alan hataları + MFA; tenant/IAM rozeti yok.
  */
 export function LoginPage() {
-  const { tenant, isTenantFromHost } = useTenant()
+  const { isTenantFromHost } = useTenant()
   const {
     isAuthenticated,
     from,
@@ -23,6 +22,7 @@ export function LoginPage() {
     step,
     mfaMode,
     formError,
+    fieldErrors,
     form,
     login,
     resetToCredentials,
@@ -34,16 +34,11 @@ export function LoginPage() {
   if (isAuthenticated) return <Navigate to={from} replace />
 
   const tenantReady = isTenantFromHost || TENANT_SELECTION_ENABLED
-  const tenantName =
-    isTenantFromHost || TENANT_SELECTION_ENABLED ? (tenant ?? undefined) : undefined
 
   return (
-    <PublicAuthLayout tenantName={tenantName}>
+    <PublicAuthLayout>
       <div className="w-full max-w-[420px] space-y-6 rounded-2xl border border-subtle bg-surface p-7 shadow-xl shadow-black/5 sm:p-8 dark:shadow-black/30">
         <div className="space-y-1.5">
-          <div className="mb-1 inline-flex items-center gap-2 rounded-md bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
-            OmniSyncCore IAM
-          </div>
           <h1 className="text-2xl font-semibold tracking-tight text-primary">
             {step === 'CREDENTIALS' ? t('login.title') : t('login.mfaSubtitle')}
           </h1>
@@ -72,18 +67,9 @@ export function LoginPage() {
             requiredMark={false}
             onFinish={submit}
             initialValues={{ email: '', password: '' }}
+            noValidate
             className="space-y-1"
           >
-            {isTenantFromHost ? (
-              <Typography.Paragraph className="!mb-4 text-sm text-secondary">
-                {t('login.tenantFromHost', tenant)}
-              </Typography.Paragraph>
-            ) : (
-              <Typography.Paragraph type="secondary" className="!mb-4 text-sm">
-                {t('login.devTenant', tenant)}
-              </Typography.Paragraph>
-            )}
-
             {invitedBanner && (
               <Alert type="success" showIcon className="!mb-4" message={t('login.invitedSuccess')} />
             )}
@@ -98,10 +84,8 @@ export function LoginPage() {
               <Form.Item
                 name="email"
                 label={t('login.emailLabel')}
-                rules={[
-                  { required: true, whitespace: true, message: t('login.emailRequired') },
-                  { type: 'email', message: t('login.emailInvalid') },
-                ]}
+                validateStatus={fieldErrors.email ? 'error' : undefined}
+                help={fieldErrors.email ? t(fieldErrors.email) : undefined}
               >
                 <Input
                   autoComplete="username"
@@ -119,7 +103,8 @@ export function LoginPage() {
               </div>
               <Form.Item
                 name="password"
-                rules={[{ required: true, message: t('login.passwordRequired') }]}
+                validateStatus={fieldErrors.password ? 'error' : undefined}
+                help={fieldErrors.password ? t(fieldErrors.password) : undefined}
               >
                 <Input.Password
                   autoComplete="current-password"
@@ -131,7 +116,12 @@ export function LoginPage() {
             </div>
 
             {step === 'MFA' && (
-              <MfaVerificationStep mode={mfaMode} onBack={resetToCredentials} onToggleMode={switchMfaMode} />
+              <MfaVerificationStep
+                mode={mfaMode}
+                onBack={resetToCredentials}
+                onToggleMode={switchMfaMode}
+                error={fieldErrors.mfaInput ? t(fieldErrors.mfaInput) : undefined}
+              />
             )}
 
             {formError && (
