@@ -140,3 +140,28 @@ npm run lint && npm test && npm run build
   user is sent to `/login`. Missing role/permission on a route yields `/unauthorized` (403).
 - Required JWT claims: `sub`, `email`, `role`, `tenant_id`, plus granular `permission` values for RBAC.
 
+## CI/CD (GitHub Actions)
+
+`.github/workflows/ci.yml` runs on every push and pull request targeting `main` or `develop`:
+
+| Job | What it checks |
+| --- | --- |
+| **Backend (.NET 10 Build & Tests)** | `dotnet restore/build/test` on `AtaGreenTech.slnx` (unit + contract/integration) |
+| **Frontend (Type-Check, Lint & Build)** | `npm run type-check`, `lint`, `test`, production `build` in `client/` |
+| **Docker Build Verification (*)** | Buildx image build (no push) for UserService, StockService, and client |
+
+`backend-ci` and `frontend-ci` run in parallel; `docker-verify` starts only after both succeed.
+
+### Branch protection (required status checks)
+
+Under **Settings → Branches → Branch protection rules → `main` / `develop`**, enable *Require status checks to pass before merging* and select:
+
+- `Backend (.NET 10 Build & Tests)`
+- `Frontend (Type-Check, Lint & Build)`
+- `Docker Build Verification (userservice)`
+- `Docker Build Verification (stockservice)`
+- `Docker Build Verification (client)`
+
+A failing TypeScript check, architecture lint (#52), integration/contract test (#47), or Docker build blocks merge automatically.
+NuGet restore and service Docker builds authenticate to GitHub Packages with `GITHUB_TOKEN` (`permissions.packages: read`).
+

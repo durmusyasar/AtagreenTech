@@ -1,23 +1,29 @@
 # Derleme çıktıları ve IDE dosyaları
-**/bin/
-**/obj/
-**/.vs/
-**/.vscode/
-**/.idea/
+**/.git
+**/.github
+**/.vs
+**/.vscode
+**/.idea
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/TestResults
 **/*.user
+**/*.suo
 
 # Gizli değerler ve yalnızca yerel geliştirmeye ait ayarlar imaja girmemelidir.
-**/.env
-**/.env.*
+.env
+.env.*
+!.env.example
 secrets/
 **/appsettings.Development.json
 **/launchSettings.json
 
 # İmajda kullanılmayan dosyalar
-.git/
-.github/
 tests/
 deploy/
+docs/
 **/*.md
 **/Dockerfile
 .dockerignore
