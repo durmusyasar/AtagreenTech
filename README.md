@@ -163,5 +163,13 @@ Under **Settings → Branches → Branch protection rules → `main` / `develop`
 - `Docker Build Verification (client)`
 
 A failing TypeScript check, architecture lint (#52), integration/contract test (#47), or Docker build blocks merge automatically.
-NuGet restore and service Docker builds authenticate to GitHub Packages with `GITHUB_TOKEN` (`permissions.packages: read`).
+
+### GitHub Packages credentials (required for backend / Docker CI)
+
+`OmniSync.Core.*` packages are private and linked to `durmusyasar/OmniSyncCore`, so this repo’s `GITHUB_TOKEN` cannot restore them (NU1301 / 403).
+
+1. Create a **classic PAT** with `read:packages` (and `repo` if the packages stay private).
+2. Add it as repository secret **`GITHUB_PACKAGES_TOKEN`**  
+   (`Settings → Secrets and variables → Actions`, or `gh secret set GITHUB_PACKAGES_TOKEN`).
+3. Re-run the failed workflow.
 

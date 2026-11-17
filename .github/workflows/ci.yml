@@ -19,8 +19,10 @@ env:
   NODE_VERSION: '22.x'
   SOLUTION_PATH: 'AtaGreenTech.slnx'
   CLIENT_DIR: 'client'
-  GITHUB_USERNAME: ${{ github.actor }}
-  GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # OmniSync.Core.* paketleri OmniSyncCore reposuna bağlı; AtagreenTech GITHUB_TOKEN
+  # ile okunamaz. Repo secret: classic PAT (read:packages) zorunlu.
+  GITHUB_USERNAME: ${{ github.repository_owner }}
+  GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_PACKAGES_TOKEN }}
 
 jobs:
   # 1. Backend Build + Unit & E2E/Contract Testleri
@@ -31,6 +33,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Require GitHub Packages credentials
+        run: |
+          if [ -z "${GITHUB_PACKAGES_TOKEN}" ]; then
+            echo "::error::Missing secret GITHUB_PACKAGES_TOKEN. Create a classic PAT with read:packages and add it as a repository secret (Settings → Secrets → Actions). OmniSync.Core packages live under OmniSyncCore and are not readable with this repo's GITHUB_TOKEN."
+            exit 1
+          fi
 
       - name: Setup .NET ${{ env.DOTNET_VERSION }}
         uses: actions/setup-dotnet@v4
@@ -44,6 +53,14 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/nuget.config') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
+
+      - name: Authenticate NuGet GitHub Packages feed
+        run: |
+          dotnet nuget update source omnisync \
+            --username "${GITHUB_USERNAME}" \
+            --password "${GITHUB_PACKAGES_TOKEN}" \
+            --store-password-in-clear-text \
+            --configfile nuget.config
 
       - name: Restore dependencies
         run: dotnet restore ${{ env.SOLUTION_PATH }}
@@ -141,8 +158,8 @@ jobs:
           load: false
           tags: atagreen-${{ matrix.service }}:ci-verify
           build-args: |
-            GITHUB_USERNAME=${{ github.actor }}
+            GITHUB_USERNAME=${{ github.repository_owner }}
           secrets: |
-            github_packages_token=${{ secrets.GITHUB_TOKEN }}
+            github_packages_token=${{ secrets.GITHUB_PACKAGES_TOKEN }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
