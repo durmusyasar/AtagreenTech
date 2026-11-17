@@ -110,6 +110,7 @@ export function useLoginForm() {
     const request: LoginRequest = {
       email: values.email.trim(),
       password: values.password,
+      rememberMe: values.rememberMe === true,
     }
     if (step === 'MFA') {
       const raw = values.mfaInput?.trim() ?? ''

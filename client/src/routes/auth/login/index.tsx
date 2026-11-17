@@ -66,7 +66,7 @@ export function LoginPage() {
             layout="vertical"
             requiredMark={false}
             onFinish={submit}
-            initialValues={{ email: '', password: '' }}
+            initialValues={{ email: '', password: '', rememberMe: false }}
             noValidate
             className="space-y-1"
           >
@@ -95,14 +95,9 @@ export function LoginPage() {
                 />
               </Form.Item>
 
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="text-sm text-secondary">{t('login.passwordLabel')}</span>
-                <Link to="/forgot-password" className="text-xs font-medium text-brand hover:text-brand-hover">
-                  {t('login.forgotPassword')}
-                </Link>
-              </div>
               <Form.Item
                 name="password"
+                label={t('login.passwordLabel')}
                 validateStatus={fieldErrors.password ? 'error' : undefined}
                 help={fieldErrors.password ? t(fieldErrors.password) : undefined}
               >
@@ -113,6 +108,27 @@ export function LoginPage() {
                   size="large"
                 />
               </Form.Item>
+
+              <div className="flex items-center justify-between gap-2 pt-1 pb-2">
+                <label className="flex cursor-pointer items-center gap-2.5 group">
+                  <Form.Item name="rememberMe" valuePropName="checked" noStyle>
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 cursor-pointer rounded border-subtle bg-elevated text-brand transition focus:ring-brand/30"
+                    />
+                  </Form.Item>
+                  <span className="text-xs font-medium text-secondary transition-colors group-hover:text-primary">
+                    {t('login.rememberMe')}
+                  </span>
+                </label>
+
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
+                >
+                  {t('login.forgotPassword')}
+                </Link>
+              </div>
             </div>
 
             {step === 'MFA' && (

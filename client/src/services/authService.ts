@@ -15,6 +15,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 export const authService = {
   async login(request: LoginRequest): Promise<LoginResult> {
     try {
+      const rememberMe = request.rememberMe === true
+
       const { data } = await axiosClient.post<AuthTokens>(
         '/auth/login',
         {
@@ -22,6 +24,7 @@ export const authService = {
           password: request.password,
           totpCode: request.totpCode?.trim() || undefined,
           recoveryCode: request.recoveryCode?.trim() || undefined,
+          rememberMe,
         },
         { skipErrorNotification: true },
       )
@@ -30,6 +33,7 @@ export const authService = {
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
         expiresAt: data.expiresAt,
+        rememberMe,
       })
 
       const me = await sessionService.getCurrent()

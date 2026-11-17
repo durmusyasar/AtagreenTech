@@ -16,6 +16,7 @@ vi.mock('../core/session', () => ({
       token: null,
       refreshToken: null,
       expiresAt: null,
+      rememberMe: false,
       tenant: 'atagreen',
       isTenantFromHost: true,
       language: 'tr',
@@ -66,7 +67,7 @@ describe('authService.login', () => {
     })
 
     await expect(
-      authService.login({ email: 'admin@omnisync.com', password: 'Admin123!' }),
+      authService.login({ email: 'admin@omnisync.com', password: 'Admin123!', rememberMe: true }),
     ).resolves.toMatchObject({
       userName: 'admin@omnisync.com',
       roles: ['Admin'],
@@ -76,13 +77,18 @@ describe('authService.login', () => {
 
     expect(mockedPost).toHaveBeenCalledWith(
       '/auth/login',
-      expect.objectContaining({ email: 'admin@omnisync.com', password: 'Admin123!' }),
+      expect.objectContaining({
+        email: 'admin@omnisync.com',
+        password: 'Admin123!',
+        rememberMe: true,
+      }),
       expect.objectContaining({ skipErrorNotification: true }),
     )
     expect(mockedSignIn).toHaveBeenCalledWith({
       accessToken: 'access',
       refreshToken: 'refresh',
       expiresAt: '2026-11-16T12:00:00Z',
+      rememberMe: true,
     })
     expect(mockedGetMe).toHaveBeenCalled()
   })

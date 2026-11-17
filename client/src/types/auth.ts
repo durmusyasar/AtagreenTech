@@ -4,6 +4,8 @@ export interface LoginRequest {
   password: string
   totpCode?: string
   recoveryCode?: string
+  /** true → istemci token’ları localStorage’da tutar; false → sessionStorage. */
+  rememberMe?: boolean
 }
 
 /** `POST /api/v1/auth/login` ve `/auth/refresh` yanıtı. */

@@ -5,6 +5,7 @@ export type MfaInputMode = MfaMode
 export interface LoginForm {
   email: string
   password: string
+  rememberMe?: boolean
   mfaInput?: string
 }
 
