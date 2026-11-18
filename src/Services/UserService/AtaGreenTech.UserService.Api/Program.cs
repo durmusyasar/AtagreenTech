@@ -2,6 +2,7 @@ using AtaGreenTech.UserService.Api.Hosting;
 using System.Text.Json.Serialization;
 using AtaGreenTech.UserService.Application;
 using AtaGreenTech.UserService.Infrastructure;
+using AtaGreenTech.UserService.Infrastructure.Persistence.Master;
 using Microsoft.EntityFrameworkCore;
 using OmniSync.Core.Infrastructure.Cors;
 using OmniSync.Core.Infrastructure.Hosting;
@@ -32,7 +33,10 @@ var app = builder.Build();
 if (args is ["migrate-master"])
 {
     await using var scope = app.Services.CreateAsyncScope();
-    await scope.ServiceProvider.GetRequiredService<MasterDbContext>().Database.MigrateAsync();
+    var master = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
+    await master.Database.MigrateAsync();
+    // OmniSync Tenant modeline dokunmadan menü kataloğu + servis aboneliklerini master'a ekler.
+    await MasterNavigationSchema.EnsureAsync(master);
     return 0;
 }
 

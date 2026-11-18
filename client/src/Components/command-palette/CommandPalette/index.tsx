@@ -1,19 +1,4 @@
-import {
-  AppstoreOutlined,
-  BarChartOutlined,
-  BgColorsOutlined,
-  ColumnWidthOutlined,
-  DashboardOutlined,
-  GlobalOutlined,
-  LockOutlined,
-  LogoutOutlined,
-  PlusOutlined,
-  SafetyCertificateOutlined,
-  ShopOutlined,
-  SwapOutlined,
-  TagsOutlined,
-  TeamOutlined,
-} from '@ant-design/icons'
+import { BgColorsOutlined, GlobalOutlined, LogoutOutlined, PlusOutlined } from '@ant-design/icons'
 import { Empty, Flex, Input, Modal, Typography, theme, type InputRef } from 'antd'
 import {
   useCallback,
@@ -24,26 +9,15 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createNavigationItems } from '@/config/navigation'
 import { useAuth } from '@/core/context/useAuth'
 import { useLanguage } from '@/core/context/useLanguage'
 import { usePermissions } from '@/core/hooks/usePermissions'
+import { useNavigationMenus } from '@/hooks/useNavigationMenus'
+import { useNavigationStore } from '@/stores/navigationStore'
 import { useThemeStore } from '@/stores/themeStore'
+import { resolveMenuIcon } from '@/utils/iconMapper'
 import { filterByQuery, isCommandPaletteToggle } from '@/Components/command-palette/commandPaletteSearch'
 import type { CommandPaletteProps, PaletteCommand } from '@/Components/command-palette/CommandPalette/type'
-
-const NAV_ICONS = {
-  dashboard: <DashboardOutlined />,
-  units: <ColumnWidthOutlined />,
-  categories: <AppstoreOutlined />,
-  products: <TagsOutlined />,
-  warehouses: <ShopOutlined />,
-  movements: <SwapOutlined />,
-  balances: <BarChartOutlined />,
-  security: <LockOutlined />,
-  users: <TeamOutlined />,
-  roles: <SafetyCertificateOutlined />,
-}
 
 const NAV_KEYWORDS: Record<string, string> = {
   '/': 'home overview genel bakış dashboard',
@@ -68,6 +42,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const { signOut } = useAuth()
   const toggleTheme = useThemeStore((state) => state.toggleTheme)
   const access = usePermissions()
+  useNavigationMenus()
+  const flatItems = useNavigationStore((s) => s.flatItems)
   const { token } = theme.useToken()
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
@@ -93,18 +69,17 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   )
 
   const commands = useMemo<PaletteCommand[]>(() => {
-    const pageCommands = createNavigationItems(NAV_ICONS)
-      .filter((item) => access.canAccess({ roles: item.roles, permissions: item.permissions }))
-      .map(
-        (item): PaletteCommand => ({
-          id: item.path,
-          titleKey: item.label,
-          categoryKey: 'command.category.pages',
-          keywords: NAV_KEYWORDS[item.path] ?? '',
-          icon: item.icon,
-          run: () => go(item.path),
-        }),
-      )
+    // Backend zaten tenant aboneliği + izin filtreledi; ⌘K yalnızca yetkili ekranları listeler.
+    const pageCommands = flatItems.map(
+      (item): PaletteCommand => ({
+        id: item.code,
+        titleKey: item.translationKey,
+        categoryKey: 'command.category.pages',
+        keywords: `${NAV_KEYWORDS[item.route] ?? ''} ${item.serviceName}`,
+        icon: resolveMenuIcon(item.icon),
+        run: () => go(item.route),
+      }),
+    )
 
     const actionCommands: PaletteCommand[] = []
     if (access.can('stock.write')) {
@@ -155,7 +130,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         },
       },
     ]
-  }, [access, go, language, setLanguage, setOpen, signOut, toggleTheme])
+  }, [access, flatItems, go, language, setLanguage, setOpen, signOut, toggleTheme])
 
   const searchable = useMemo(
     () =>

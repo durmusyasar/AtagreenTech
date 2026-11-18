@@ -3,8 +3,10 @@ using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
+using AtaGreenTech.UserService.Infrastructure.Caching;
 using AtaGreenTech.UserService.Infrastructure.Email;
 using AtaGreenTech.UserService.Infrastructure.Persistence;
+using AtaGreenTech.UserService.Infrastructure.Persistence.Master;
 using AtaGreenTech.UserService.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,9 @@ public static class DependencyInjection
             (services, configuration) =>
             {
                 services.AddScoped<IUserDbContext, UserQueryContext>();
+                services.AddScoped<INavigationMenuCatalog, NavigationMenuCatalog>();
+                services.AddSingleton<INavigationMenuCache, MemoryNavigationMenuCache>();
+                services.AddMemoryCache();
                 services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
                 services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
                 services.AddSingleton<ITotpService, Rfc6238TotpService>();

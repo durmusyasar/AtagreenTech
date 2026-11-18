@@ -8,6 +8,8 @@ export const queryKeys = {
   sessions: ['sessions'],
   /** Host'tan çözülen tenant'ın logo / renk / favicon ayarları. */
   tenantConfig: ['tenant', 'config'],
+  /** Tenant + izin filtreli dinamik menü (`GET /navigation/menus`). */
+  navigation: ['navigation'],
   users: ['users'],
   roles: ['roles'],
   permissions: ['permissions'],
