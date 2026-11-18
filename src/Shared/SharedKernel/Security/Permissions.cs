@@ -17,6 +17,11 @@ public static class Permissions
         public const string Read = "audit.read";
     }
 
+    public static class System
+    {
+        public const string Read = "system.read";
+    }
+
     public static class Stock
     {
         public const string Read = "stock.read";
@@ -37,6 +42,7 @@ public static class Permissions
         (Users.Write, "Kullanıcı oluşturma/düzenleme"),
         (Users.Delete, "Kullanıcı silme/pasife alma"),
         (Audit.Read, "Kimlik denetim günlüğünü okuma"),
+        (System.Read, "Sistem tanı ve bağlantı ekranını görüntüleme"),
         (Stock.Read, "Stok verilerini okuma"),
         (Stock.Write, "Stok ekleme/güncelleme"),
         (Stock.Delete, "Stok silme"),
@@ -52,6 +58,7 @@ public static class Permissions
                 Users.Write,
                 Users.Delete,
                 Audit.Read,
+                System.Read,
                 Stock.Read,
                 Stock.Write,
                 Stock.Delete,

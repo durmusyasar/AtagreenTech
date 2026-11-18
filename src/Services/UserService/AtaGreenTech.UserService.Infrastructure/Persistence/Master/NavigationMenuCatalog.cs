@@ -19,7 +19,8 @@ internal sealed class NavigationMenuCatalog(MasterDbContext master) : INavigatio
             FROM (VALUES
                 ('General', TRUE),
                 ('UserService', TRUE),
-                ('StockService', TRUE)
+                ('StockService', TRUE),
+                ('System', TRUE)
             ) AS s("ServiceName", "IsEnabled")
             WHERE NOT EXISTS (
                 SELECT 1 FROM "TenantServiceSubscriptions" x

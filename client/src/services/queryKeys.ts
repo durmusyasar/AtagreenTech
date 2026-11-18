@@ -10,6 +10,10 @@ export const queryKeys = {
   tenantConfig: ['tenant', 'config'],
   /** Tenant + izin filtreli dinamik menü (`GET /navigation/menus`). */
   navigation: ['navigation'],
+  /** Sistem sayfası servis sağlık probe'ları. */
+  systemDiagnostics: ['system', 'diagnostics'],
+  /** Genel bakış analitik özeti. */
+  dashboard: ['dashboard'],
   users: ['users'],
   roles: ['roles'],
   permissions: ['permissions'],

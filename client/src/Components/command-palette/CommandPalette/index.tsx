@@ -30,6 +30,7 @@ const NAV_KEYWORDS: Record<string, string> = {
   '/account/security': 'security güvenlik mfa password şifre session oturum',
   '/admin/users': 'users kullanıcı admin invite davet',
   '/admin/roles': 'roles permissions rbac rol izin',
+  '/admin/system': 'system sistem health bağlantı token tenant diagnostics',
 }
 
 /**

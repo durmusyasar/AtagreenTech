@@ -39,6 +39,7 @@ const StockBalancesRoute = lazyNamed(() => import('@/routes/catalog/stock-balanc
 const SecurityRoute = lazyNamed(() => import('@/routes/account/security'), 'SecurityPage')
 const AdminUsersRoute = lazyNamed(() => import('@/routes/admin/users'), 'UsersPage')
 const AdminRolesRoute = lazyNamed(() => import('@/routes/admin/roles'), 'RolesPage')
+const AdminSystemRoute = lazyNamed(() => import('@/routes/admin/system'), 'SystemPage')
 
 function withSuspense(element: ReactNode) {
   return (
@@ -91,6 +92,14 @@ export const appRouter = createBrowserRouter([
         element: withSuspense(
           <RequireAuth roles={['Admin']}>
             <AdminRolesRoute />
+          </RequireAuth>,
+        ),
+      },
+      {
+        path: 'admin/system',
+        element: withSuspense(
+          <RequireAuth permissions="system.read">
+            <AdminSystemRoute />
           </RequireAuth>,
         ),
       },
