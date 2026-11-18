@@ -1,36 +1,22 @@
-import { FloatingInput } from '@/Components/FloatingInput'
+import { FormFloatingInput } from '@/Components/forms/FormFloatingInput'
 import { useLanguage } from '@/core/context/useLanguage'
-import type { MfaVerificationStepProps } from '@/routes/auth/login/type'
+import type { LoginFormValues, MfaVerificationStepProps } from '@/routes/auth/login/type'
 
-/** Login MFA ikinci adım alanları (TOTP / kurtarma kodu); hatalar Zod'dan gelir. */
-export function MfaVerificationStep({
-  mode,
-  value,
-  onChange,
-  onBlur,
-  onToggleMode,
-  onBack,
-  error,
-}: MfaVerificationStepProps) {
+/** Login MFA ikinci adım — `name="mfaInput"` FormProvider üzerinden Zod’a bağlı. */
+export function MfaVerificationStep({ mode, onToggleMode, onBack }: MfaVerificationStepProps) {
   const { t } = useLanguage()
 
   return (
     <div className="space-y-3">
-      <FloatingInput
-        id="login-mfa"
+      <FormFloatingInput<LoginFormValues>
+        name="mfaInput"
         autoFocus
         autoComplete="one-time-code"
         maxLength={mode === 'TOTP' ? 6 : 8}
         inputMode={mode === 'TOTP' ? 'numeric' : 'text'}
         label={mode === 'TOTP' ? t('login.mfaTotpLabel') : t('login.mfaRecoveryLabel')}
-        value={value}
-        onChange={(event) =>
-          onChange(mode === 'RECOVERY' ? event.target.value.toUpperCase() : event.target.value)
-        }
-        onBlur={onBlur}
-        error={error}
         autoClear
-        clearLabel={t('common.clear')}
+        transformValue={(value) => (mode === 'RECOVERY' ? value.toUpperCase() : value)}
         className="[&_input]:text-center [&_input]:font-mono [&_input]:tracking-[0.35em]"
       />
 

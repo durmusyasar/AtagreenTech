@@ -1,5 +1,7 @@
 import { App } from 'antd'
-import { useCallback, useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError } from '@/core/api/apiError'
 import { useAuth } from '@/core/context/useAuth'
@@ -8,31 +10,17 @@ import { useAppMutation } from '@/core/hooks/useAppMutation'
 import { resolveAuthErrorMessage } from '@/core/i18n/authErrors'
 import { authService } from '@/services/authService'
 import { AuthErrorCodes, type LoginRequest, type LoginResult } from '@/types/auth'
-import type {
-  LoginFieldErrors,
-  LoginFieldName,
-  LoginForm,
-  LoginStep,
-  MfaMode,
-} from '@/routes/auth/login/type'
+import type { LoginFormValues, LoginStep, MfaMode } from '@/routes/auth/login/type'
 import { createLoginSchema } from '@/routes/auth/login/validation/loginSchema'
 
-const LOGIN_FIELDS: LoginFieldName[] = ['email', 'password', 'mfaInput']
-
-function zodIssuesToFieldErrors(
-  issues: { path: PropertyKey[]; message: string }[],
-): LoginFieldErrors {
-  const next: LoginFieldErrors = {}
-  for (const issue of issues) {
-    const key = issue.path[0]
-    if (key === 'email' || key === 'password' || key === 'mfaInput') {
-      if (!next[key]) next[key] = issue.message
-    }
-  }
-  return next
+const LOGIN_DEFAULTS: LoginFormValues = {
+  email: '',
+  password: '',
+  rememberMe: false,
+  mfaInput: '',
 }
 
-/** Login ekranı state + MFA geçiş + dinamik Zod validasyon + submit mantığı. */
+/** Login: RHF FormProvider + Zod resolver; alan state’i form store’da. */
 export function useLoginForm() {
   const { isAuthenticated } = useAuth()
   const { language, t } = useLanguage()
@@ -41,71 +29,18 @@ export function useLoginForm() {
   const [searchParams] = useSearchParams()
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
-  const [mfaInput, setMfaInput] = useState('')
   const [step, setStep] = useState<LoginStep>('CREDENTIALS')
   const [mfaMode, setMfaMode] = useState<MfaMode>('TOTP')
   const [formError, setFormError] = useState<string>()
-  /** Zod mesajları i18n anahtarıdır; UI `t(key)` ile çevirir (dil değişince anında). */
-  const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({})
-  const [touched, setTouched] = useState<Partial<Record<LoginFieldName, boolean>>>({})
-  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
 
-  const computeAllErrors = useCallback(
-    (values: Pick<LoginForm, 'email' | 'password' | 'mfaInput'>): LoginFieldErrors => {
-      const result = createLoginSchema(step, mfaMode).safeParse(values)
-      if (result.success) return {}
-      return zodIssuesToFieldErrors(result.error.issues)
-    },
-    [step, mfaMode],
-  )
+  const schema = useMemo(() => createLoginSchema(step, mfaMode), [step, mfaMode])
 
-  const visibleErrorsFrom = useCallback(
-    (
-      all: LoginFieldErrors,
-      touchMap: Partial<Record<LoginFieldName, boolean>>,
-      submitted: boolean,
-    ): LoginFieldErrors => {
-      if (submitted) return all
-      const next: LoginFieldErrors = {}
-      for (const field of LOGIN_FIELDS) {
-        if (touchMap[field] && all[field]) next[field] = all[field]
-      }
-      return next
-    },
-    [],
-  )
-
-  const validateFields = useCallback((): LoginForm | null => {
-    const values = { email, password, mfaInput }
-    const all = computeAllErrors(values)
-    setFieldErrors(all)
-    if (Object.keys(all).length > 0) return null
-    return { ...values, rememberMe }
-  }, [email, password, mfaInput, rememberMe, computeAllErrors])
-
-  // Yazarken / blur sonrası: dokunulan (veya submit edilmiş) alanları canlı doğrula
-  useEffect(() => {
-    const anyTouched = LOGIN_FIELDS.some((field) => touched[field])
-    if (!hasAttemptedSubmit && !anyTouched) return
-
-    const all = computeAllErrors({ email, password, mfaInput })
-    setFieldErrors(visibleErrorsFrom(all, touched, hasAttemptedSubmit))
-  }, [
-    email,
-    password,
-    mfaInput,
-    touched,
-    hasAttemptedSubmit,
-    computeAllErrors,
-    visibleErrorsFrom,
-  ])
-
-  const handleFieldBlur = useCallback((field: LoginFieldName) => {
-    setTouched((prev) => (prev[field] ? prev : { ...prev, [field]: true }))
-  }, [])
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: LOGIN_DEFAULTS,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+  })
 
   const login = useAppMutation<LoginResult, LoginRequest>({
     mutationFn: (request) => authService.login(request),
@@ -117,11 +52,9 @@ export function useLoginForm() {
       if (error instanceof ApiError && error.code === AuthErrorCodes.MfaRequired) {
         setStep('MFA')
         setMfaMode('TOTP')
-        setMfaInput('')
+        form.setValue('mfaInput', '')
+        form.clearErrors('mfaInput')
         setFormError(undefined)
-        setFieldErrors({})
-        setTouched({})
-        setHasAttemptedSubmit(false)
         return
       }
 
@@ -142,29 +75,20 @@ export function useLoginForm() {
   const resetToCredentials = () => {
     setStep('CREDENTIALS')
     setMfaMode('TOTP')
-    setMfaInput('')
+    form.setValue('mfaInput', '')
+    form.clearErrors('mfaInput')
     setFormError(undefined)
-    setFieldErrors({})
-    setTouched({})
-    setHasAttemptedSubmit(false)
   }
 
   const switchMfaMode = () => {
     setMfaMode((current) => (current === 'TOTP' ? 'RECOVERY' : 'TOTP'))
-    setMfaInput('')
+    form.setValue('mfaInput', '')
+    form.clearErrors('mfaInput')
     setFormError(undefined)
-    setFieldErrors((prev) => ({ ...prev, mfaInput: undefined }))
-    setTouched((prev) => ({ ...prev, mfaInput: false }))
-    setHasAttemptedSubmit(false)
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault()
-    setHasAttemptedSubmit(true)
-    setTouched({ email: true, password: true, mfaInput: step === 'MFA' })
+  const onValid = (values: LoginFormValues) => {
     setFormError(undefined)
-    const values = validateFields()
-    if (!values) return
 
     const request: LoginRequest = {
       email: values.email.trim(),
@@ -172,7 +96,7 @@ export function useLoginForm() {
       rememberMe: values.rememberMe === true,
     }
     if (step === 'MFA') {
-      const raw = values.mfaInput?.trim() ?? ''
+      const raw = values.mfaInput.trim()
       if (mfaMode === 'TOTP') request.totpCode = raw
       else request.recoveryCode = raw.toUpperCase()
     }
@@ -185,23 +109,14 @@ export function useLoginForm() {
     invitedBanner: searchParams.get('invited') === '1',
     resetBanner: searchParams.get('reset') === '1',
     passwordChangedBanner: searchParams.get('passwordChanged') === '1',
-    email,
-    setEmail,
-    password,
-    setPassword,
-    rememberMe,
-    setRememberMe,
-    mfaInput,
-    setMfaInput,
+    form,
     step,
     mfaMode,
     formError,
-    fieldErrors,
     isSubmitting: login.isPending,
-    handleFieldBlur,
     resetToCredentials,
     switchMfaMode,
-    handleSubmit,
+    onSubmit: form.handleSubmit(onValid),
     t,
   }
 }
