@@ -24,7 +24,7 @@ export const AuthCheckbox = forwardRef<HTMLInputElement, AuthCheckboxProps>(
             disabled={disabled}
             onChange={(event) => onChange(event.target.checked)}
             onBlur={onBlur}
-            className="auth-checkbox-input peer sr-only"
+            className="auth-checkbox-input"
           />
           <span aria-hidden className="auth-checkbox-box">
             <svg

@@ -236,8 +236,21 @@
   @apply cursor-not-allowed opacity-60;
 }
 
+/*
+ * Native input görsel kutunun üstüne yayılır (sr-only 1×1 hit-area kırığını önler).
+ * Dekoratif kutu/svg pointer-events:none — tıklama her zaman input’a gider.
+ */
+.auth-checkbox-input {
+  @apply absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0;
+  appearance: none;
+}
+
+.auth-checkbox--disabled .auth-checkbox-input {
+  @apply cursor-not-allowed;
+}
+
 .auth-checkbox-box {
-  @apply box-border flex h-[18px] w-[18px] items-center justify-center rounded-md border border-subtle bg-elevated text-transparent;
+  @apply pointer-events-none box-border flex h-[18px] w-[18px] items-center justify-center rounded-md border border-subtle bg-elevated text-transparent;
   transition:
     border-color 150ms ease,
     background-color 150ms ease,
@@ -260,7 +273,7 @@
 }
 
 .auth-checkbox-mark {
-  @apply h-3 w-3 scale-75;
+  @apply pointer-events-none h-3 w-3 scale-75;
   transition: transform 150ms ease;
 }
 
