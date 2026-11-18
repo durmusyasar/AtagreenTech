@@ -1,6 +1,7 @@
 export interface SidebarProps {
   collapsed: boolean
-  onCollapse: (collapsed: boolean) => void
+  /** Navbar toggle kullanıldığında opsiyonel (alt collapse şeridi yok). */
+  onCollapse?: (collapsed: boolean) => void
 }
 
 /** API `GET /navigation/menus` menü öğesi. */
