@@ -12,9 +12,7 @@ export function createLoginSchema(step: LoginStep, mfaMode: MfaInputMode) {
         .string()
         .trim()
         .min(1, 'validation.emailRequired')
-        .refine((value) => z.string().email().safeParse(value).success, {
-          message: 'validation.emailInvalid',
-        }),
+        .pipe(z.email({ error: 'validation.emailInvalid' })),
       password: z
         .string()
         .min(1, 'validation.passwordRequired')

@@ -28,9 +28,7 @@ export function useForgotPassword() {
           .string()
           .trim()
           .min(1, 'validation.emailRequired')
-          .refine((value) => z.string().email().safeParse(value).success, {
-            message: 'validation.emailInvalid',
-          }),
+          .pipe(z.email({ error: 'validation.emailInvalid' })),
       })
       .safeParse({ email })
 
