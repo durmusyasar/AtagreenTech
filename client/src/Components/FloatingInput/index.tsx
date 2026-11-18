@@ -1,24 +1,47 @@
 import { useId } from 'react'
+import type { ChangeEvent, MouseEvent } from 'react'
 import type { FloatingInputProps } from '@/Components/FloatingInput/type'
 
 /**
  * Material outlined floating label.
  * Elevated yüzey + net kenarlık; boşken etiket ortada, odak/doluyken üst border’da.
+ * `autoClear` ile doluyken × temizleme düğmesi.
  */
 export function FloatingInput({
   id,
   label,
   error,
   endAdornment,
+  autoClear = false,
+  clearLabel = 'Clear',
   className = '',
   disabled,
   value,
+  onChange,
   ...inputProps
 }: FloatingInputProps) {
   const generatedId = useId()
   const inputId = id ?? generatedId
   const errorId = error ? `${inputId}-error` : undefined
-  const hasEnd = Boolean(endAdornment)
+
+  const stringValue = value == null ? '' : String(value)
+  const showClear = autoClear && !disabled && stringValue.length > 0
+  const hasEndAdornment = Boolean(endAdornment)
+  const rightSlotCount = (showClear ? 1 : 0) + (hasEndAdornment ? 1 : 0)
+  const paddingClass =
+    rightSlotCount >= 2 ? 'pl-3.5 pr-[4.75rem]' : rightSlotCount === 1 ? 'pl-3.5 pr-11' : 'px-3.5'
+
+  const handleClear = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (disabled || !onChange) return
+
+    const synthetic = {
+      target: { value: '' },
+      currentTarget: { value: '' },
+    } as ChangeEvent<HTMLInputElement>
+    onChange(synthetic)
+  }
 
   return (
     <div className={`w-full min-w-0 max-w-full ${className}`.trim()}>
@@ -28,6 +51,7 @@ export function FloatingInput({
           id={inputId}
           value={value}
           disabled={disabled}
+          onChange={onChange}
           placeholder=" "
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
@@ -36,7 +60,7 @@ export function FloatingInput({
             'h-12 bg-elevated text-sm text-primary outline-none',
             'shadow-[inset_0_1px_0_rgb(255_255_255/0.04)]',
             'transition-[border-color,box-shadow,background-color] duration-150',
-            hasEnd ? 'pl-3.5 pr-11' : 'px-3.5',
+            paddingClass,
             'placeholder:text-transparent',
             'hover:border-[rgb(var(--border-subtle)/0.95)] dark:hover:border-white/20',
             error
@@ -51,7 +75,6 @@ export function FloatingInput({
           htmlFor={inputId}
           className={[
             'pointer-events-none absolute left-3 z-10 origin-left px-1.5',
-            // Boşken şeffaf; border’a çıkınca kart rengi ile kesik outline
             'bg-transparent text-secondary transition-all duration-150',
             'top-1/2 -translate-y-1/2 text-sm',
             'peer-focus:top-0 peer-focus:bg-surface peer-focus:text-[11px] peer-focus:font-medium peer-focus:text-brand',
@@ -65,9 +88,38 @@ export function FloatingInput({
         >
           {label}
         </label>
-        {hasEnd ? (
-          <div className="pointer-events-auto absolute inset-y-0 right-0 z-10 flex w-11 items-center justify-center">
-            {endAdornment}
+
+        {rightSlotCount > 0 ? (
+          <div
+            className={[
+              'pointer-events-auto absolute inset-y-0 right-0 z-10 flex items-center',
+              rightSlotCount >= 2 ? 'gap-0.5 pr-1.5' : 'w-11 justify-center',
+            ].join(' ')}
+          >
+            {showClear ? (
+              <button
+                type="button"
+                onClick={handleClear}
+                tabIndex={-1}
+                aria-label={clearLabel}
+                className={[
+                  'box-border inline-flex h-8 w-8 shrink-0 appearance-none items-center justify-center',
+                  'rounded-lg border-0 bg-transparent p-0 text-muted shadow-none',
+                  'transition-colors hover:text-primary focus-visible:outline focus-visible:outline-2',
+                  'focus-visible:outline-offset-2 focus-visible:outline-brand/40',
+                ].join(' ')}
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden>
+                  <path
+                    d="M4.2 4.2 11.8 11.8M11.8 4.2 4.2 11.8"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            ) : null}
+            {hasEndAdornment ? endAdornment : null}
           </div>
         ) : null}
       </div>

@@ -56,6 +56,8 @@ export function AcceptInvitePage() {
             onChange={(event) => setFirstName(event.target.value)}
             error={fieldErrors.firstName ? t(fieldErrors.firstName) : undefined}
             disabled={!token}
+            autoClear
+            clearLabel={t('common.clear')}
           />
           <FloatingInput
             id="invite-last-name"
@@ -66,6 +68,8 @@ export function AcceptInvitePage() {
             onChange={(event) => setLastName(event.target.value)}
             error={fieldErrors.lastName ? t(fieldErrors.lastName) : undefined}
             disabled={!token}
+            autoClear
+            clearLabel={t('common.clear')}
           />
         </div>
 

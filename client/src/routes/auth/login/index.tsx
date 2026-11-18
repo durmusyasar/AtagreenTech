@@ -132,6 +132,8 @@ export function LoginPage() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     error={fieldErrors.email ? t(fieldErrors.email) : undefined}
+                    autoClear
+                    clearLabel={t('common.clear')}
                   />
 
                   <FloatingInput
@@ -142,6 +144,8 @@ export function LoginPage() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     error={fieldErrors.password ? t(fieldErrors.password) : undefined}
+                    autoClear
+                    clearLabel={t('common.clear')}
                     endAdornment={
                       <PasswordVisibilityToggle
                         visible={showPassword}

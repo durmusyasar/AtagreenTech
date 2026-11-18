@@ -32,6 +32,8 @@ export function ForgotPasswordPage() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             error={fieldErrors.email ? t(fieldErrors.email) : undefined}
+            autoClear
+            clearLabel={t('common.clear')}
           />
 
           <button

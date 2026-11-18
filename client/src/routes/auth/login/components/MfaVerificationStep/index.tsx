@@ -27,6 +27,8 @@ export function MfaVerificationStep({
           onChange(mode === 'RECOVERY' ? event.target.value.toUpperCase() : event.target.value)
         }
         error={error}
+        autoClear
+        clearLabel={t('common.clear')}
         className="[&_input]:text-center [&_input]:font-mono [&_input]:tracking-[0.35em]"
       />
 
