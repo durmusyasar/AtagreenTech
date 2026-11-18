@@ -67,6 +67,7 @@ export function AcceptInvitePage() {
                   onToggle={() => setShowPass((value) => !value)}
                   showLabel={t('login.showPassword')}
                   hideLabel={t('login.hidePassword')}
+                  disabled={!token}
                 />
               }
             />

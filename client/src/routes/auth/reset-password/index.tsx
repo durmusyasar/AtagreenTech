@@ -48,6 +48,7 @@ export function ResetPasswordPage() {
                   onToggle={() => setShowPass((value) => !value)}
                   showLabel={t('login.showPassword')}
                   hideLabel={t('login.hidePassword')}
+                  disabled={!token}
                 />
               }
             />

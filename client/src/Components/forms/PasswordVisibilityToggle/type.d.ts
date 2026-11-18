@@ -3,5 +3,7 @@ export interface PasswordVisibilityToggleProps {
   onToggle: () => void
   showLabel: string
   hideLabel: string
+  /** Alan disabled iken toggle’ı da kilitle. */
+  disabled?: boolean
   className?: string
 }
