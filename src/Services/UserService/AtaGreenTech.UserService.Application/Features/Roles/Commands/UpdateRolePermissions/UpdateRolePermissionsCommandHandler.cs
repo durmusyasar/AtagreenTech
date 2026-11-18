@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using OmniSync.Core.Application.Messaging;
 using OmniSync.Core.Domain.Exceptions;
 using OmniSync.Core.Domain.Repositories;
+using OmniSync.Core.Domain.Tenants;
 using OmniSync.Core.Domain.Users;
 
 namespace AtaGreenTech.UserService.Application.Features.Roles.Commands.UpdateRolePermissions;
@@ -14,7 +15,9 @@ internal sealed class UpdateRolePermissionsCommandHandler(
     IRepository<RolePermission> rolePermissions,
     IUserDbContext db,
     IIdentityAuditLogger auditLogger,
-    ICurrentUser currentUser
+    ICurrentUser currentUser,
+    ICurrentTenant currentTenant,
+    INavigationMenuCache navigationMenuCache
 ) : ICommandHandler<UpdateRolePermissionsCommand, RoleWriteResult>
 {
     public async Task<RoleWriteResult> Handle(
@@ -73,6 +76,9 @@ internal sealed class UpdateRolePermissionsCommandHandler(
             $"{role.Name} rolünün izinleri güncellendi: {string.Join(", ", permissionNames)}.",
             cancellationToken
         );
+
+        if (currentTenant.Id is { } tenantId)
+            navigationMenuCache.InvalidateTenant(tenantId);
 
         return RoleWriteResult.Ok(
             new RoleDetailDto(role.Id, role.Name, role.Description, permissionNames),

@@ -1,68 +1,21 @@
-import {
-  AppstoreOutlined,
-  BarChartOutlined,
-  ColumnWidthOutlined,
-  DashboardOutlined,
-  LockOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  SafetyCertificateOutlined,
-  ShopOutlined,
-  SwapOutlined,
-  TagsOutlined,
-  TeamOutlined,
-} from '@ant-design/icons'
-import { useMemo } from 'react'
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { SidebarProps } from '@/Components/Sidebar/type'
-import { createNavigationItems, type NavItemConfig, type NavSection } from '@/config/navigation'
 import { useLanguage } from '@/core/context/useLanguage'
-import { usePermissions } from '@/core/hooks/usePermissions'
-
-const NAV_ICONS = {
-  dashboard: <DashboardOutlined />,
-  units: <ColumnWidthOutlined />,
-  categories: <AppstoreOutlined />,
-  products: <TagsOutlined />,
-  warehouses: <ShopOutlined />,
-  movements: <SwapOutlined />,
-  balances: <BarChartOutlined />,
-  security: <LockOutlined />,
-  users: <TeamOutlined />,
-  roles: <SafetyCertificateOutlined />,
-}
-
-const SECTION_ORDER: NavSection[] = ['main', 'admin']
+import { useNavigationMenus } from '@/hooks/useNavigationMenus'
+import { useNavigationStore } from '@/stores/navigationStore'
+import { resolveMenuIcon } from '@/utils/iconMapper'
 
 /**
- * Sol navigasyon — surface token, aktif sol şerit, bölüm grupları.
+ * Sol navigasyon — API menü grupları; yüklenirken pulse skeleton.
  * Marka yalnızca AppNavbar’da.
  */
 export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { t } = useLanguage()
-  const access = usePermissions()
-
-  const visibleNav = useMemo(
-    () =>
-      createNavigationItems(NAV_ICONS).filter((item) =>
-        access.canAccess({ roles: item.roles, permissions: item.permissions }),
-      ),
-    [access],
-  )
-
-  const sections = useMemo(() => {
-    const grouped = new Map<NavSection, NavItemConfig[]>()
-    for (const section of SECTION_ORDER) grouped.set(section, [])
-    for (const item of visibleNav) {
-      grouped.get(item.section)?.push(item)
-    }
-    return SECTION_ORDER.map((section) => ({
-      section,
-      items: grouped.get(section) ?? [],
-    })).filter((group) => group.items.length > 0)
-  }, [visibleNav])
+  const { isPending, isError } = useNavigationMenus()
+  const groups = useNavigationStore((s) => s.groups)
 
   return (
     <aside
@@ -72,22 +25,34 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
       ].join(' ')}
     >
       <nav className="flex-1 space-y-5 overflow-y-auto px-2.5 py-4" aria-label={t('app.title')}>
-        {sections.map((group) => (
-          <div key={group.section} className="space-y-1">
-            {!collapsed && group.section === 'admin' ? (
+        {isPending && groups.length === 0 ? (
+          <div className="space-y-2 px-1" aria-hidden>
+            {Array.from({ length: 5 }, (_, index) => (
+              <div key={index} className="h-10 animate-pulse rounded-xl bg-elevated/80" />
+            ))}
+          </div>
+        ) : null}
+
+        {isError && groups.length === 0 && !collapsed ? (
+          <p className="px-3 text-xs text-muted">{t('menu.loadError')}</p>
+        ) : null}
+
+        {groups.map((group) => (
+          <div key={group.serviceName} className="space-y-1">
+            {!collapsed ? (
               <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-                {t('menu.admin')}
+                {t(group.translationKey)}
               </p>
             ) : null}
 
             {group.items.map((item) => {
-              const active = item.path === '/' ? pathname === '/' : pathname.startsWith(item.path)
+              const active = item.route === '/' ? pathname === '/' : pathname.startsWith(item.route)
               return (
                 <button
-                  key={item.path}
+                  key={item.code}
                   type="button"
-                  onClick={() => navigate(item.path)}
-                  title={collapsed ? t(item.label) : undefined}
+                  onClick={() => navigate(item.route)}
+                  title={collapsed ? t(item.translationKey) : undefined}
                   className={[
                     'group relative flex w-full appearance-none items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-all duration-150',
                     collapsed ? 'justify-center px-2' : '',
@@ -104,9 +69,9 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
                         : 'bg-elevated/80 text-secondary group-hover:text-primary',
                     ].join(' ')}
                   >
-                    {item.icon}
+                    {resolveMenuIcon(item.icon)}
                   </span>
-                  {!collapsed ? <span className="truncate">{t(item.label)}</span> : null}
+                  {!collapsed ? <span className="truncate">{t(item.translationKey)}</span> : null}
                 </button>
               )
             })}
