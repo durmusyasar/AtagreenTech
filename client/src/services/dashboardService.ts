@@ -6,6 +6,7 @@ import type {
   RecentActivityItem,
   StockTrendPoint,
 } from '@/routes/dashboard/type'
+import { fetchAllPages } from '@/services/paging'
 import { productService } from '@/services/productService'
 import { queryKeys } from '@/services/queryKeys'
 import { stockService } from '@/services/stockService'
@@ -70,11 +71,13 @@ export async function buildDashboardSummary(options: {
         totalActiveProducts = products.totalCount
       })(),
       (async () => {
-        const balances = await stockService.listBalances(
-          { pageNumber: 1, pageSize: 200, includeEmpty: true, language },
-          signal,
+        const balanceItems = await fetchAllPages((page) =>
+          stockService.listBalances(
+            { ...page, includeEmpty: true, language },
+            signal,
+          ),
         )
-        for (const row of balances.items) {
+        for (const row of balanceItems) {
           if (row.quantity > 0 && row.quantity <= CRITICAL_QTY) criticalStockCount += 1
           const prev = warehouseQty.get(row.warehouseId)
           const next = (prev?.value ?? 0) + row.quantity
@@ -85,11 +88,10 @@ export async function buildDashboardSummary(options: {
         }
       })(),
       (async () => {
-        const movements = await stockService.listMovements(
-          { pageNumber: 1, pageSize: 200, from, language },
-          signal,
+        const movementItems = await fetchAllPages((page) =>
+          stockService.listMovements({ ...page, from, language }, signal),
         )
-        for (const movement of movements.items) {
+        for (const movement of movementItems) {
           const key = dayKey(movement.createdAt)
           const point = trendMap.get(key)
           if (point) {
