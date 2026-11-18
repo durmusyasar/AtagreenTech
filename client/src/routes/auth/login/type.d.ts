@@ -9,6 +9,8 @@ export interface LoginForm {
   mfaInput?: string
 }
 
+export type LoginFieldName = 'email' | 'password' | 'mfaInput'
+
 export interface LoginFieldErrors {
   email?: string
   password?: string
@@ -19,6 +21,7 @@ export interface MfaVerificationStepProps {
   mode: MfaInputMode
   value: string
   onChange: (value: string) => void
+  onBlur?: () => void
   onToggleMode: () => void
   onBack: () => void
   /** Zod alan hatası (dil değişiminde güncellenir). */

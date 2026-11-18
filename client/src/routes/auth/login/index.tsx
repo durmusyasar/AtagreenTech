@@ -34,6 +34,7 @@ export function LoginPage() {
     formError,
     fieldErrors,
     isSubmitting,
+    handleFieldBlur,
     resetToCredentials,
     switchMfaMode,
     handleSubmit,
@@ -131,6 +132,7 @@ export function LoginPage() {
                     label={t('login.emailLabel')}
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
+                    onBlur={() => handleFieldBlur('email')}
                     error={fieldErrors.email ? t(fieldErrors.email) : undefined}
                     autoClear
                     clearLabel={t('common.clear')}
@@ -143,6 +145,7 @@ export function LoginPage() {
                     label={t('login.passwordLabel')}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
+                    onBlur={() => handleFieldBlur('password')}
                     error={fieldErrors.password ? t(fieldErrors.password) : undefined}
                     autoClear
                     clearLabel={t('common.clear')}
@@ -177,6 +180,7 @@ export function LoginPage() {
                   mode={mfaMode}
                   value={mfaInput}
                   onChange={setMfaInput}
+                  onBlur={() => handleFieldBlur('mfaInput')}
                   onBack={resetToCredentials}
                   onToggleMode={switchMfaMode}
                   error={fieldErrors.mfaInput ? t(fieldErrors.mfaInput) : undefined}

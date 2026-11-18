@@ -7,6 +7,7 @@ export function MfaVerificationStep({
   mode,
   value,
   onChange,
+  onBlur,
   onToggleMode,
   onBack,
   error,
@@ -26,6 +27,7 @@ export function MfaVerificationStep({
         onChange={(event) =>
           onChange(mode === 'RECOVERY' ? event.target.value.toUpperCase() : event.target.value)
         }
+        onBlur={onBlur}
         error={error}
         autoClear
         clearLabel={t('common.clear')}
