@@ -1,19 +1,25 @@
-import { useCallback, useState, type FormEvent } from 'react'
-import { z } from 'zod'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useLanguage } from '@/core/context/useLanguage'
 import { useAppMutation } from '@/core/hooks/useAppMutation'
 import { authPublicService } from '@/services/authPublicService'
+import type { ForgotPasswordFormValues } from '@/routes/auth/forgot-password/type'
+import { forgotPasswordSchema } from '@/routes/auth/forgot-password/validation/forgotPasswordSchema'
 
-export interface ForgotPasswordFieldErrors {
-  email?: string
-}
+const DEFAULTS: ForgotPasswordFormValues = { email: '' }
 
-/** Şifremi unuttum — FloatingInput + Zod alan doğrulaması. */
+/** Şifremi unuttum — FormProvider + Zod alan doğrulaması. */
 export function useForgotPassword() {
   const { t } = useLanguage()
-  const [email, setEmail] = useState('')
-  const [fieldErrors, setFieldErrors] = useState<ForgotPasswordFieldErrors>({})
   const [submittedEmail, setSubmittedEmail] = useState<string>()
+
+  const form = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: DEFAULTS,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+  })
 
   const forgot = useAppMutation({
     mutationFn: (value: string) => authPublicService.forgotPassword(value),
@@ -21,44 +27,15 @@ export function useForgotPassword() {
     onError: (_error, value) => setSubmittedEmail(value),
   })
 
-  const validate = useCallback(() => {
-    const schema = z
-      .object({
-        email: z
-          .string()
-          .trim()
-          .min(1, 'validation.emailRequired')
-          .check(z.email({ error: 'validation.emailInvalid' })),
-      })
-      .safeParse({ email })
-
-    if (schema.success) {
-      setFieldErrors({})
-      return schema.data.email
-    }
-
-    const next: ForgotPasswordFieldErrors = {}
-    for (const issue of schema.error.issues) {
-      if (issue.path[0] === 'email' && !next.email) next.email = issue.message
-    }
-    setFieldErrors(next)
-    return null
-  }, [email])
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault()
-    const validEmail = validate()
-    if (!validEmail) return
-    forgot.mutate(validEmail)
+  const onValid = (values: ForgotPasswordFormValues) => {
+    forgot.mutate(values.email)
   }
 
   return {
     t,
-    email,
-    setEmail,
-    fieldErrors,
+    form,
     submittedEmail,
     isSubmitting: forgot.isPending,
-    handleSubmit,
+    onSubmit: form.handleSubmit(onValid),
   }
 }

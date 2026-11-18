@@ -1,32 +1,35 @@
-import { useCallback, useState, type FormEvent } from 'react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { z } from 'zod'
 import { ApiError } from '@/core/api/apiError'
 import { useLanguage } from '@/core/context/useLanguage'
 import { useAppMutation } from '@/core/hooks/useAppMutation'
-import { checkPasswordStrength } from '@/core/passwordPolicy'
 import { authPublicService } from '@/services/authPublicService'
+import type { AcceptInviteFormValues } from '@/routes/auth/accept-invite/type'
+import { acceptInviteSchema } from '@/routes/auth/accept-invite/validation/acceptInviteSchema'
 
-export interface AcceptInviteFieldErrors {
-  firstName?: string
-  lastName?: string
-  password?: string
-  confirmPassword?: string
+const DEFAULTS: AcceptInviteFormValues = {
+  firstName: '',
+  lastName: '',
+  password: '',
+  confirmPassword: '',
 }
 
-/** Davet kabul — FloatingInput + Zod + parola politikası. */
+/** Davet kabul — FormProvider + Zod + parola politikası. */
 export function useAcceptInvite() {
   const { t } = useLanguage()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token')?.trim() ?? ''
-
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [fieldErrors, setFieldErrors] = useState<AcceptInviteFieldErrors>({})
   const [serverError, setServerError] = useState<string>()
+
+  const form = useForm<AcceptInviteFormValues>({
+    resolver: zodResolver(acceptInviteSchema),
+    defaultValues: DEFAULTS,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+  })
 
   const accept = useAppMutation({
     mutationFn: authPublicService.acceptInvite,
@@ -38,63 +41,13 @@ export function useAcceptInvite() {
     },
   })
 
-  const validate = useCallback(() => {
-    const schema = z
-      .object({
-        firstName: z.string().trim().min(1, 'invite.firstNameRequired'),
-        lastName: z.string().trim().min(1, 'invite.lastNameRequired'),
-        password: z.string().min(1, 'validation.passwordRequired'),
-        confirmPassword: z.string().min(1, 'invite.confirmPasswordRequired'),
-      })
-      .superRefine((data, ctx) => {
-        if (data.confirmPassword && data.password !== data.confirmPassword) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['confirmPassword'],
-            message: 'password.mismatch',
-          })
-        }
-      })
-      .safeParse({ firstName, lastName, password, confirmPassword })
-
-    if (!schema.success) {
-      const next: AcceptInviteFieldErrors = {}
-      for (const issue of schema.error.issues) {
-        const key = issue.path[0]
-        if (
-          (key === 'firstName' ||
-            key === 'lastName' ||
-            key === 'password' ||
-            key === 'confirmPassword') &&
-          !next[key]
-        ) {
-          next[key] = issue.message
-        }
-      }
-      setFieldErrors(next)
-      return null
-    }
-
-    if (!checkPasswordStrength(schema.data.password).isValid) {
-      setFieldErrors({ password: 'password.policyFailed' })
-      return null
-    }
-
-    setFieldErrors({})
-    return schema.data
-  }, [firstName, lastName, password, confirmPassword])
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault()
+  const onValid = (values: AcceptInviteFormValues) => {
     setServerError(undefined)
 
     if (!token) {
       setServerError(t('invite.missingToken'))
       return
     }
-
-    const values = validate()
-    if (!values) return
 
     accept.mutate({
       token,
@@ -106,18 +59,10 @@ export function useAcceptInvite() {
 
   return {
     t,
+    form,
     token,
-    firstName,
-    setFirstName,
-    lastName,
-    setLastName,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
-    fieldErrors,
     serverError,
     isSubmitting: accept.isPending,
-    handleSubmit,
+    onSubmit: form.handleSubmit(onValid),
   }
 }
