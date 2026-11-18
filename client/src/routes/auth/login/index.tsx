@@ -50,7 +50,7 @@ export function LoginPage() {
 
   return (
     <PublicAuthLayout>
-      <div className="auth-panel-rise grid w-full max-w-[920px] overflow-hidden rounded-3xl border border-subtle/80 bg-surface/95 shadow-2xl shadow-slate-900/10 backdrop-blur-sm dark:border-white/10 dark:shadow-black/50 lg:grid-cols-[1.05fr_1fr]">
+      <div className="auth-panel auth-panel-rise grid max-w-[920px] lg:grid-cols-[1.05fr_1fr]">
         <aside className="relative hidden overflow-hidden border-b border-subtle/70 bg-gradient-to-br from-brand/[0.14] via-surface to-surface p-9 dark:border-white/10 dark:from-brand/[0.22] lg:flex lg:flex-col lg:justify-between lg:border-b-0 lg:border-r">
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div className="absolute -right-16 -top-10 h-56 w-56 rounded-full bg-brand/20 blur-3xl" />

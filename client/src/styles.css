@@ -116,6 +116,26 @@
   animation: auth-orb-drift-alt 18s ease-in-out infinite;
 }
 
+/* PublicAuthLayout atmosfer grid — maskeli noktalı arka plan */
+.auth-grid-bg {
+  opacity: 0.35;
+  background-image:
+    linear-gradient(to right, rgb(var(--border-subtle) / 0.45) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--border-subtle) / 0.45) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 75%);
+}
+
+.dark .auth-grid-bg {
+  opacity: 0.22;
+}
+
+/* Ortak auth kart yüzeyi (AuthPageShell + Login panel) */
+.auth-panel {
+  @apply w-full overflow-hidden rounded-3xl border border-subtle/80 bg-surface/95 shadow-2xl shadow-slate-900/10 backdrop-blur-sm dark:border-white/10 dark:shadow-black/40;
+}
+
 .auth-panel-rise {
   animation: auth-panel-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
