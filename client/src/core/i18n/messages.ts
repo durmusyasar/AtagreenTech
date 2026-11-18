@@ -10,12 +10,12 @@ function interpolationFromParams(params: readonly unknown[]): Record<string, unk
 
 type Namespace = (typeof namespaces)[number]
 
-/** Anahtarın hangi namespace'te olduğunu bulur; bulunamazsa defaultNS (`common`) kullanılır. */
+/** Anahtarın hangi namespace'te olduğunu bulur; bulunamazsa defaultNS (`main`) kullanılır. */
 function resolveNamespace(key: string, language?: Language): Namespace {
   for (const ns of namespaces) {
     if (i18n.exists(key, { ns, lng: language })) return ns
   }
-  return 'common'
+  return 'main'
 }
 
 /**

@@ -1,0 +1,19 @@
+{
+  "errors.AUTH_ACCOUNT_INACTIVE": "Your account is inactive. Please contact your system administrator.",
+  "errors.AUTH_ACCOUNT_LOCKED": "Your account is temporarily locked due to multiple failed attempts. Please try again later.",
+  "errors.AUTH_EMAIL_NOT_VERIFIED": "Please verify your email address before signing in.",
+  "errors.AUTH_INVALID_CREDENTIALS": "Invalid email address or password.",
+  "errors.AUTH_MFA_INVALID": "The verification or recovery code you entered is invalid.",
+  "errors.AUTH_RATE_LIMIT_EXCEEDED": "Too many requests. Please wait 1 minute before trying again.",
+  "errors.MFA_INVALID_CODE": "The verification or recovery code you entered is invalid.",
+  "errors.NETWORK_ERROR": "Unable to reach the server. Please check your connection.",
+  "errors.UNKNOWN_ERROR": "An unexpected error occurred during sign in.",
+  "movement.type.Inbound": "Inbound",
+  "movement.type.Outbound": "Outbound",
+  "movement.type.Transfer": "Transfer",
+  "stockMovementType.Inbound": "Inbound",
+  "stockMovementType.Outbound": "Outbound",
+  "stockMovementType.Transfer": "Transfer",
+  "userStatus.Active": "Active",
+  "userStatus.Inactive": "Inactive"
+}
