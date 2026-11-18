@@ -71,7 +71,7 @@ public static class MasterNavigationSchema
             );
         }
 
-        // General + UserService her tenant'ta açık; StockService varsayılan açık (lisans ile kapatılabilir).
+        // General / UserService / System her tenant'ta açık; StockService varsayılan açık (lisans ile kapatılabilir).
         await master.Database.ExecuteSqlRawAsync(
             """
             INSERT INTO "TenantServiceSubscriptions" ("Id", "TenantId", "ServiceName", "IsEnabled", "SubscribedAtUtc")
@@ -80,7 +80,8 @@ public static class MasterNavigationSchema
             CROSS JOIN (VALUES
                 ('General', TRUE),
                 ('UserService', TRUE),
-                ('StockService', TRUE)
+                ('StockService', TRUE),
+                ('System', TRUE)
             ) AS s("ServiceName", "IsEnabled")
             WHERE NOT t."IsDeleted"
               AND NOT EXISTS (
@@ -105,6 +106,7 @@ public static class MasterNavigationSchema
         new(Guid.Parse("11111111-1111-1111-1111-111111110201"), "iam.security", "UserService", "services.iam", "/account/security", "security", "menu.security", null, 10, 20),
         new(Guid.Parse("11111111-1111-1111-1111-111111110202"), "iam.users", "UserService", "services.iam", "/admin/users", "users", "menu.users", "users.read", 20, 20),
         new(Guid.Parse("11111111-1111-1111-1111-111111110203"), "iam.roles", "UserService", "services.iam", "/admin/roles", "roles", "menu.roles", "users.read", 30, 20),
+        new(Guid.Parse("11111111-1111-1111-1111-111111110301"), "system.overview", "System", "services.system", "/admin/system", "system", "menu.system", "system.read", 10, 30),
     ];
 
     internal sealed record MenuSeedRow(

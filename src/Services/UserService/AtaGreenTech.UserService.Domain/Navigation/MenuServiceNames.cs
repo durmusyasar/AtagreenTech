@@ -14,5 +14,6 @@ public static class MenuServiceNames
         (General, true),
         (UserService, true),
         (StockService, true),
+        (System, true),
     ];
 }

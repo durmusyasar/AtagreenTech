@@ -29,6 +29,16 @@ export default defineConfig(({ mode }) => {
           target: userTarget,
           changeOrigin: true,
         },
+        '/api/v1/system/health/user': {
+          target: userTarget,
+          changeOrigin: true,
+          rewrite: () => '/health/ready',
+        },
+        '/api/v1/system/health/stock': {
+          target: stockTarget,
+          changeOrigin: true,
+          rewrite: () => '/health/ready',
+        },
         '/api': {
           target: stockTarget,
           changeOrigin: true,

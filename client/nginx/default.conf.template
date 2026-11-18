@@ -64,6 +64,27 @@ server {
         proxy_read_timeout 60s;
     }
 
+    # Sistem tanı: OmniSync readiness uçlarını /api altında birleştirir (tarayıcı CORS / path için).
+    location = /api/v1/system/health/user {
+        proxy_pass http://$user_service/health/ready;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_read_timeout 10s;
+    }
+
+    location = /api/v1/system/health/stock {
+        proxy_pass http://$stock_service/health/ready;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_read_timeout 10s;
+    }
+
     # Diğer API istekleri (stok, ürün, tenant/config …) → stock-service.
     location /api/ {
         proxy_pass http://$stock_service;

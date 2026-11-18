@@ -5,7 +5,7 @@ export interface PermissionModuleGroup {
   items: PermissionItem[]
 }
 
-const KNOWN_MODULES = ['users', 'stock', 'audit'] as const
+const KNOWN_MODULES = ['users', 'stock', 'audit', 'system'] as const
 
 /** İzinleri `users.*` / `stock.*` gibi öneklerine göre gruplar. */
 export function groupPermissionsByModule(permissions: PermissionItem[]): PermissionModuleGroup[] {

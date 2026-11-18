@@ -9,6 +9,7 @@ public static class AuthorizationPolicies
     public const string UsersWrite = "perm:users.write";
     public const string UsersDelete = "perm:users.delete";
     public const string AuditRead = "perm:audit.read";
+    public const string SystemRead = "perm:system.read";
     public const string StockRead = "perm:stock.read";
     public const string StockWrite = "perm:stock.write";
     public const string StockDelete = "perm:stock.delete";
@@ -20,6 +21,7 @@ public static class AuthorizationPolicies
         (UsersWrite, Permissions.Users.Write),
         (UsersDelete, Permissions.Users.Delete),
         (AuditRead, Permissions.Audit.Read),
+        (SystemRead, Permissions.System.Read),
         (StockRead, Permissions.Stock.Read),
         (StockWrite, Permissions.Stock.Write),
         (StockDelete, Permissions.Stock.Delete),
