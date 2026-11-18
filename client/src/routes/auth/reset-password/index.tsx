@@ -78,7 +78,7 @@ export function ResetPasswordPage() {
         <button
           type="submit"
           disabled={isSubmitting || !token}
-          className="mt-2 w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-brand/25 transition-all duration-150 hover:bg-brand-hover disabled:opacity-50"
+          className="auth-submit mt-2 h-12 rounded-xl bg-brand px-4 text-sm font-semibold text-white shadow-[0_10px_24px_-12px_rgb(var(--brand-primary)/0.85)] transition-[background-color,box-shadow] duration-150 hover:bg-brand-hover disabled:opacity-50 disabled:shadow-none"
         >
           {isSubmitting ? t('reset.submitting') : t('reset.submit')}
         </button>

@@ -2,22 +2,19 @@ export type LoginStep = 'CREDENTIALS' | 'MFA'
 export type MfaMode = 'TOTP' | 'RECOVERY'
 export type MfaInputMode = MfaMode
 
-export interface LoginForm {
+/** RHF + Zod ortak form değerleri (`name` / schema key birebir). */
+export interface LoginFormValues {
   email: string
   password: string
-  mfaInput?: string
+  rememberMe: boolean
+  mfaInput: string
 }
 
-export interface LoginFieldErrors {
-  email?: string
-  password?: string
-  mfaInput?: string
-}
+/** @deprecated LoginFormValues kullanın. */
+export type LoginForm = LoginFormValues
 
 export interface MfaVerificationStepProps {
   mode: MfaInputMode
   onToggleMode: () => void
   onBack: () => void
-  /** Zod alan hatası (dil değişiminde güncellenir). */
-  error?: string
 }

@@ -8,7 +8,7 @@ import type { PublicNavbarProps } from '@/Components/PublicNavbar/type'
 export function PublicNavbar({ className = '' }: PublicNavbarProps) {
   return (
     <header
-      className={`sticky top-0 z-40 h-16 w-full border-b border-subtle bg-surface shadow-sm shadow-slate-900/5 dark:shadow-none ${className}`.trim()}
+      className={`sticky top-0 z-40 h-16 w-full border-b border-subtle/80 bg-surface/80 shadow-sm shadow-slate-900/5 backdrop-blur-md dark:border-white/10 dark:shadow-none ${className}`.trim()}
     >
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-8">
         <Link to="/login" className="group flex min-w-0 items-center gap-2.5">

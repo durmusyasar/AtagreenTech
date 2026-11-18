@@ -1,15 +1,19 @@
-import { LoginOutlined } from '@ant-design/icons'
-import { Alert, Button, Form, Input } from 'antd'
+import { useState } from 'react'
+import { FormProvider } from 'react-hook-form'
 import { Link, Navigate } from 'react-router-dom'
+import { BrandMark } from '@/Components/BrandMark'
+import { FormAuthCheckbox } from '@/Components/forms/FormAuthCheckbox'
+import { FormFloatingInput } from '@/Components/forms/FormFloatingInput'
+import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
 import { PublicAuthLayout } from '@/Components/PublicAuthLayout'
 import { useTenant } from '@/core/context/useTenant'
 import { TENANT_SELECTION_ENABLED, tenantAddressPattern } from '@/core/tenant'
 import { MfaVerificationStep } from '@/routes/auth/login/components/MfaVerificationStep'
 import { useLoginForm } from '@/routes/auth/login/hooks/useLoginForm'
-import type { LoginForm } from '@/routes/auth/login/type'
+import type { LoginFormValues } from '@/routes/auth/login/type'
 
 /**
- * Sade login kartı: Zod alan hataları + MFA; tenant/IAM rozeti yok.
+ * Modern login: FormProvider + Zod; masaüstünde brand paneli + form.
  */
 export function LoginPage() {
   const { isTenantFromHost } = useTenant()
@@ -19,17 +23,17 @@ export function LoginPage() {
     invitedBanner,
     resetBanner,
     passwordChangedBanner,
+    form,
     step,
     mfaMode,
     formError,
-    fieldErrors,
-    form,
-    login,
+    isSubmitting,
     resetToCredentials,
     switchMfaMode,
-    submit,
+    onSubmit,
     t,
   } = useLoginForm()
+  const [showPassword, setShowPassword] = useState(false)
 
   if (isAuthenticated) return <Navigate to={from} replace />
 
@@ -37,114 +41,153 @@ export function LoginPage() {
 
   return (
     <PublicAuthLayout>
-      <div className="w-full max-w-[420px] space-y-6 rounded-2xl border border-subtle bg-surface p-7 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5 sm:p-8 dark:shadow-black/40 dark:ring-white/5">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight text-primary">
-            {step === 'CREDENTIALS' ? t('login.title') : t('login.mfaSubtitle')}
-          </h1>
-          <p className="text-sm leading-relaxed text-secondary">
-            {step === 'CREDENTIALS'
-              ? t('login.subtitle')
-              : mfaMode === 'TOTP'
-                ? t('login.totpPrompt')
-                : t('login.recoveryPrompt')}
-          </p>
-        </div>
+      <div className="auth-panel-rise grid w-full max-w-[920px] overflow-hidden rounded-3xl border border-subtle/80 bg-surface/95 shadow-2xl shadow-slate-900/10 backdrop-blur-sm dark:border-white/10 dark:shadow-black/50 lg:grid-cols-[1.05fr_1fr]">
+        <aside className="relative hidden overflow-hidden border-b border-subtle/70 bg-gradient-to-br from-brand/[0.14] via-surface to-surface p-9 dark:border-white/10 dark:from-brand/[0.22] lg:flex lg:flex-col lg:justify-between lg:border-b-0 lg:border-r">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute -right-16 -top-10 h-56 w-56 rounded-full bg-brand/20 blur-3xl" />
+            <div className="absolute -bottom-20 left-0 h-48 w-48 rounded-full bg-brand/10 blur-3xl" />
+            <div
+              className="absolute inset-0 opacity-40"
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle at 20% 20%, rgb(var(--brand-primary) / 0.18), transparent 42%), radial-gradient(circle at 80% 70%, rgb(var(--brand-primary) / 0.1), transparent 45%)',
+              }}
+            />
+          </div>
 
-        {!tenantReady ? (
-          <Alert
-            type="warning"
-            showIcon
-            message={t(
-              'login.tenantAddressRequired',
-              tenantAddressPattern(window.location.hostname, window.location.port),
-            )}
-          />
-        ) : (
-          <Form<LoginForm>
-            form={form}
-            layout="vertical"
-            requiredMark={false}
-            onFinish={submit}
-            initialValues={{ email: '', password: '' }}
-            noValidate
-            className="space-y-1"
-          >
-            {invitedBanner && (
-              <Alert type="success" showIcon className="!mb-4" message={t('login.invitedSuccess')} />
-            )}
-            {resetBanner && (
-              <Alert type="success" showIcon className="!mb-4" message={t('login.resetSuccess')} />
-            )}
-            {passwordChangedBanner && (
-              <Alert type="success" showIcon className="!mb-4" message={t('login.passwordChangedSuccess')} />
-            )}
+          <div className="relative">
+            <BrandMark size={42} nameStyle={{ fontSize: 22, margin: 0 }} />
+          </div>
 
-            <div style={{ display: step === 'CREDENTIALS' ? undefined : 'none' }}>
-              <Form.Item
-                name="email"
-                label={t('login.emailLabel')}
-                validateStatus={fieldErrors.email ? 'error' : undefined}
-                help={fieldErrors.email ? t(fieldErrors.email) : undefined}
-              >
-                <Input
-                  autoComplete="username"
-                  placeholder="admin@omnisync.com"
-                  className="!rounded-xl"
-                  size="large"
-                />
-              </Form.Item>
+          <div className="relative space-y-4 pt-16">
+            <p className="max-w-[16ch] text-3xl font-semibold leading-tight tracking-tight text-primary">
+              {t('login.panelHeadline')}
+            </p>
+            <p className="max-w-sm text-sm leading-relaxed text-secondary">{t('login.panelTagline')}</p>
+          </div>
 
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="text-sm text-secondary">{t('login.passwordLabel')}</span>
-                <Link to="/forgot-password" className="text-xs font-medium text-brand hover:text-brand-hover">
-                  {t('login.forgotPassword')}
-                </Link>
-              </div>
-              <Form.Item
-                name="password"
-                validateStatus={fieldErrors.password ? 'error' : undefined}
-                help={fieldErrors.password ? t(fieldErrors.password) : undefined}
-              >
-                <Input.Password
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  className="!rounded-xl"
-                  size="large"
-                />
-              </Form.Item>
+          <p className="relative pt-10 text-xs text-muted">{t('login.panelFootnote')}</p>
+        </aside>
+
+        <div className="relative flex flex-col justify-center p-7 sm:p-9 lg:p-10">
+          <div className="mb-7 space-y-2 lg:mb-8">
+            <div className="mb-5 lg:hidden">
+              <BrandMark size={34} nameStyle={{ fontSize: 18, margin: 0 }} />
             </div>
+            <h1 className="text-[1.65rem] font-semibold tracking-tight text-primary">
+              {step === 'CREDENTIALS' ? t('login.title') : t('login.mfaSubtitle')}
+            </h1>
+            <p className="text-sm leading-relaxed text-secondary">
+              {step === 'CREDENTIALS'
+                ? t('login.subtitle')
+                : mfaMode === 'TOTP'
+                  ? t('login.totpPrompt')
+                  : t('login.recoveryPrompt')}
+            </p>
+          </div>
 
-            {step === 'MFA' && (
-              <MfaVerificationStep
-                mode={mfaMode}
-                onBack={resetToCredentials}
-                onToggleMode={switchMfaMode}
-                error={fieldErrors.mfaInput ? t(fieldErrors.mfaInput) : undefined}
-              />
-            )}
-
-            {formError && (
-              <Alert type="error" showIcon role="alert" className="!mb-4" message={formError} />
-            )}
-
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<LoginOutlined />}
-              loading={login.isPending}
-              block
-              size="large"
-              className="!mt-2 !rounded-xl !font-medium"
+          {!tenantReady ? (
+            <div
+              role="alert"
+              className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs leading-relaxed text-amber-700 dark:text-amber-300"
             >
-              {login.isPending
-                ? t('login.verifying')
-                : step === 'MFA'
-                  ? t('login.verifySubmit')
-                  : t('login.submit')}
-            </Button>
-          </Form>
-        )}
+              {t(
+                'login.tenantAddressRequired',
+                tenantAddressPattern(window.location.hostname, window.location.port),
+              )}
+            </div>
+          ) : (
+            <FormProvider {...form}>
+              <form onSubmit={onSubmit} noValidate className="space-y-4">
+                {invitedBanner ? (
+                  <div className="rounded-2xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
+                    {t('login.invitedSuccess')}
+                  </div>
+                ) : null}
+                {resetBanner ? (
+                  <div className="rounded-2xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
+                    {t('login.resetSuccess')}
+                  </div>
+                ) : null}
+                {passwordChangedBanner ? (
+                  <div className="rounded-2xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
+                    {t('login.passwordChangedSuccess')}
+                  </div>
+                ) : null}
+
+                {step === 'CREDENTIALS' ? (
+                  <>
+                    <FormFloatingInput<LoginFormValues>
+                      name="email"
+                      type="email"
+                      autoComplete="username"
+                      label={t('login.emailLabel')}
+                      autoClear
+                    />
+
+                    <FormFloatingInput<LoginFormValues>
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      label={t('login.passwordLabel')}
+                      autoClear
+                      endAdornment={
+                        <PasswordVisibilityToggle
+                          visible={showPassword}
+                          onToggle={() => setShowPassword((value) => !value)}
+                          showLabel={t('login.showPassword')}
+                          hideLabel={t('login.hidePassword')}
+                        />
+                      }
+                    />
+
+                    <div className="flex items-center justify-between gap-3 pt-1.5">
+                      <FormAuthCheckbox<LoginFormValues>
+                        name="rememberMe"
+                        id="login-remember-me"
+                        label={t('login.rememberMe')}
+                      />
+
+                      <Link
+                        to="/forgot-password"
+                        className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
+                      >
+                        {t('login.forgotPassword')}
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <MfaVerificationStep
+                    mode={mfaMode}
+                    onBack={resetToCredentials}
+                    onToggleMode={switchMfaMode}
+                  />
+                )}
+
+                {formError ? (
+                  <div
+                    role="alert"
+                    className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
+                  >
+                    {formError}
+                  </div>
+                ) : null}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="auth-submit mt-3 flex h-12 items-center justify-center rounded-xl bg-brand px-4 text-sm font-semibold text-white shadow-[0_10px_24px_-12px_rgb(var(--brand-primary)/0.85)] transition-[background-color,box-shadow,transform] duration-200 hover:bg-brand-hover hover:shadow-[0_14px_28px_-12px_rgb(var(--brand-primary)/0.9)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                >
+                  {isSubmitting
+                    ? t('login.verifying')
+                    : step === 'MFA'
+                      ? t('login.verifySubmit')
+                      : t('login.submit')}
+                </button>
+              </form>
+            </FormProvider>
+          )}
+        </div>
       </div>
     </PublicAuthLayout>
   )

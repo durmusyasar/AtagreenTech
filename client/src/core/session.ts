@@ -4,6 +4,7 @@ import { resolveTenantFromHost, TENANT_SELECTION_ENABLED } from '@/core/tenant'
 const ACCESS_TOKEN_KEY = 'atagreen.accessToken'
 const REFRESH_TOKEN_KEY = 'atagreen.refreshToken'
 const EXPIRES_AT_KEY = 'atagreen.expiresAt'
+const REMEMBER_ME_KEY = 'atagreen.rememberMe'
 const TENANT_KEY = 'atagreen.tenant'
 /** @deprecated Eski anahtar; okuma geriye dönük, yazma `omnisync_lang`. */
 const LEGACY_LANGUAGE_KEY = 'atagreen.language'
@@ -15,6 +16,8 @@ export interface SessionState {
   token: string | null
   refreshToken: string | null
   expiresAt: string | null
+  /** true → token’lar localStorage (kalıcı); false → sessionStorage (sekme ömrü). */
+  rememberMe: boolean
   tenant: string | null
   /**
    * Tenant adresin alt alan adından geliyorsa değiştirilemez ve `X-Tenant` başlığı gönderilmez. Adreste tenant yoksa
@@ -29,6 +32,8 @@ export interface SignInSession {
   refreshToken: string
   expiresAt?: string | null
   tenant?: string
+  /** Varsayılan false — tarayıcı/sekme kapanınca oturum temizlenir. */
+  rememberMe?: boolean
 }
 
 type Listener = () => void
@@ -36,11 +41,15 @@ type Listener = () => void
 const hostTenant = resolveTenantFromHost(window.location.hostname)
 const listeners = new Set<Listener>()
 
-// Token'lar sekme kapanınca silinsin diye sessionStorage'da tutulur; dil ve (geliştirmede) tenant kalıcıdır.
+const initialRememberMe = readRememberMeFlag()
+const bootStorage = tokenStorageFor(initialRememberMe)
+
+// rememberMe: localStorage; aksi halde sessionStorage. Dil/tenant kalıcılığı ayrıdır.
 let state: SessionState = {
-  token: read(sessionStorage, ACCESS_TOKEN_KEY),
-  refreshToken: read(sessionStorage, REFRESH_TOKEN_KEY),
-  expiresAt: read(sessionStorage, EXPIRES_AT_KEY),
+  token: read(bootStorage, ACCESS_TOKEN_KEY),
+  refreshToken: read(bootStorage, REFRESH_TOKEN_KEY),
+  expiresAt: read(bootStorage, EXPIRES_AT_KEY),
+  rememberMe: initialRememberMe,
   tenant:
     hostTenant ??
     (TENANT_SELECTION_ENABLED ? (read(localStorage, TENANT_KEY) ?? (import.meta.env.VITE_DEV_TENANT || null)) : null),
@@ -59,10 +68,14 @@ export const sessionStore = {
     return () => listeners.delete(listener)
   },
 
-  signIn({ accessToken, refreshToken, expiresAt, tenant }: SignInSession): void {
-    write(sessionStorage, ACCESS_TOKEN_KEY, accessToken)
-    write(sessionStorage, REFRESH_TOKEN_KEY, refreshToken)
-    write(sessionStorage, EXPIRES_AT_KEY, expiresAt ?? null)
+  signIn({ accessToken, refreshToken, expiresAt, tenant, rememberMe = false }: SignInSession): void {
+    const storage = tokenStorageFor(rememberMe)
+    clearTokenKeys(sessionStorage)
+    clearTokenKeys(localStorage)
+    write(storage, ACCESS_TOKEN_KEY, accessToken)
+    write(storage, REFRESH_TOKEN_KEY, refreshToken)
+    write(storage, EXPIRES_AT_KEY, expiresAt ?? null)
+    writeRememberMeFlag(rememberMe)
 
     const canSelect = TENANT_SELECTION_ENABLED && !state.isTenantFromHost
     const nextTenant = canSelect && tenant ? tenant.trim().toLowerCase() : state.tenant
@@ -72,23 +85,25 @@ export const sessionStore = {
       token: accessToken,
       refreshToken,
       expiresAt: expiresAt ?? null,
+      rememberMe,
       tenant: nextTenant,
     })
   },
 
-  /** Access + refresh çifti (rotation sonrası). Tenant değişmez. */
+  /** Access + refresh çifti (rotation sonrası). Tenant / rememberMe değişmez. */
   setTokens(accessToken: string, refreshToken: string, expiresAt?: string | null): void {
-    write(sessionStorage, ACCESS_TOKEN_KEY, accessToken)
-    write(sessionStorage, REFRESH_TOKEN_KEY, refreshToken)
-    write(sessionStorage, EXPIRES_AT_KEY, expiresAt ?? null)
+    const storage = tokenStorageFor(state.rememberMe)
+    write(storage, ACCESS_TOKEN_KEY, accessToken)
+    write(storage, REFRESH_TOKEN_KEY, refreshToken)
+    write(storage, EXPIRES_AT_KEY, expiresAt ?? null)
     update({ token: accessToken, refreshToken, expiresAt: expiresAt ?? null })
   },
 
   signOut(): void {
-    write(sessionStorage, ACCESS_TOKEN_KEY, null)
-    write(sessionStorage, REFRESH_TOKEN_KEY, null)
-    write(sessionStorage, EXPIRES_AT_KEY, null)
-    update({ token: null, refreshToken: null, expiresAt: null })
+    clearTokenKeys(sessionStorage)
+    clearTokenKeys(localStorage)
+    writeRememberMeFlag(false)
+    update({ token: null, refreshToken: null, expiresAt: null, rememberMe: false })
   },
 
   setLanguage(language: Language): void {
@@ -107,6 +122,24 @@ function readLanguage(): Language {
   const stored =
     read(localStorage, I18N_LANGUAGE_STORAGE_KEY) ?? read(localStorage, LEGACY_LANGUAGE_KEY)
   return isSupportedLanguage(stored) ? stored : DEFAULT_LANGUAGE
+}
+
+function tokenStorageFor(rememberMe: boolean): Storage {
+  return rememberMe ? localStorage : sessionStorage
+}
+
+function readRememberMeFlag(): boolean {
+  return read(localStorage, REMEMBER_ME_KEY) === '1'
+}
+
+function writeRememberMeFlag(rememberMe: boolean): void {
+  write(localStorage, REMEMBER_ME_KEY, rememberMe ? '1' : null)
+}
+
+function clearTokenKeys(storage: Storage): void {
+  write(storage, ACCESS_TOKEN_KEY, null)
+  write(storage, REFRESH_TOKEN_KEY, null)
+  write(storage, EXPIRES_AT_KEY, null)
 }
 
 // Depolama kapalıysa (ör. bazı gizli pencere modları) oturum yalnızca bellekte yaşar.
