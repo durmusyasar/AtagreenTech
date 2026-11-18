@@ -277,6 +277,27 @@
   @apply text-primary;
 }
 
+/* Auth metin link / ikincil aksiyon butonları */
+.auth-text-link {
+  @apply bg-transparent text-xs font-medium text-secondary transition-colors hover:text-primary;
+  appearance: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.auth-text-link--brand {
+  @apply text-brand hover:text-brand-hover;
+}
+
+.auth-text-link:disabled {
+  @apply cursor-not-allowed opacity-50 hover:text-secondary;
+}
+
+.auth-text-link--brand:disabled {
+  @apply hover:text-brand;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-orb-a,
   .auth-orb-b,
@@ -290,7 +311,8 @@
   .floating-input-clear,
   .auth-checkbox-box,
   .auth-checkbox-mark,
-  .auth-checkbox-label {
+  .auth-checkbox-label,
+  .auth-text-link {
     transition: none;
   }
 }

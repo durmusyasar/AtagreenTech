@@ -7,9 +7,9 @@ import {
   RECOVERY_CODE_PATTERN,
   TOTP_CODE_PATTERN,
 } from '@/routes/auth/login/constants'
-import type { LoginFormValues, LoginStep, MfaInputMode } from '@/routes/auth/login/type'
+import type { LoginFormValues, LoginStep, MfaMode } from '@/routes/auth/login/type'
 
-function mfaInputSchema(mfaMode: MfaInputMode) {
+function mfaInputSchema(mfaMode: MfaMode) {
   if (mfaMode === MFA_MODE.Totp) {
     return z
       .string()
@@ -27,7 +27,7 @@ function mfaInputSchema(mfaMode: MfaInputMode) {
  * Login Zod şeması — alan adları RHF `name` ile birebir.
  * Mesajlar i18n anahtarıdır; UI `t(key)` ile çevirir.
  */
-export function createLoginSchema(step: LoginStep, mfaMode: MfaInputMode) {
+export function createLoginSchema(step: LoginStep, mfaMode: MfaMode) {
   return z.object({
     email: z
       .string()

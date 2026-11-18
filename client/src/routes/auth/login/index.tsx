@@ -170,6 +170,7 @@ export function LoginPage() {
                     mode={mfaMode}
                     onBack={resetToCredentials}
                     onToggleMode={switchMfaMode}
+                    disabled={isSubmitting}
                   />
                 )}
 

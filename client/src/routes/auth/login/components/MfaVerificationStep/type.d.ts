@@ -1,3 +1,9 @@
-import type { MfaVerificationStepProps } from '@/routes/auth/login/type'
+import type { MfaMode } from '@/routes/auth/login/type'
 
-export type { MfaVerificationStepProps }
+export interface MfaVerificationStepProps {
+  mode: MfaMode
+  onToggleMode: () => void
+  onBack: () => void
+  /** Submit sırasında geri / mod değişimini kilitle. */
+  disabled?: boolean
+}
