@@ -2,8 +2,8 @@ import { useId } from 'react'
 import type { FloatingInputProps } from '@/Components/FloatingInput/type'
 
 /**
- * Kayan etiketli (floating label) metin alanı.
- * Auth ve form ekranlarında ortak girdi standardı.
+ * Material outlined floating label.
+ * Boşken etiket alanda ortada; odak / doluyken üst border’ın üzerine oturur (kesik outline).
  */
 export function FloatingInput({
   id,
@@ -32,14 +32,13 @@ export function FloatingInput({
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
           className={[
-            'peer appearance-none w-full rounded-xl border bg-elevated text-sm text-primary',
-            'pt-5 pb-2 outline-none transition-all duration-150',
+            'peer appearance-none w-full rounded-xl border bg-transparent text-sm text-primary',
+            'h-12 outline-none transition-[border-color,box-shadow] duration-150',
             hasEnd ? 'pl-3.5 pr-11' : 'px-3.5',
             'placeholder:text-transparent',
-            'focus:ring-2',
             error
-              ? 'border-red-500 focus:border-red-500 focus:ring-red-500/25'
-              : 'border-subtle focus:border-brand focus:ring-brand/30',
+              ? 'border-red-500 focus:border-red-500 focus:shadow-[0_0_0_1px_rgb(239_68_68)]'
+              : 'border-subtle focus:border-brand focus:shadow-[0_0_0_1px_rgb(var(--brand-primary))]',
             disabled ? 'cursor-not-allowed opacity-60' : '',
           ]
             .filter(Boolean)
@@ -48,11 +47,16 @@ export function FloatingInput({
         <label
           htmlFor={inputId}
           className={[
-            'pointer-events-none absolute left-3.5 origin-left text-muted transition-all duration-150',
+            'pointer-events-none absolute left-3 z-10 origin-left px-1',
+            'bg-surface text-muted transition-all duration-150',
+            // Boş: alanın ortasında placeholder gibi
             'top-1/2 -translate-y-1/2 text-sm',
-            'peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-[11px] peer-focus:font-medium peer-focus:text-brand',
-            'peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-medium',
-            error ? 'peer-[:not(:placeholder-shown)]:text-red-500 peer-focus:text-red-500' : '',
+            // Odak / dolu: üst border hattının ortasına oturur (outline kesik efekti)
+            'peer-focus:top-0 peer-focus:text-[11px] peer-focus:font-medium peer-focus:text-brand',
+            'peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-medium',
+            error
+              ? 'peer-focus:text-red-500 peer-[:not(:placeholder-shown)]:text-red-500'
+              : 'peer-[:not(:placeholder-shown)]:text-secondary peer-focus:text-brand',
           ]
             .filter(Boolean)
             .join(' ')}
