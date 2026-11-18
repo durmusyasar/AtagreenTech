@@ -144,12 +144,97 @@
   animation: auth-panel-rise 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* FloatingInput — ortak yüzey / etiket / clear token’ları */
+.floating-input {
+  @apply box-border appearance-none h-12 w-full min-w-0 max-w-full rounded-xl border bg-elevated text-sm text-primary outline-none placeholder:text-transparent;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+.floating-input:hover:not(:disabled) {
+  border-color: rgb(var(--border-subtle) / 0.95);
+}
+
+.dark .floating-input:hover:not(:disabled) {
+  border-color: rgb(255 255 255 / 0.2);
+}
+
+.floating-input--ok {
+  @apply border-subtle;
+}
+
+.floating-input--ok:focus {
+  @apply border-brand;
+  box-shadow: 0 0 0 3px rgb(var(--brand-primary) / 0.22);
+}
+
+.floating-input--error {
+  @apply border-red-500;
+}
+
+.floating-input--error:focus {
+  @apply border-red-500;
+  box-shadow: 0 0 0 3px rgb(239 68 68 / 0.2);
+}
+
+.floating-input:disabled {
+  @apply cursor-not-allowed opacity-60;
+}
+
+.floating-input-label {
+  @apply pointer-events-none absolute left-3 z-10 origin-left bg-transparent px-1.5 text-sm text-secondary;
+  top: 50%;
+  transform: translateY(-50%);
+  transition:
+    top 150ms ease,
+    font-size 150ms ease,
+    font-weight 150ms ease,
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.floating-input:focus ~ .floating-input-label,
+.floating-input:not(:placeholder-shown) ~ .floating-input-label {
+  top: 0;
+  @apply bg-surface text-[11px] font-medium;
+}
+
+.floating-input:not(:placeholder-shown) ~ .floating-input-label {
+  @apply text-secondary;
+}
+
+.floating-input:focus ~ .floating-input-label {
+  @apply text-brand;
+}
+
+.floating-input--error:focus ~ .floating-input-label,
+.floating-input--error:not(:placeholder-shown) ~ .floating-input-label {
+  @apply text-red-500;
+}
+
+.floating-input-clear {
+  @apply box-border inline-flex h-8 w-8 shrink-0 appearance-none items-center justify-center rounded-lg border-0 bg-transparent p-0 text-muted shadow-none transition-colors hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand/40;
+}
+
+.floating-input-error {
+  @apply mt-1.5 text-xs text-red-500;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-orb-a,
   .auth-orb-b,
   .auth-panel-rise,
   .app-shell-rise {
     animation: none;
+  }
+
+  .floating-input,
+  .floating-input-label,
+  .floating-input-clear {
+    transition: none;
   }
 }
 
