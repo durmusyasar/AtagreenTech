@@ -51,11 +51,11 @@ export function FloatingInput({
           htmlFor={inputId}
           className={[
             'pointer-events-none absolute left-3 z-10 origin-left px-1.5',
-            // Kesik outline: kart rengi (surface) ile border’ı keser
-            'bg-surface text-secondary transition-all duration-150',
+            // Boşken şeffaf; border’a çıkınca kart rengi ile kesik outline
+            'bg-transparent text-secondary transition-all duration-150',
             'top-1/2 -translate-y-1/2 text-sm',
-            'peer-focus:top-0 peer-focus:text-[11px] peer-focus:font-medium peer-focus:text-brand',
-            'peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-medium',
+            'peer-focus:top-0 peer-focus:bg-surface peer-focus:text-[11px] peer-focus:font-medium peer-focus:text-brand',
+            'peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:bg-surface peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-medium',
             error
               ? 'peer-focus:text-red-500 peer-[:not(:placeholder-shown)]:text-red-500'
               : 'peer-[:not(:placeholder-shown)]:text-secondary peer-focus:text-brand',
