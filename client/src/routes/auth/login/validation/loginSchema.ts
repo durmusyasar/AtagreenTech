@@ -12,7 +12,8 @@ export function createLoginSchema(step: LoginStep, mfaMode: MfaInputMode) {
         .string()
         .trim()
         .min(1, 'validation.emailRequired')
-        .pipe(z.email({ error: 'validation.emailInvalid' })),
+        // Zod 4: top-level z.email(); "asd" gibi değerler invalid_format ile elenir.
+        .check(z.email({ error: 'validation.emailInvalid' })),
       password: z
         .string()
         .min(1, 'validation.passwordRequired')

@@ -25,6 +25,17 @@ describe('createLoginSchema', () => {
     expect(result.error.issues.some((issue) => issue.message === 'validation.emailInvalid')).toBe(true)
   })
 
+  it('rejects bare local-part email like "asd"', () => {
+    const result = createLoginSchema('CREDENTIALS', 'TOTP').safeParse({
+      email: 'asd',
+      password: 'secret1',
+    })
+    expect(result.success).toBe(false)
+    if (result.success) return
+    expect(result.error.issues.some((issue) => issue.path[0] === 'email')).toBe(true)
+    expect(result.error.issues.some((issue) => issue.message === 'validation.emailInvalid')).toBe(true)
+  })
+
   it('validates TOTP with superRefine on MFA step', () => {
     const invalid = createLoginSchema('MFA', 'TOTP').safeParse({
       email: 'admin@omnisync.com',

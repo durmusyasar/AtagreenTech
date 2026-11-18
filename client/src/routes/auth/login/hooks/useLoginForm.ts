@@ -1,5 +1,5 @@
 import { App } from 'antd'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError } from '@/core/api/apiError'
 import { useAuth } from '@/core/context/useAuth'
@@ -42,6 +42,7 @@ export function useLoginForm() {
   const [formError, setFormError] = useState<string>()
   /** Zod mesajları i18n anahtarıdır; UI `t(key)` ile çevirir (dil değişince anında). */
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({})
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
 
   const validateFields = useCallback((): LoginForm | null => {
     const result = createLoginSchema(step, mfaMode).safeParse({
@@ -59,6 +60,11 @@ export function useLoginForm() {
     return null
   }, [email, password, mfaInput, rememberMe, step, mfaMode])
 
+  useEffect(() => {
+    if (!hasAttemptedSubmit) return
+    validateFields()
+  }, [hasAttemptedSubmit, validateFields])
+
   const login = useAppMutation<LoginResult, LoginRequest>({
     mutationFn: (request) => authService.login(request),
     onSuccess: (result) => {
@@ -72,6 +78,7 @@ export function useLoginForm() {
         setMfaInput('')
         setFormError(undefined)
         setFieldErrors({})
+        setHasAttemptedSubmit(false)
         return
       }
 
@@ -95,6 +102,7 @@ export function useLoginForm() {
     setMfaInput('')
     setFormError(undefined)
     setFieldErrors({})
+    setHasAttemptedSubmit(false)
   }
 
   const switchMfaMode = () => {
@@ -102,10 +110,12 @@ export function useLoginForm() {
     setMfaInput('')
     setFormError(undefined)
     setFieldErrors((prev) => ({ ...prev, mfaInput: undefined }))
+    setHasAttemptedSubmit(false)
   }
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
+    setHasAttemptedSubmit(true)
     setFormError(undefined)
     const values = validateFields()
     if (!values) return
