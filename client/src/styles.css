@@ -227,6 +227,56 @@
   @apply mt-1.5 text-xs text-red-500;
 }
 
+/* AuthCheckbox — marka uyumlu özel kutu */
+.auth-checkbox {
+  @apply inline-flex cursor-pointer select-none items-center gap-2.5;
+}
+
+.auth-checkbox--disabled {
+  @apply cursor-not-allowed opacity-60;
+}
+
+.auth-checkbox-box {
+  @apply box-border flex h-[18px] w-[18px] items-center justify-center rounded-md border border-subtle bg-elevated text-transparent;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.auth-checkbox:hover:not(.auth-checkbox--disabled) .auth-checkbox-box {
+  border-color: rgb(var(--brand-primary) / 0.5);
+}
+
+.auth-checkbox-input:focus-visible + .auth-checkbox-box {
+  outline: 2px solid rgb(var(--brand-primary) / 0.4);
+  outline-offset: 2px;
+}
+
+.auth-checkbox-input:checked + .auth-checkbox-box {
+  @apply border-brand bg-brand text-white;
+  box-shadow: 0 0 0 3px rgb(var(--brand-primary) / 0.18);
+}
+
+.auth-checkbox-mark {
+  @apply h-3 w-3 scale-75;
+  transition: transform 150ms ease;
+}
+
+.auth-checkbox-input:checked + .auth-checkbox-box .auth-checkbox-mark {
+  @apply scale-100;
+}
+
+.auth-checkbox-label {
+  @apply text-xs font-medium text-secondary;
+  transition: color 150ms ease;
+}
+
+.auth-checkbox:hover:not(.auth-checkbox--disabled) .auth-checkbox-label {
+  @apply text-primary;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-orb-a,
   .auth-orb-b,
@@ -237,7 +287,10 @@
 
   .floating-input,
   .floating-input-label,
-  .floating-input-clear {
+  .floating-input-clear,
+  .auth-checkbox-box,
+  .auth-checkbox-mark,
+  .auth-checkbox-label {
     transition: none;
   }
 }
