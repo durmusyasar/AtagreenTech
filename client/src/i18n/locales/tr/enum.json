@@ -1,0 +1,19 @@
+{
+  "errors.AUTH_ACCOUNT_INACTIVE": "Hesabınız pasif durumdadır. Lütfen sistem yöneticinizle iletişime geçin.",
+  "errors.AUTH_ACCOUNT_LOCKED": "Çok fazla başarısız deneme nedeniyle hesabınız geçici olarak kilitlendi. Lütfen daha sonra tekrar deneyin.",
+  "errors.AUTH_EMAIL_NOT_VERIFIED": "Giriş yapabilmek için lütfen e-posta adresinizi doğrulayın.",
+  "errors.AUTH_INVALID_CREDENTIALS": "E-posta adresi veya şifre hatalı.",
+  "errors.AUTH_MFA_INVALID": "Girdiğiniz doğrulama veya kurtarma kodu geçersiz.",
+  "errors.AUTH_RATE_LIMIT_EXCEEDED": "Çok fazla deneme yaptınız. Güvenliğiniz için lütfen 1 dakika bekleyin.",
+  "errors.MFA_INVALID_CODE": "Girdiğiniz doğrulama veya kurtarma kodu geçersiz.",
+  "errors.NETWORK_ERROR": "Sunucuya erişilemiyor. İnternet bağlantınızı kontrol edin.",
+  "errors.UNKNOWN_ERROR": "Giriş sırasında beklenmeyen bir hata oluştu.",
+  "movement.type.Inbound": "Giriş",
+  "movement.type.Outbound": "Çıkış",
+  "movement.type.Transfer": "Transfer",
+  "stockMovementType.Inbound": "Giriş",
+  "stockMovementType.Outbound": "Çıkış",
+  "stockMovementType.Transfer": "Transfer",
+  "userStatus.Active": "Aktif",
+  "userStatus.Inactive": "Pasif"
+}

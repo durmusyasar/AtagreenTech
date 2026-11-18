@@ -3,36 +3,29 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
 import { DEFAULT_LANGUAGE, I18N_LANGUAGE_STORAGE_KEY, SUPPORTED_LANGUAGES } from '@/core/i18n/languages'
 
-import enAuth from '@/i18n/locales/en/auth.json'
 import enCommon from '@/i18n/locales/en/common.json'
-import enRbac from '@/i18n/locales/en/rbac.json'
-import enSecurity from '@/i18n/locales/en/security.json'
-import enUsers from '@/i18n/locales/en/users.json'
-import trAuth from '@/i18n/locales/tr/auth.json'
+import enEnum from '@/i18n/locales/en/enum.json'
+import enMain from '@/i18n/locales/en/main.json'
 import trCommon from '@/i18n/locales/tr/common.json'
-import trRbac from '@/i18n/locales/tr/rbac.json'
-import trSecurity from '@/i18n/locales/tr/security.json'
-import trUsers from '@/i18n/locales/tr/users.json'
+import trEnum from '@/i18n/locales/tr/enum.json'
+import trMain from '@/i18n/locales/tr/main.json'
 
 export { I18N_LANGUAGE_STORAGE_KEY }
 
-export const defaultNS = 'common' as const
-export const namespaces = ['common', 'auth', 'users', 'rbac', 'security'] as const
+/** Varsayılan: ekran metinleri (`login.title`, `users.title`…). */
+export const defaultNS = 'main' as const
+export const namespaces = ['main', 'common', 'enum'] as const
 
 export const resources = {
   tr: {
+    main: trMain,
     common: trCommon,
-    auth: trAuth,
-    users: trUsers,
-    rbac: trRbac,
-    security: trSecurity,
+    enum: trEnum,
   },
   en: {
+    main: enMain,
     common: enCommon,
-    auth: enAuth,
-    users: enUsers,
-    rbac: enRbac,
-    security: enSecurity,
+    enum: enEnum,
   },
 } as const
 
@@ -45,14 +38,13 @@ void i18n
     supportedLngs: [...SUPPORTED_LANGUAGES],
     defaultNS,
     ns: [...namespaces],
-    // Düz anahtarlar: `login.title`, `errors.AUTH_INVALID_CREDENTIALS`
+    // Düz anahtarlar: `login.title`, `errors.AUTH_INVALID_CREDENTIALS`, `menu.dashboard`
     keySeparator: false,
     nsSeparator: ':',
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: I18N_LANGUAGE_STORAGE_KEY,
       caches: ['localStorage'],
-      // tr-* → tr; diğer tüm navigator dilleri → en
       convertDetectedLanguage: (lng: string) => (lng.toLowerCase().startsWith('tr') ? 'tr' : 'en'),
     },
     interpolation: {

@@ -21,12 +21,12 @@ export function isKnownAuthErrorCode(code: string | null | undefined): boolean {
 }
 
 function authError(locale: Language | undefined, code: string): string {
-  const t = i18n.getFixedT(locale ?? i18n.resolvedLanguage ?? 'tr', 'auth')
+  const t = i18n.getFixedT(locale ?? i18n.resolvedLanguage ?? 'tr', 'enum')
   return t(`errors.${code}` as 'errors.UNKNOWN_ERROR')
 }
 
 /**
- * Backend / ApiError kodunu `auth:errors.<CODE>` üzerinden kullanıcı mesajına çevirir.
+ * Backend / ApiError kodunu `enum:errors.<CODE>` üzerinden kullanıcı mesajına çevirir.
  */
 export function resolveApiError(error: unknown, locale?: Language): string {
   if (error instanceof ApiError) {
