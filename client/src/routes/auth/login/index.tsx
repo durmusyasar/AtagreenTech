@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { BrandMark } from '@/Components/BrandMark'
 import { FloatingInput } from '@/Components/FloatingInput'
+import { AuthCheckbox } from '@/Components/forms/AuthCheckbox'
 import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
 import { PublicAuthLayout } from '@/Components/PublicAuthLayout'
 import { useTenant } from '@/core/context/useTenant'
@@ -151,18 +152,13 @@ export function LoginPage() {
                     }
                   />
 
-                  <div className="flex items-center justify-between gap-3 pt-1">
-                    <label className="group flex cursor-pointer items-center gap-2.5">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(event) => setRememberMe(event.target.checked)}
-                        className="box-border h-4 w-4 shrink-0 cursor-pointer appearance-auto rounded border border-subtle bg-transparent accent-[rgb(var(--brand-primary))] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand/40"
-                      />
-                      <span className="text-xs font-medium text-secondary transition-colors group-hover:text-primary">
-                        {t('login.rememberMe')}
-                      </span>
-                    </label>
+                  <div className="flex items-center justify-between gap-3 pt-1.5">
+                    <AuthCheckbox
+                      id="login-remember-me"
+                      checked={rememberMe}
+                      onChange={setRememberMe}
+                      label={t('login.rememberMe')}
+                    />
 
                     <Link
                       to="/forgot-password"
