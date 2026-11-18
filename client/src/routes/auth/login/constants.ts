@@ -40,3 +40,13 @@ export const TOTP_CODE_PATTERN = new RegExp(`^\\d{${TOTP_CODE_LENGTH}}$`)
 
 /** MFA recovery: 8 alfanümerik karakter. */
 export const RECOVERY_CODE_PATTERN = new RegExp(`^[A-Za-z0-9]{${RECOVERY_CODE_LENGTH}}$`)
+
+/** Zod / UI ortak i18n validation anahtarları. */
+export const LOGIN_VALIDATION = {
+  emailRequired: 'validation.emailRequired',
+  emailInvalid: 'validation.emailInvalid',
+  passwordRequired: 'validation.passwordRequired',
+  passwordMinLength: 'validation.passwordMinLength',
+  totpInvalid: 'validation.totpInvalid',
+  recoveryInvalid: 'validation.recoveryInvalid',
+} as const
