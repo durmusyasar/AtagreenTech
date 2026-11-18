@@ -157,7 +157,7 @@ export function LoginPage() {
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(event) => setRememberMe(event.target.checked)}
-                        className="h-4 w-4 cursor-pointer rounded border-subtle bg-elevated text-brand accent-brand transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand/40"
+                        className="box-border h-4 w-4 shrink-0 cursor-pointer appearance-auto rounded border border-subtle bg-transparent accent-[rgb(var(--brand-primary))] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand/40"
                       />
                       <span className="text-xs font-medium text-secondary transition-colors group-hover:text-primary">
                         {t('login.rememberMe')}
@@ -195,7 +195,7 @@ export function LoginPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="mt-2 flex w-full items-center justify-center rounded-2xl bg-brand px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-xl hover:shadow-brand/30 active:translate-y-0 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                className="auth-submit mt-3 flex h-12 items-center justify-center rounded-xl bg-brand px-4 text-sm font-semibold text-white shadow-[0_10px_24px_-12px_rgb(var(--brand-primary)/0.85)] transition-[background-color,box-shadow,transform] duration-200 hover:bg-brand-hover hover:shadow-[0_14px_28px_-12px_rgb(var(--brand-primary)/0.9)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
               >
                 {isSubmitting
                   ? t('login.verifying')

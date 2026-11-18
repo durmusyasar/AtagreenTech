@@ -21,8 +21,8 @@ export function FloatingInput({
   const hasEnd = Boolean(endAdornment)
 
   return (
-    <div className={`w-full ${className}`.trim()}>
-      <div className="relative">
+    <div className={`w-full min-w-0 max-w-full ${className}`.trim()}>
+      <div className="relative w-full min-w-0">
         <input
           {...inputProps}
           id={inputId}
@@ -32,8 +32,8 @@ export function FloatingInput({
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
           className={[
-            'peer appearance-none w-full rounded-xl border bg-transparent text-sm text-primary',
-            'h-12 outline-none transition-[border-color,box-shadow] duration-150',
+            'peer box-border appearance-none w-full max-w-full min-w-0 rounded-xl border bg-transparent',
+            'h-12 text-sm text-primary outline-none transition-[border-color,box-shadow] duration-150',
             hasEnd ? 'pl-3.5 pr-11' : 'px-3.5',
             'placeholder:text-transparent',
             error
@@ -49,9 +49,7 @@ export function FloatingInput({
           className={[
             'pointer-events-none absolute left-3 z-10 origin-left px-1',
             'bg-surface text-muted transition-all duration-150',
-            // Boş: alanın ortasında placeholder gibi
             'top-1/2 -translate-y-1/2 text-sm',
-            // Odak / dolu: üst border hattının ortasına oturur (outline kesik efekti)
             'peer-focus:top-0 peer-focus:text-[11px] peer-focus:font-medium peer-focus:text-brand',
             'peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-medium',
             error
@@ -64,7 +62,9 @@ export function FloatingInput({
           {label}
         </label>
         {hasEnd ? (
-          <div className="absolute right-2.5 top-1/2 z-10 -translate-y-1/2">{endAdornment}</div>
+          <div className="pointer-events-auto absolute inset-y-0 right-0 z-10 flex w-11 items-center justify-center">
+            {endAdornment}
+          </div>
         ) : null}
       </div>
       {error ? (

@@ -127,3 +127,16 @@
     animation: none;
   }
 }
+
+/*
+ * Tailwind preflight kapalı (Ant Design). Auth native button/input’larda
+ * tarayıcı varsayılan border/padding taşmalarını önlemek için ortak reset.
+ */
+.auth-submit {
+  box-sizing: border-box;
+  appearance: none;
+  border: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
