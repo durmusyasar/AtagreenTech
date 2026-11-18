@@ -1,10 +1,16 @@
 import { FormFloatingInput } from '@/Components/forms/FormFloatingInput'
 import { useLanguage } from '@/core/context/useLanguage'
+import {
+  MFA_MODE,
+  RECOVERY_CODE_LENGTH,
+  TOTP_CODE_LENGTH,
+} from '@/routes/auth/login/constants'
 import type { LoginFormValues, MfaVerificationStepProps } from '@/routes/auth/login/type'
 
 /** Login MFA ikinci adım — `name="mfaInput"` FormProvider üzerinden Zod’a bağlı. */
 export function MfaVerificationStep({ mode, onToggleMode, onBack }: MfaVerificationStepProps) {
   const { t } = useLanguage()
+  const isTotp = mode === MFA_MODE.Totp
 
   return (
     <div className="space-y-3">
@@ -12,11 +18,11 @@ export function MfaVerificationStep({ mode, onToggleMode, onBack }: MfaVerificat
         name="mfaInput"
         autoFocus
         autoComplete="one-time-code"
-        maxLength={mode === 'TOTP' ? 6 : 8}
-        inputMode={mode === 'TOTP' ? 'numeric' : 'text'}
-        label={mode === 'TOTP' ? t('login.mfaTotpLabel') : t('login.mfaRecoveryLabel')}
+        maxLength={isTotp ? TOTP_CODE_LENGTH : RECOVERY_CODE_LENGTH}
+        inputMode={isTotp ? 'numeric' : 'text'}
+        label={isTotp ? t('login.mfaTotpLabel') : t('login.mfaRecoveryLabel')}
         autoClear
-        transformValue={(value) => (mode === 'RECOVERY' ? value.toUpperCase() : value)}
+        transformValue={(value) => (mode === MFA_MODE.Recovery ? value.toUpperCase() : value)}
         className="[&_input]:text-center [&_input]:font-mono [&_input]:tracking-[0.35em]"
       />
 
@@ -33,7 +39,7 @@ export function MfaVerificationStep({ mode, onToggleMode, onBack }: MfaVerificat
           onClick={onToggleMode}
           className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
         >
-          {mode === 'TOTP' ? t('login.useRecoveryCode') : t('login.useTotpCode')}
+          {isTotp ? t('login.useRecoveryCode') : t('login.useTotpCode')}
         </button>
       </div>
     </div>

@@ -1,14 +1,21 @@
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { BrandMark } from '@/Components/BrandMark'
 import { FormAuthCheckbox } from '@/Components/forms/FormAuthCheckbox'
 import { FormFloatingInput } from '@/Components/forms/FormFloatingInput'
 import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
 import { PublicAuthLayout } from '@/Components/PublicAuthLayout'
+import { useLanguage } from '@/core/context/useLanguage'
 import { useTenant } from '@/core/context/useTenant'
 import { TENANT_SELECTION_ENABLED, tenantAddressPattern } from '@/core/tenant'
 import { MfaVerificationStep } from '@/routes/auth/login/components/MfaVerificationStep'
+import {
+  LOGIN_QUERY,
+  LOGIN_QUERY_FLAG,
+  LOGIN_STEP,
+  MFA_MODE,
+} from '@/routes/auth/login/constants'
 import { useLoginForm } from '@/routes/auth/login/hooks/useLoginForm'
 import type { LoginFormValues } from '@/routes/auth/login/type'
 
@@ -16,13 +23,12 @@ import type { LoginFormValues } from '@/routes/auth/login/type'
  * Modern login: FormProvider + Zod; masaüstünde brand paneli + form.
  */
 export function LoginPage() {
+  const { t } = useLanguage()
   const { isTenantFromHost } = useTenant()
+  const [searchParams] = useSearchParams()
   const {
     isAuthenticated,
     from,
-    invitedBanner,
-    resetBanner,
-    passwordChangedBanner,
     form,
     step,
     mfaMode,
@@ -31,13 +37,16 @@ export function LoginPage() {
     resetToCredentials,
     switchMfaMode,
     onSubmit,
-    t,
   } = useLoginForm()
   const [showPassword, setShowPassword] = useState(false)
 
   if (isAuthenticated) return <Navigate to={from} replace />
 
   const tenantReady = isTenantFromHost || TENANT_SELECTION_ENABLED
+  const invitedBanner = searchParams.get(LOGIN_QUERY.invited) === LOGIN_QUERY_FLAG
+  const resetBanner = searchParams.get(LOGIN_QUERY.reset) === LOGIN_QUERY_FLAG
+  const passwordChangedBanner =
+    searchParams.get(LOGIN_QUERY.passwordChanged) === LOGIN_QUERY_FLAG
 
   return (
     <PublicAuthLayout>
@@ -75,12 +84,12 @@ export function LoginPage() {
               <BrandMark size={34} nameStyle={{ fontSize: 18, margin: 0 }} />
             </div>
             <h1 className="text-[1.65rem] font-semibold tracking-tight text-primary">
-              {step === 'CREDENTIALS' ? t('login.title') : t('login.mfaSubtitle')}
+              {step === LOGIN_STEP.Credentials ? t('login.title') : t('login.mfaSubtitle')}
             </h1>
             <p className="text-sm leading-relaxed text-secondary">
-              {step === 'CREDENTIALS'
+              {step === LOGIN_STEP.Credentials
                 ? t('login.subtitle')
-                : mfaMode === 'TOTP'
+                : mfaMode === MFA_MODE.Totp
                   ? t('login.totpPrompt')
                   : t('login.recoveryPrompt')}
             </p>
@@ -115,7 +124,7 @@ export function LoginPage() {
                   </div>
                 ) : null}
 
-                {step === 'CREDENTIALS' ? (
+                {step === LOGIN_STEP.Credentials ? (
                   <>
                     <FormFloatingInput<LoginFormValues>
                       name="email"
@@ -180,7 +189,7 @@ export function LoginPage() {
                 >
                   {isSubmitting
                     ? t('login.verifying')
-                    : step === 'MFA'
+                    : step === LOGIN_STEP.Mfa
                       ? t('login.verifySubmit')
                       : t('login.submit')}
                 </button>

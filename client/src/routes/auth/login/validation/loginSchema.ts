@@ -1,4 +1,11 @@
 import { z } from 'zod'
+import {
+  LOGIN_PASSWORD_MIN_LENGTH,
+  LOGIN_STEP,
+  MFA_MODE,
+  RECOVERY_CODE_PATTERN,
+  TOTP_CODE_PATTERN,
+} from '@/routes/auth/login/constants'
 import type { LoginStep, MfaInputMode } from '@/routes/auth/login/type'
 
 /**
@@ -16,18 +23,18 @@ export function createLoginSchema(step: LoginStep, mfaMode: MfaInputMode) {
       password: z
         .string()
         .min(1, 'validation.passwordRequired')
-        .refine((value) => value.length >= 6, {
+        .refine((value) => value.length >= LOGIN_PASSWORD_MIN_LENGTH, {
           message: 'validation.passwordMinLength',
         }),
       rememberMe: z.boolean(),
       mfaInput: z.string(),
     })
     .superRefine((data, ctx) => {
-      if (step !== 'MFA') return
+      if (step !== LOGIN_STEP.Mfa) return
 
       const code = data.mfaInput.trim()
-      if (mfaMode === 'TOTP') {
-        if (!/^\d{6}$/.test(code)) {
+      if (mfaMode === MFA_MODE.Totp) {
+        if (!TOTP_CODE_PATTERN.test(code)) {
           ctx.addIssue({
             code: 'custom',
             path: ['mfaInput'],
@@ -37,7 +44,7 @@ export function createLoginSchema(step: LoginStep, mfaMode: MfaInputMode) {
         return
       }
 
-      if (!/^[A-Za-z0-9]{8}$/.test(code)) {
+      if (!RECOVERY_CODE_PATTERN.test(code)) {
         ctx.addIssue({
           code: 'custom',
           path: ['mfaInput'],
