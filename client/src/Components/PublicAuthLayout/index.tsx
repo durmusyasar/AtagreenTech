@@ -1,5 +1,5 @@
+import { AppNavbar } from '@/Components/AppNavbar'
 import { Footer } from '@/Components/Footer'
-import { PublicNavbar } from '@/Components/PublicNavbar'
 import type { PublicAuthLayoutProps } from '@/Components/PublicAuthLayout/type'
 
 /**
@@ -28,7 +28,7 @@ export function PublicAuthLayout({ children, className = '' }: PublicAuthLayoutP
         />
       </div>
 
-      <PublicNavbar />
+      <AppNavbar />
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
         {children}

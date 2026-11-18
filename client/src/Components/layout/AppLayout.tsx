@@ -1,45 +1,46 @@
-import { Layout, theme } from 'antd'
 import { useCallback, useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { AppNavbar } from '@/Components/AppNavbar'
 import { CommandPalette } from '@/Components/command-palette/CommandPalette'
 import { Footer } from '@/Components/layout/Footer'
-import { Navbar } from '@/Components/layout/Navbar'
 import { Sidebar } from '@/Components/Sidebar'
 
 /**
- * Oturum açık sayfaların ortak iskeleti: sol Sidebar, üst Navbar, içerik ve Footer.
+ * Oturum açık kabuk: AppNavbar + Sidebar + main + Footer.
+ * Canvas üzerinde soft brand atmosfer; içerik panelleri surface token’ı kullanır.
  */
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [commandOpen, setCommandOpen] = useState(false)
-  const { token } = theme.useToken()
   const openCommandPalette = useCallback(() => setCommandOpen(true), [])
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
+    <div className="relative flex min-h-screen flex-col bg-canvas text-primary">
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-brand/[0.07] blur-3xl dark:bg-brand/[0.12]" />
+        <div className="absolute -right-16 bottom-10 h-80 w-80 rounded-full bg-brand/[0.05] blur-3xl dark:bg-brand/[0.08]" />
+      </div>
 
-      <Layout style={{ minWidth: 0 }}>
-        <Layout.Header
-          style={{
-            background: token.colorBgContainer,
-            paddingInline: 24,
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-            lineHeight: 'normal',
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <Navbar onOpenCommandPalette={openCommandPalette} />
-        </Layout.Header>
-        <Layout.Content style={{ margin: 24, minHeight: 280 }}>
-          <Outlet />
-        </Layout.Content>
-        <Footer />
-      </Layout>
+      <AppNavbar
+        onOpenCommandPalette={openCommandPalette}
+        onToggleSidebar={() => setCollapsed((value) => !value)}
+        isSidebarCollapsed={collapsed}
+      />
+
+      <div className="relative z-10 flex min-h-0 flex-1">
+        <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main className="app-shell-main flex-1 px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+            <div className="mx-auto w-full max-w-[1200px] app-shell-rise">
+              <Outlet />
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </div>
 
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
-    </Layout>
+    </div>
   )
 }
