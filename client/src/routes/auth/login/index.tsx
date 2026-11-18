@@ -65,7 +65,7 @@ export function LoginPage() {
           </div>
 
           <div className="relative">
-            <BrandMark size={42} nameStyle={{ fontSize: 22, margin: 0 }} />
+            <BrandMark size={42} nameClassName="text-[22px] leading-none" />
           </div>
 
           <div className="relative space-y-4 pt-16">
@@ -81,7 +81,7 @@ export function LoginPage() {
         <div className="relative flex flex-col justify-center p-7 sm:p-9 lg:p-10">
           <div className="mb-7 space-y-2 lg:mb-8">
             <div className="mb-5 lg:hidden">
-              <BrandMark size={34} nameStyle={{ fontSize: 18, margin: 0 }} />
+              <BrandMark size={34} nameClassName="text-lg leading-none" />
             </div>
             <h1 className="text-[1.65rem] font-semibold tracking-tight text-primary">
               {step === LOGIN_STEP.Credentials ? t('login.title') : t('login.mfaSubtitle')}

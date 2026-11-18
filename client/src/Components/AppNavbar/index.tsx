@@ -70,7 +70,9 @@ export function AppNavbar({
           >
             <BrandMark
               size={isAuthenticated ? 28 : 36}
-              nameStyle={{ fontSize: isAuthenticated ? 16 : 18, margin: 0 }}
+              nameClassName={
+                isAuthenticated ? 'text-base leading-none' : 'text-lg leading-none'
+              }
             />
           </Link>
         </div>
