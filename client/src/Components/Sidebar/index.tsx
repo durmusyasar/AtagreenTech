@@ -4,21 +4,20 @@ import {
   ColumnWidthOutlined,
   DashboardOutlined,
   LockOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
   SafetyCertificateOutlined,
   ShopOutlined,
   SwapOutlined,
   TagsOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
-import { Layout, Menu, theme } from 'antd'
 import { useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { BrandMark } from '@/Components/BrandMark'
 import type { SidebarProps } from '@/Components/Sidebar/type'
 import { createNavigationItems } from '@/config/navigation'
 import { useLanguage } from '@/core/context/useLanguage'
 import { usePermissions } from '@/core/hooks/usePermissions'
-import { useThemeStore } from '@/stores/themeStore'
 
 const NAV_ICONS = {
   dashboard: <DashboardOutlined />,
@@ -33,14 +32,15 @@ const NAV_ICONS = {
   roles: <SafetyCertificateOutlined />,
 }
 
-/** Sol navigasyon menüsü (AppLayout sider). */
+/**
+ * Sol navigasyon — AppNavbar ile aynı `bg-surface` / `border-subtle` token’ları.
+ * Marka logosu yalnızca AppNavbar’dadır (mükerrer başlık yok).
+ */
 export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { t } = useLanguage()
   const access = usePermissions()
-  const { token } = theme.useToken()
-  const resolvedTheme = useThemeStore((state) => state.resolvedTheme)
 
   const visibleNav = useMemo(
     () =>
@@ -49,27 +49,51 @@ export function Sidebar({ collapsed, onCollapse }: SidebarProps) {
       ),
     [access],
   )
-  const selected = visibleNav.filter((item) =>
-    item.path === '/' ? pathname === '/' : pathname.startsWith(item.path),
-  )
 
   return (
-    <Layout.Sider
-      collapsible
-      collapsed={collapsed}
-      onCollapse={onCollapse}
-      breakpoint="lg"
-      theme={resolvedTheme === 'dark' ? 'dark' : 'light'}
+    <aside
+      className={[
+        'flex shrink-0 flex-col border-r border-subtle bg-surface transition-[width] duration-200',
+        collapsed ? 'w-[72px]' : 'w-60',
+      ].join(' ')}
     >
-      <div className="app-logo">
-        <BrandMark size={28} showName={!collapsed} nameStyle={{ color: token.colorPrimary }} />
+      <nav className="flex-1 space-y-1 overflow-y-auto p-2" aria-label={t('app.title')}>
+        {visibleNav.map((item) => {
+          const active = item.path === '/' ? pathname === '/' : pathname.startsWith(item.path)
+          return (
+            <button
+              key={item.path}
+              type="button"
+              onClick={() => navigate(item.path)}
+              title={collapsed ? t(item.label) : undefined}
+              className={[
+                'flex w-full appearance-none items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors',
+                collapsed ? 'justify-center px-2' : '',
+                active
+                  ? 'border-brand/20 bg-brand/12 font-semibold text-brand'
+                  : 'border-transparent text-secondary hover:bg-elevated hover:text-primary',
+              ].join(' ')}
+            >
+              <span className="text-base leading-none">{item.icon}</span>
+              {!collapsed ? <span className="truncate">{t(item.label)}</span> : null}
+            </button>
+          )
+        })}
+      </nav>
+
+      <div className="border-t border-subtle bg-surface p-2">
+        <button
+          type="button"
+          onClick={() => onCollapse(!collapsed)}
+          aria-label={collapsed ? t('header.expandSidebar') : t('header.collapseSidebar')}
+          className="flex w-full appearance-none items-center justify-center gap-2 rounded-xl border border-subtle bg-elevated/60 px-3 py-2 text-xs font-medium text-secondary transition-colors hover:bg-elevated hover:text-primary"
+        >
+          {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          {!collapsed ? (
+            <span>{t('header.collapseSidebar')}</span>
+          ) : null}
+        </button>
       </div>
-      <Menu
-        mode="inline"
-        selectedKeys={selected.map((item) => item.path)}
-        onClick={({ key }) => navigate(key)}
-        items={visibleNav.map((item) => ({ key: item.path, icon: item.icon, label: t(item.label) }))}
-      />
-    </Layout.Sider>
+    </aside>
   )
 }

@@ -1,10 +1,12 @@
 import {
   AppstoreOutlined,
   BarChartOutlined,
+  BgColorsOutlined,
   ColumnWidthOutlined,
   DashboardOutlined,
   GlobalOutlined,
   LockOutlined,
+  LogoutOutlined,
   PlusOutlined,
   SafetyCertificateOutlined,
   ShopOutlined,
@@ -23,8 +25,10 @@ import {
 } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createNavigationItems } from '@/config/navigation'
+import { useAuth } from '@/core/context/useAuth'
 import { useLanguage } from '@/core/context/useLanguage'
 import { usePermissions } from '@/core/hooks/usePermissions'
+import { useThemeStore } from '@/stores/themeStore'
 import { filterByQuery, isCommandPaletteToggle } from '@/Components/command-palette/commandPaletteSearch'
 import type { CommandPaletteProps, PaletteCommand } from '@/Components/command-palette/CommandPalette/type'
 
@@ -61,6 +65,8 @@ const NAV_KEYWORDS: Record<string, string> = {
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate()
   const { language, setLanguage, t } = useLanguage()
+  const { signOut } = useAuth()
+  const toggleTheme = useThemeStore((state) => state.toggleTheme)
   const access = usePermissions()
   const { token } = theme.useToken()
   const [query, setQuery] = useState('')
@@ -116,6 +122,17 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       ...pageCommands,
       ...actionCommands,
       {
+        id: 'theme-toggle',
+        titleKey: 'command.toggleTheme',
+        categoryKey: 'command.category.system',
+        keywords: 'theme tema dark light dark mode',
+        icon: <BgColorsOutlined />,
+        run: () => {
+          toggleTheme()
+          setOpen(false)
+        },
+      },
+      {
         id: 'lang-toggle',
         titleKey: 'command.toggleLanguage',
         categoryKey: 'command.category.system',
@@ -126,8 +143,19 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           setOpen(false)
         },
       },
+      {
+        id: 'sign-out',
+        titleKey: 'header.signOut',
+        categoryKey: 'command.category.system',
+        keywords: 'logout çıkış sign out exit',
+        icon: <LogoutOutlined />,
+        run: () => {
+          setOpen(false)
+          void signOut()
+        },
+      },
     ]
-  }, [access, go, language, setLanguage, setOpen])
+  }, [access, go, language, setLanguage, setOpen, signOut, toggleTheme])
 
   const searchable = useMemo(
     () =>

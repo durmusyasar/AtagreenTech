@@ -1,45 +1,39 @@
-import { Layout, theme } from 'antd'
 import { useCallback, useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { AppNavbar } from '@/Components/AppNavbar'
 import { CommandPalette } from '@/Components/command-palette/CommandPalette'
 import { Footer } from '@/Components/layout/Footer'
-import { Navbar } from '@/Components/layout/Navbar'
 import { Sidebar } from '@/Components/Sidebar'
 
 /**
- * Oturum açık sayfaların ortak iskeleti: sol Sidebar, üst Navbar, içerik ve Footer.
+ * Oturum açık kabuk: AppNavbar + Sidebar + main + Footer.
+ * Hepsi `bg-surface` / `border-subtle` / `bg-canvas` token’larıyla hizalıdır.
  */
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [commandOpen, setCommandOpen] = useState(false)
-  const { token } = theme.useToken()
   const openCommandPalette = useCallback(() => setCommandOpen(true), [])
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
+    <div className="flex min-h-screen flex-col bg-canvas text-primary">
+      <AppNavbar
+        onOpenCommandPalette={openCommandPalette}
+        onToggleSidebar={() => setCollapsed((value) => !value)}
+        isSidebarCollapsed={collapsed}
+      />
 
-      <Layout style={{ minWidth: 0 }}>
-        <Layout.Header
-          style={{
-            background: token.colorBgContainer,
-            paddingInline: 24,
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-            lineHeight: 'normal',
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <Navbar onOpenCommandPalette={openCommandPalette} />
-        </Layout.Header>
-        <Layout.Content style={{ margin: 24, minHeight: 280 }}>
-          <Outlet />
-        </Layout.Content>
-        <Footer />
-      </Layout>
+      <div className="flex min-h-0 flex-1">
+        <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main className="flex-1 p-4 sm:p-6">
+            <Outlet />
+          </main>
+          <Footer />
+        </div>
+      </div>
 
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
-    </Layout>
+    </div>
   )
 }
