@@ -120,10 +120,15 @@
   animation: auth-panel-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.app-shell-rise {
+  animation: auth-panel-rise 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-orb-a,
   .auth-orb-b,
-  .auth-panel-rise {
+  .auth-panel-rise,
+  .app-shell-rise {
     animation: none;
   }
 }
