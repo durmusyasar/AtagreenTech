@@ -1,4 +1,4 @@
-import { App, Form } from 'antd'
+import { App } from 'antd'
 import { useCallback, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError } from '@/core/api/apiError'
@@ -33,29 +33,31 @@ export function useLoginForm() {
   const [searchParams] = useSearchParams()
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
 
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
+  const [mfaInput, setMfaInput] = useState('')
   const [step, setStep] = useState<LoginStep>('CREDENTIALS')
   const [mfaMode, setMfaMode] = useState<MfaMode>('TOTP')
   const [formError, setFormError] = useState<string>()
   /** Zod mesajları i18n anahtarıdır; UI `t(key)` ile çevirir (dil değişince anında). */
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({})
-  const [form] = Form.useForm<LoginForm>()
 
   const validateFields = useCallback((): LoginForm | null => {
-    const values = form.getFieldsValue(true) as LoginForm
     const result = createLoginSchema(step, mfaMode).safeParse({
-      email: values.email ?? '',
-      password: values.password ?? '',
-      mfaInput: values.mfaInput,
+      email,
+      password,
+      mfaInput,
     })
 
     if (result.success) {
       setFieldErrors({})
-      return result.data
+      return { ...result.data, rememberMe }
     }
 
     setFieldErrors(zodIssuesToFieldErrors(result.error.issues))
     return null
-  }, [form, step, mfaMode])
+  }, [email, password, mfaInput, rememberMe, step, mfaMode])
 
   const login = useAppMutation<LoginResult, LoginRequest>({
     mutationFn: (request) => authService.login(request),
@@ -67,9 +69,9 @@ export function useLoginForm() {
       if (error instanceof ApiError && error.code === AuthErrorCodes.MfaRequired) {
         setStep('MFA')
         setMfaMode('TOTP')
+        setMfaInput('')
         setFormError(undefined)
         setFieldErrors({})
-        form.setFieldValue('mfaInput', undefined)
         return
       }
 
@@ -90,19 +92,20 @@ export function useLoginForm() {
   const resetToCredentials = () => {
     setStep('CREDENTIALS')
     setMfaMode('TOTP')
+    setMfaInput('')
     setFormError(undefined)
     setFieldErrors({})
-    form.setFieldValue('mfaInput', undefined)
   }
 
   const switchMfaMode = () => {
     setMfaMode((current) => (current === 'TOTP' ? 'RECOVERY' : 'TOTP'))
+    setMfaInput('')
     setFormError(undefined)
     setFieldErrors((prev) => ({ ...prev, mfaInput: undefined }))
-    form.setFieldValue('mfaInput', undefined)
   }
 
-  const submit = () => {
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault()
     setFormError(undefined)
     const values = validateFields()
     if (!values) return
@@ -126,15 +129,22 @@ export function useLoginForm() {
     invitedBanner: searchParams.get('invited') === '1',
     resetBanner: searchParams.get('reset') === '1',
     passwordChangedBanner: searchParams.get('passwordChanged') === '1',
+    email,
+    setEmail,
+    password,
+    setPassword,
+    rememberMe,
+    setRememberMe,
+    mfaInput,
+    setMfaInput,
     step,
     mfaMode,
     formError,
     fieldErrors,
-    form,
-    login,
+    isSubmitting: login.isPending,
     resetToCredentials,
     switchMfaMode,
-    submit,
+    handleSubmit,
     t,
   }
 }

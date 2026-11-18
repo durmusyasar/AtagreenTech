@@ -17,6 +17,8 @@ export interface LoginFieldErrors {
 
 export interface MfaVerificationStepProps {
   mode: MfaInputMode
+  value: string
+  onChange: (value: string) => void
   onToggleMode: () => void
   onBack: () => void
   /** Zod alan hatası (dil değişiminde güncellenir). */

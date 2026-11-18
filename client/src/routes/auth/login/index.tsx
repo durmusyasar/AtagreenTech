@@ -1,15 +1,15 @@
-import { LoginOutlined } from '@ant-design/icons'
-import { Alert, Button, Form, Input } from 'antd'
+import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import { FloatingInput } from '@/Components/FloatingInput'
+import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
 import { PublicAuthLayout } from '@/Components/PublicAuthLayout'
 import { useTenant } from '@/core/context/useTenant'
 import { TENANT_SELECTION_ENABLED, tenantAddressPattern } from '@/core/tenant'
 import { MfaVerificationStep } from '@/routes/auth/login/components/MfaVerificationStep'
 import { useLoginForm } from '@/routes/auth/login/hooks/useLoginForm'
-import type { LoginForm } from '@/routes/auth/login/type'
 
 /**
- * Sade login kartı: Zod alan hataları + MFA; tenant/IAM rozeti yok.
+ * Sade login kartı: FloatingInput + Zod alan hataları + MFA; tenant/IAM rozeti yok.
  */
 export function LoginPage() {
   const { isTenantFromHost } = useTenant()
@@ -19,17 +19,25 @@ export function LoginPage() {
     invitedBanner,
     resetBanner,
     passwordChangedBanner,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    rememberMe,
+    setRememberMe,
+    mfaInput,
+    setMfaInput,
     step,
     mfaMode,
     formError,
     fieldErrors,
-    form,
-    login,
+    isSubmitting,
     resetToCredentials,
     switchMfaMode,
-    submit,
+    handleSubmit,
     t,
   } = useLoginForm()
+  const [showPassword, setShowPassword] = useState(false)
 
   if (isAuthenticated) return <Navigate to={from} replace />
 
@@ -52,114 +60,116 @@ export function LoginPage() {
         </div>
 
         {!tenantReady ? (
-          <Alert
-            type="warning"
-            showIcon
-            message={t(
+          <div
+            role="alert"
+            className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs leading-relaxed text-amber-700 dark:text-amber-300"
+          >
+            {t(
               'login.tenantAddressRequired',
               tenantAddressPattern(window.location.hostname, window.location.port),
             )}
-          />
+          </div>
         ) : (
-          <Form<LoginForm>
-            form={form}
-            layout="vertical"
-            requiredMark={false}
-            onFinish={submit}
-            initialValues={{ email: '', password: '', rememberMe: false }}
-            noValidate
-            className="space-y-1"
-          >
-            {invitedBanner && (
-              <Alert type="success" showIcon className="!mb-4" message={t('login.invitedSuccess')} />
-            )}
-            {resetBanner && (
-              <Alert type="success" showIcon className="!mb-4" message={t('login.resetSuccess')} />
-            )}
-            {passwordChangedBanner && (
-              <Alert type="success" showIcon className="!mb-4" message={t('login.passwordChangedSuccess')} />
-            )}
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+            {invitedBanner ? (
+              <div className="rounded-xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
+                {t('login.invitedSuccess')}
+              </div>
+            ) : null}
+            {resetBanner ? (
+              <div className="rounded-xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
+                {t('login.resetSuccess')}
+              </div>
+            ) : null}
+            {passwordChangedBanner ? (
+              <div className="rounded-xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
+                {t('login.passwordChangedSuccess')}
+              </div>
+            ) : null}
 
-            <div style={{ display: step === 'CREDENTIALS' ? undefined : 'none' }}>
-              <Form.Item
-                name="email"
-                label={t('login.emailLabel')}
-                validateStatus={fieldErrors.email ? 'error' : undefined}
-                help={fieldErrors.email ? t(fieldErrors.email) : undefined}
-              >
-                <Input
+            {step === 'CREDENTIALS' ? (
+              <>
+                <FloatingInput
+                  id="login-email"
+                  type="email"
                   autoComplete="username"
-                  placeholder="admin@omnisync.com"
-                  className="!rounded-xl"
-                  size="large"
+                  label={t('login.emailLabel')}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  error={fieldErrors.email ? t(fieldErrors.email) : undefined}
                 />
-              </Form.Item>
 
-              <Form.Item
-                name="password"
-                label={t('login.passwordLabel')}
-                validateStatus={fieldErrors.password ? 'error' : undefined}
-                help={fieldErrors.password ? t(fieldErrors.password) : undefined}
-              >
-                <Input.Password
+                <FloatingInput
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  placeholder="••••••••"
-                  className="!rounded-xl"
-                  size="large"
+                  label={t('login.passwordLabel')}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  error={fieldErrors.password ? t(fieldErrors.password) : undefined}
+                  endAdornment={
+                    <PasswordVisibilityToggle
+                      visible={showPassword}
+                      onToggle={() => setShowPassword((value) => !value)}
+                      showLabel={t('login.showPassword')}
+                      hideLabel={t('login.hidePassword')}
+                    />
+                  }
                 />
-              </Form.Item>
 
-              <div className="flex items-center justify-between gap-2 pt-1 pb-2">
-                <label className="flex cursor-pointer items-center gap-2.5 group">
-                  <Form.Item name="rememberMe" valuePropName="checked" noStyle>
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <label className="group flex cursor-pointer items-center gap-2.5">
                     <input
                       type="checkbox"
+                      checked={rememberMe}
+                      onChange={(event) => setRememberMe(event.target.checked)}
                       className="h-4 w-4 cursor-pointer rounded border-subtle bg-elevated text-brand transition focus:ring-brand/30"
                     />
-                  </Form.Item>
-                  <span className="text-xs font-medium text-secondary transition-colors group-hover:text-primary">
-                    {t('login.rememberMe')}
-                  </span>
-                </label>
+                    <span className="text-xs font-medium text-secondary transition-colors group-hover:text-primary">
+                      {t('login.rememberMe')}
+                    </span>
+                  </label>
 
-                <Link
-                  to="/forgot-password"
-                  className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
-                >
-                  {t('login.forgotPassword')}
-                </Link>
-              </div>
-            </div>
-
-            {step === 'MFA' && (
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
+                  >
+                    {t('login.forgotPassword')}
+                  </Link>
+                </div>
+              </>
+            ) : (
               <MfaVerificationStep
                 mode={mfaMode}
+                value={mfaInput}
+                onChange={setMfaInput}
                 onBack={resetToCredentials}
                 onToggleMode={switchMfaMode}
                 error={fieldErrors.mfaInput ? t(fieldErrors.mfaInput) : undefined}
               />
             )}
 
-            {formError && (
-              <Alert type="error" showIcon role="alert" className="!mb-4" message={formError} />
-            )}
+            {formError ? (
+              <div
+                role="alert"
+                className="rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
+              >
+                {formError}
+              </div>
+            ) : null}
 
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<LoginOutlined />}
-              loading={login.isPending}
-              block
-              size="large"
-              className="!mt-2 !rounded-xl !font-medium"
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="mt-2 w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-brand/25 transition-all duration-150 hover:bg-brand-hover disabled:opacity-50"
             >
-              {login.isPending
+              {isSubmitting
                 ? t('login.verifying')
                 : step === 'MFA'
                   ? t('login.verifySubmit')
                   : t('login.submit')}
-            </Button>
-          </Form>
+            </button>
+          </form>
         )}
       </div>
     </PublicAuthLayout>
