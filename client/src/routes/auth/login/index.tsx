@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import { BrandMark } from '@/Components/BrandMark'
 import { FloatingInput } from '@/Components/FloatingInput'
 import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
 import { PublicAuthLayout } from '@/Components/PublicAuthLayout'
@@ -9,7 +10,7 @@ import { MfaVerificationStep } from '@/routes/auth/login/components/MfaVerificat
 import { useLoginForm } from '@/routes/auth/login/hooks/useLoginForm'
 
 /**
- * Sade login kartı: FloatingInput + Zod alan hataları + MFA; tenant/IAM rozeti yok.
+ * Modern login: masaüstünde brand paneli + form; mobilde sade form kompozisyonu.
  */
 export function LoginPage() {
   const { isTenantFromHost } = useTenant()
@@ -45,132 +46,166 @@ export function LoginPage() {
 
   return (
     <PublicAuthLayout>
-      <div className="w-full max-w-[420px] space-y-6 rounded-2xl border border-subtle bg-surface p-7 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5 sm:p-8 dark:shadow-black/40 dark:ring-white/5">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight text-primary">
-            {step === 'CREDENTIALS' ? t('login.title') : t('login.mfaSubtitle')}
-          </h1>
-          <p className="text-sm leading-relaxed text-secondary">
-            {step === 'CREDENTIALS'
-              ? t('login.subtitle')
-              : mfaMode === 'TOTP'
-                ? t('login.totpPrompt')
-                : t('login.recoveryPrompt')}
-          </p>
-        </div>
-
-        {!tenantReady ? (
-          <div
-            role="alert"
-            className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs leading-relaxed text-amber-700 dark:text-amber-300"
-          >
-            {t(
-              'login.tenantAddressRequired',
-              tenantAddressPattern(window.location.hostname, window.location.port),
-            )}
+      <div className="auth-panel-rise grid w-full max-w-[920px] overflow-hidden rounded-3xl border border-subtle/80 bg-surface/95 shadow-2xl shadow-slate-900/10 backdrop-blur-sm dark:border-white/10 dark:shadow-black/50 lg:grid-cols-[1.05fr_1fr]">
+        {/* Brand panel — masaüstü */}
+        <aside className="relative hidden overflow-hidden border-b border-subtle/70 bg-gradient-to-br from-brand/[0.14] via-surface to-surface p-9 dark:border-white/10 dark:from-brand/[0.22] lg:flex lg:flex-col lg:justify-between lg:border-b-0 lg:border-r">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute -right-16 -top-10 h-56 w-56 rounded-full bg-brand/20 blur-3xl" />
+            <div className="absolute -bottom-20 left-0 h-48 w-48 rounded-full bg-brand/10 blur-3xl" />
+            <div
+              className="absolute inset-0 opacity-40"
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle at 20% 20%, rgb(var(--brand-primary) / 0.18), transparent 42%), radial-gradient(circle at 80% 70%, rgb(var(--brand-primary) / 0.1), transparent 45%)',
+              }}
+            />
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
-            {invitedBanner ? (
-              <div className="rounded-xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
-                {t('login.invitedSuccess')}
-              </div>
-            ) : null}
-            {resetBanner ? (
-              <div className="rounded-xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
-                {t('login.resetSuccess')}
-              </div>
-            ) : null}
-            {passwordChangedBanner ? (
-              <div className="rounded-xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
-                {t('login.passwordChangedSuccess')}
-              </div>
-            ) : null}
 
-            {step === 'CREDENTIALS' ? (
-              <>
-                <FloatingInput
-                  id="login-email"
-                  type="email"
-                  autoComplete="username"
-                  label={t('login.emailLabel')}
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  error={fieldErrors.email ? t(fieldErrors.email) : undefined}
-                />
+          <div className="relative">
+            <BrandMark size={42} nameStyle={{ fontSize: 22, margin: 0 }} />
+          </div>
 
-                <FloatingInput
-                  id="login-password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  label={t('login.passwordLabel')}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  error={fieldErrors.password ? t(fieldErrors.password) : undefined}
-                  endAdornment={
-                    <PasswordVisibilityToggle
-                      visible={showPassword}
-                      onToggle={() => setShowPassword((value) => !value)}
-                      showLabel={t('login.showPassword')}
-                      hideLabel={t('login.hidePassword')}
-                    />
-                  }
-                />
+          <div className="relative space-y-4 pt-16">
+            <p className="max-w-[16ch] text-3xl font-semibold leading-tight tracking-tight text-primary">
+              {t('login.panelHeadline')}
+            </p>
+            <p className="max-w-sm text-sm leading-relaxed text-secondary">{t('login.panelTagline')}</p>
+          </div>
 
-                <div className="flex items-center justify-between gap-2 pt-1">
-                  <label className="group flex cursor-pointer items-center gap-2.5">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(event) => setRememberMe(event.target.checked)}
-                      className="h-4 w-4 cursor-pointer rounded border-subtle bg-elevated text-brand transition focus:ring-brand/30"
-                    />
-                    <span className="text-xs font-medium text-secondary transition-colors group-hover:text-primary">
-                      {t('login.rememberMe')}
-                    </span>
-                  </label>
+          <p className="relative pt-10 text-xs text-muted">{t('login.panelFootnote')}</p>
+        </aside>
 
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
-                  >
-                    {t('login.forgotPassword')}
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <MfaVerificationStep
-                mode={mfaMode}
-                value={mfaInput}
-                onChange={setMfaInput}
-                onBack={resetToCredentials}
-                onToggleMode={switchMfaMode}
-                error={fieldErrors.mfaInput ? t(fieldErrors.mfaInput) : undefined}
-              />
-            )}
+        {/* Form paneli */}
+        <div className="relative flex flex-col justify-center p-7 sm:p-9 lg:p-10">
+          <div className="mb-7 space-y-2 lg:mb-8">
+            <div className="mb-5 lg:hidden">
+              <BrandMark size={34} nameStyle={{ fontSize: 18, margin: 0 }} />
+            </div>
+            <h1 className="text-[1.65rem] font-semibold tracking-tight text-primary">
+              {step === 'CREDENTIALS' ? t('login.title') : t('login.mfaSubtitle')}
+            </h1>
+            <p className="text-sm leading-relaxed text-secondary">
+              {step === 'CREDENTIALS'
+                ? t('login.subtitle')
+                : mfaMode === 'TOTP'
+                  ? t('login.totpPrompt')
+                  : t('login.recoveryPrompt')}
+            </p>
+          </div>
 
-            {formError ? (
-              <div
-                role="alert"
-                className="rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
-              >
-                {formError}
-              </div>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-2 w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-brand/25 transition-all duration-150 hover:bg-brand-hover disabled:opacity-50"
+          {!tenantReady ? (
+            <div
+              role="alert"
+              className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs leading-relaxed text-amber-700 dark:text-amber-300"
             >
-              {isSubmitting
-                ? t('login.verifying')
-                : step === 'MFA'
-                  ? t('login.verifySubmit')
-                  : t('login.submit')}
-            </button>
-          </form>
-        )}
+              {t(
+                'login.tenantAddressRequired',
+                tenantAddressPattern(window.location.hostname, window.location.port),
+              )}
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
+              {invitedBanner ? (
+                <div className="rounded-2xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
+                  {t('login.invitedSuccess')}
+                </div>
+              ) : null}
+              {resetBanner ? (
+                <div className="rounded-2xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
+                  {t('login.resetSuccess')}
+                </div>
+              ) : null}
+              {passwordChangedBanner ? (
+                <div className="rounded-2xl border border-brand/30 bg-brand/10 p-3.5 text-xs leading-relaxed text-brand">
+                  {t('login.passwordChangedSuccess')}
+                </div>
+              ) : null}
+
+              {step === 'CREDENTIALS' ? (
+                <>
+                  <FloatingInput
+                    id="login-email"
+                    type="email"
+                    autoComplete="username"
+                    label={t('login.emailLabel')}
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    error={fieldErrors.email ? t(fieldErrors.email) : undefined}
+                  />
+
+                  <FloatingInput
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    label={t('login.passwordLabel')}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    error={fieldErrors.password ? t(fieldErrors.password) : undefined}
+                    endAdornment={
+                      <PasswordVisibilityToggle
+                        visible={showPassword}
+                        onToggle={() => setShowPassword((value) => !value)}
+                        showLabel={t('login.showPassword')}
+                        hideLabel={t('login.hidePassword')}
+                      />
+                    }
+                  />
+
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <label className="group flex cursor-pointer items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(event) => setRememberMe(event.target.checked)}
+                        className="h-4 w-4 cursor-pointer rounded border-subtle bg-elevated text-brand accent-brand transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand/40"
+                      />
+                      <span className="text-xs font-medium text-secondary transition-colors group-hover:text-primary">
+                        {t('login.rememberMe')}
+                      </span>
+                    </label>
+
+                    <Link
+                      to="/forgot-password"
+                      className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
+                    >
+                      {t('login.forgotPassword')}
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <MfaVerificationStep
+                  mode={mfaMode}
+                  value={mfaInput}
+                  onChange={setMfaInput}
+                  onBack={resetToCredentials}
+                  onToggleMode={switchMfaMode}
+                  error={fieldErrors.mfaInput ? t(fieldErrors.mfaInput) : undefined}
+                />
+              )}
+
+              {formError ? (
+                <div
+                  role="alert"
+                  className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
+                >
+                  {formError}
+                </div>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="mt-2 flex w-full items-center justify-center rounded-2xl bg-brand px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-xl hover:shadow-brand/30 active:translate-y-0 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+              >
+                {isSubmitting
+                  ? t('login.verifying')
+                  : step === 'MFA'
+                    ? t('login.verifySubmit')
+                    : t('login.submit')}
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </PublicAuthLayout>
   )
