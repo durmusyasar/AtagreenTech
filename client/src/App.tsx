@@ -7,7 +7,7 @@ import { SessionHydrator } from '@/Components/SessionHydrator'
 import { clearOnSessionChange, createQueryClient } from '@/core/api/queryClient'
 import { TenantThemeProvider } from '@/core/context/TenantThemeProvider'
 import { sessionStore } from '@/core/session'
-import { appRouter } from '@/routes'
+import { appRouter } from '@app/createAppRouter'
 
 const queryClient = createQueryClient()
 clearOnSessionChange(queryClient, sessionStore)
