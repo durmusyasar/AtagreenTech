@@ -45,7 +45,7 @@
   "definedRoles": "Tanımlı Roller",
   "editPermissions": "İzinleri Düzenle",
   "forgot.description": "Kayıtlı e-posta adresinizi girin; şifre sıfırlama bağlantısını gönderelim.",
-  "forgot.sent": "Eğer {{0}} adresi sistemimizde kayıtlıysa şifre sıfırlama bağlantısı gönderilmiştir.",
+  "forgot.sent": "Şifre sıfırlama bağlantısı {{0}} adresine gönderildi.",
   "forgot.submit": "Sıfırlama bağlantısı gönder",
   "forgot.title": "Şifremi unuttum",
   "invite.confirmPassword": "Şifre tekrar",

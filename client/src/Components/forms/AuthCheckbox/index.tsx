@@ -10,9 +10,9 @@ export const AuthCheckbox = forwardRef<HTMLInputElement, AuthCheckboxProps>(
     const generatedId = useId()
     const inputId = id ?? generatedId
 
+    // htmlFor yok: sarmalayan label + iç input aynı kontrolü iki kez tetiklemesin (Beni hatırla).
     return (
       <label
-        htmlFor={inputId}
         className={`auth-checkbox ${disabled ? 'auth-checkbox--disabled' : ''} ${className}`.trim()}
       >
         <span className="relative inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center">

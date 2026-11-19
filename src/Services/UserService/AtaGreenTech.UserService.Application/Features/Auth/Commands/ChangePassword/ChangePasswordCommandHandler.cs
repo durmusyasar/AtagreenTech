@@ -24,8 +24,9 @@ internal sealed class ChangePasswordCommandHandler(
         var user = await users.GetByIdAsync(userId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Kullanıcı bulunamadı.");
 
+        // Yanlış şifre 401 olmamalı: istemci 401'i oturum düşmesi sanıp refresh/signOut yapıyor.
         if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
-            throw new UnauthorizedAccessException("Mevcut şifreniz hatalı.");
+            return MessageResult.Fail("Mevcut şifreniz hatalı.");
 
         user.ChangePassword(passwordHasher.Hash(request.NewPassword));
         await SessionRevocation.RevokeAllRefreshTokensAsync(refreshTokens, user.Id, cancellationToken);

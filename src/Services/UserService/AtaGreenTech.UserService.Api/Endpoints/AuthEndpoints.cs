@@ -16,7 +16,6 @@ using AtaGreenTech.UserService.Application.Features.Auth.Commands.VerifyMfa;
 using AtaGreenTech.UserService.Application.Features.Auth.Queries.GetMe;
 using AtaGreenTech.UserService.Application.Interfaces;
 using MediatR;
-using Microsoft.AspNetCore.RateLimiting;
 using OmniSync.Core.Infrastructure.Endpoints;
 
 namespace AtaGreenTech.UserService.Api.Endpoints;
@@ -153,6 +152,14 @@ public sealed class AuthEndpoints : IEndpointModule
     )
     {
         var result = await sender.Send(new ForgotPasswordCommand(request.Email), cancellationToken);
+        if (!result.Succeeded)
+        {
+            return Results.Json(
+                new ErrorResponse(AuthErrorCodes.EmailNotFound, result.Message),
+                statusCode: StatusCodes.Status400BadRequest
+            );
+        }
+
         return TypedResults.Ok(new { message = result.Message });
     }
 
@@ -186,7 +193,7 @@ public sealed class AuthEndpoints : IEndpointModule
                 new ChangePasswordCommand(request.CurrentPassword, request.NewPassword),
                 cancellationToken
             );
-            return TypedResults.Ok(new { message = result.Message });
+            return ToMessageResult(result);
         }
         catch (UnauthorizedAccessException ex)
         {

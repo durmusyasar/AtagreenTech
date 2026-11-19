@@ -6,7 +6,7 @@ import { useForgotPassword } from '@/routes/auth/forgot-password/hooks/useForgot
 import type { ForgotPasswordFormValues } from '@/routes/auth/forgot-password/type'
 
 export function ForgotPasswordPage() {
-  const { t, form, submittedEmail, isSubmitting, onSubmit } = useForgotPassword()
+  const { t, form, submittedEmail, formError, isSubmitting, onSubmit } = useForgotPassword()
 
   return (
     <AuthPageShell title={t('forgot.title')} description={t('forgot.description')}>
@@ -33,6 +33,15 @@ export function ForgotPasswordPage() {
               label={t('login.emailLabel')}
               autoClear
             />
+
+            {formError ? (
+              <div
+                role="alert"
+                className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
+              >
+                {formError}
+              </div>
+            ) : null}
 
             <button
               type="submit"

@@ -39,6 +39,16 @@
     --primary-color: #22c55e;
   }
 
+  /*
+   * Preflight kapalı (Ant Design); yine de border-box şart —
+   * aksi halde w-full + padding navbar gibi yerlerde viewport dışına taşar.
+   */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
   html,
   body,
   #root {
@@ -46,10 +56,16 @@
     min-height: 100%;
   }
 
+  /* Portal menü / blur gölge gibi kenar taşmalarında yatay scrollbar oluşmasın. */
+  html {
+    overflow-x: clip;
+  }
+
   body {
     background-color: rgb(var(--bg-canvas));
     color: rgb(var(--text-primary));
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    overflow-x: clip;
     transition:
       background-color 150ms ease,
       color 150ms ease;
