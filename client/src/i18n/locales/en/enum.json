@@ -1,6 +1,7 @@
 {
   "errors.AUTH_ACCOUNT_INACTIVE": "Your account is inactive. Please contact your system administrator.",
   "errors.AUTH_ACCOUNT_LOCKED": "Your account is temporarily locked due to multiple failed attempts. Please try again later.",
+  "errors.AUTH_EMAIL_NOT_FOUND": "This email address is not registered in the system.",
   "errors.AUTH_EMAIL_NOT_VERIFIED": "Please verify your email address before signing in.",
   "errors.AUTH_INVALID_CREDENTIALS": "Invalid email address or password.",
   "errors.AUTH_MFA_INVALID": "The verification or recovery code you entered is invalid.",

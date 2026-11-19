@@ -1,8 +1,8 @@
 import { App } from 'antd'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '@/core/api/apiError'
 import { useAuth } from '@/core/context/useAuth'
 import { useLanguage } from '@/core/context/useLanguage'
@@ -10,55 +10,75 @@ import { useAppMutation } from '@/core/hooks/useAppMutation'
 import { resolveAuthErrorMessage } from '@/core/i18n/authErrors'
 import { authService } from '@/services/authService'
 import { AuthErrorCodes, type LoginRequest, type LoginResult } from '@/types/auth'
+import { buildLoginRequest } from '@/routes/auth/login/buildLoginRequest'
+import {
+  LOGIN_DEFAULT_REDIRECT,
+  LOGIN_FORM_DEFAULTS,
+  LOGIN_STEP,
+  MFA_MODE,
+} from '@/routes/auth/login/constants'
 import type { LoginFormValues, LoginStep, MfaMode } from '@/routes/auth/login/type'
 import { createLoginSchema } from '@/routes/auth/login/validation/loginSchema'
 
-const LOGIN_DEFAULTS: LoginFormValues = {
-  email: '',
-  password: '',
-  rememberMe: false,
-  mfaInput: '',
+function clearMfaField(
+  form: ReturnType<typeof useForm<LoginFormValues>>,
+  setFormError: (value: string | undefined) => void,
+) {
+  form.setValue('mfaInput', '')
+  form.clearErrors('mfaInput')
+  setFormError(undefined)
 }
 
-/** Login: RHF FormProvider + Zod resolver; alan state’i form store’da. */
+/** Login: RHF FormProvider + Zod; MFA adımı schema ref ile güncel kalır. */
 export function useLoginForm() {
   const { isAuthenticated } = useAuth()
   const { language, t } = useLanguage()
   const { message } = App.useApp()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
+  const from = (useLocation().state as { from?: string } | null)?.from ?? LOGIN_DEFAULT_REDIRECT
 
-  const [step, setStep] = useState<LoginStep>('CREDENTIALS')
-  const [mfaMode, setMfaMode] = useState<MfaMode>('TOTP')
+  const [step, setStep] = useState<LoginStep>(LOGIN_STEP.Credentials)
+  const [mfaMode, setMfaMode] = useState<MfaMode>(MFA_MODE.Totp)
   const [formError, setFormError] = useState<string>()
 
+  const stepRef = useRef(step)
+  stepRef.current = step
+  const mfaModeRef = useRef(mfaMode)
+  mfaModeRef.current = mfaMode
+
   const schema = useMemo(() => createLoginSchema(step, mfaMode), [step, mfaMode])
+  const schemaRef = useRef(schema)
+  schemaRef.current = schema
 
   const form = useForm<LoginFormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: LOGIN_DEFAULTS,
+    // Adım/mod değişince güncel Zod kurallarını kullan (ilk mount resolver’ı kilitlenmesin).
+    resolver: (values, context, options) =>
+      zodResolver(schemaRef.current)(values, context, options),
+    defaultValues: LOGIN_FORM_DEFAULTS,
     mode: 'onBlur',
     reValidateMode: 'onChange',
   })
 
+  useEffect(() => {
+    form.clearErrors()
+  }, [step, mfaMode, form])
+
   const login = useAppMutation<LoginResult, LoginRequest>({
     mutationFn: (request) => authService.login(request),
+    skipErrorNotification: true,
     onSuccess: (result) => {
       message.success(t('login.welcome', result.userName))
       navigate(from, { replace: true })
     },
     onError: (error) => {
       if (error instanceof ApiError && error.code === AuthErrorCodes.MfaRequired) {
-        setStep('MFA')
-        setMfaMode('TOTP')
-        form.setValue('mfaInput', '')
-        form.clearErrors('mfaInput')
-        setFormError(undefined)
+        setStep(LOGIN_STEP.Mfa)
+        setMfaMode(MFA_MODE.Totp)
+        clearMfaField(form, setFormError)
         return
       }
 
-      if (step === 'MFA' && error instanceof ApiError && error.status === 401) {
+      if (stepRef.current === LOGIN_STEP.Mfa && error instanceof ApiError && error.status === 401) {
         setFormError(
           resolveAuthErrorMessage(
             error.code === AuthErrorCodes.MfaInvalid ? error : AuthErrorCodes.MfaInvalid,
@@ -73,42 +93,24 @@ export function useLoginForm() {
   })
 
   const resetToCredentials = () => {
-    setStep('CREDENTIALS')
-    setMfaMode('TOTP')
-    form.setValue('mfaInput', '')
-    form.clearErrors('mfaInput')
-    setFormError(undefined)
+    setStep(LOGIN_STEP.Credentials)
+    setMfaMode(MFA_MODE.Totp)
+    clearMfaField(form, setFormError)
   }
 
   const switchMfaMode = () => {
-    setMfaMode((current) => (current === 'TOTP' ? 'RECOVERY' : 'TOTP'))
-    form.setValue('mfaInput', '')
-    form.clearErrors('mfaInput')
-    setFormError(undefined)
+    setMfaMode((current) => (current === MFA_MODE.Totp ? MFA_MODE.Recovery : MFA_MODE.Totp))
+    clearMfaField(form, setFormError)
   }
 
   const onValid = (values: LoginFormValues) => {
     setFormError(undefined)
-
-    const request: LoginRequest = {
-      email: values.email.trim(),
-      password: values.password,
-      rememberMe: values.rememberMe === true,
-    }
-    if (step === 'MFA') {
-      const raw = values.mfaInput.trim()
-      if (mfaMode === 'TOTP') request.totpCode = raw
-      else request.recoveryCode = raw.toUpperCase()
-    }
-    login.mutate(request)
+    login.mutate(buildLoginRequest(values, stepRef.current, mfaModeRef.current))
   }
 
   return {
     isAuthenticated,
     from,
-    invitedBanner: searchParams.get('invited') === '1',
-    resetBanner: searchParams.get('reset') === '1',
-    passwordChangedBanner: searchParams.get('passwordChanged') === '1',
     form,
     step,
     mfaMode,
@@ -117,6 +119,5 @@ export function useLoginForm() {
     resetToCredentials,
     switchMfaMode,
     onSubmit: form.handleSubmit(onValid),
-    t,
   }
 }

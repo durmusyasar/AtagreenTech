@@ -57,11 +57,18 @@ export function MfaSetupPanel({ initialEnabled }: MfaSetupPanelProps = {}) {
     },
   })
 
+  const patchMfaEnabled = (enabled: boolean) => {
+    queryClient.setQueryData(sessionQueries.current().queryKey, (current: typeof me.data) =>
+      current ? { ...current, isMfaEnabled: enabled } : current,
+    )
+  }
+
   const verify = useAppMutation({
     mutationFn: (code: string) => accountSecurityService.verifyMfa(code),
     onSuccess: async () => {
       setSetupData(null)
       setBanner({ type: 'success', text: t('security.mfaEnabled') })
+      patchMfaEnabled(true)
       await refreshMe()
     },
     onError: (error) => {
@@ -73,7 +80,9 @@ export function MfaSetupPanel({ initialEnabled }: MfaSetupPanelProps = {}) {
     mutationFn: (password: string) => accountSecurityService.disableMfa(password),
     onSuccess: async () => {
       setShowDisableForm(false)
+      setFormError(undefined)
       setBanner({ type: 'success', text: t('security.mfaDisabled') })
+      patchMfaEnabled(false)
       await refreshMe()
     },
     onError: (error) => {
@@ -210,6 +219,7 @@ export function MfaSetupPanel({ initialEnabled }: MfaSetupPanelProps = {}) {
               requiredMark={false}
               style={{ maxWidth: 360 }}
               onFinish={(values: { password: string }) => {
+                if (disable.isPending) return
                 setFormError(undefined)
                 disable.mutate(values.password)
               }}
@@ -218,12 +228,14 @@ export function MfaSetupPanel({ initialEnabled }: MfaSetupPanelProps = {}) {
               <Form.Item
                 name="password"
                 label={t('security.currentPassword')}
-                rules={[{ required: true, message: t('login.passwordRequired') }]}
+                rules={[{ required: true, whitespace: true, message: t('login.passwordRequired') }]}
               >
                 <Input.Password autoComplete="current-password" />
               </Form.Item>
               <Space>
-                <Button onClick={() => setShowDisableForm(false)}>{t('common.cancel')}</Button>
+                <Button htmlType="button" onClick={() => setShowDisableForm(false)}>
+                  {t('common.cancel')}
+                </Button>
                 <Button type="primary" danger htmlType="submit" loading={disable.isPending}>
                   {t('security.mfaDisableConfirm')}
                 </Button>

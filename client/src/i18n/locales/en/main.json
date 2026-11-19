@@ -45,7 +45,7 @@
   "definedRoles": "Defined Roles",
   "editPermissions": "Edit Permissions",
   "forgot.description": "Enter your registered email and we will send a reset link.",
-  "forgot.sent": "If {{0}} is registered, a password reset link has been sent.",
+  "forgot.sent": "A password reset link has been sent to {{0}}.",
   "forgot.submit": "Send reset link",
   "forgot.title": "Forgot password",
   "invite.confirmPassword": "Confirm password",

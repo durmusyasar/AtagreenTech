@@ -54,6 +54,15 @@ function isAuthBootstrapUrl(url: string | undefined): boolean {
   )
 }
 
+/**
+ * Oturum açıkken şifre doğrulayan uçlar. 401 burada "yanlış şifre" olabilir; refresh/signOut yapma.
+ * (Kalıcı çözüm: bu uçlar yanlış şifrede 400 döner; bu liste savunma katmanı.)
+ */
+function isPasswordConfirmationUrl(url: string | undefined): boolean {
+  if (!url) return false
+  return url.includes('/auth/mfa/disable') || url.includes('/auth/change-password')
+}
+
 axiosClient.interceptors.request.use((config) => {
   const { token, refreshToken, tenant, isTenantFromHost, language } = sessionStore.getSnapshot()
 
@@ -94,6 +103,7 @@ axiosClient.interceptors.response.use(
       originalRequest &&
       !originalRequest._retry &&
       !isAuthBootstrapUrl(originalRequest.url) &&
+      !isPasswordConfirmationUrl(originalRequest.url) &&
       refreshToken
     ) {
       if (isRefreshing) {
@@ -127,7 +137,12 @@ axiosClient.interceptors.response.use(
 
     if (apiError.status === 401) {
       // Refresh yok / login-refresh uçları / retry sonrası: oturumu temizle (login ekranı MFA 401'inde token olmayabilir).
-      if (token && !isAuthBootstrapUrl(originalRequest?.url)) {
+      // Şifre onay uçlarında 401 = yanlış şifre; oturumu düşürme.
+      if (
+        token &&
+        !isAuthBootstrapUrl(originalRequest?.url) &&
+        !isPasswordConfirmationUrl(originalRequest?.url)
+      ) {
         sessionStore.signOut()
         if (!(isAxiosError(error) && error.config?.skipErrorNotification)) {
           notify('warning', translate(language, 'error.unauthorized'), 'unauthorized')

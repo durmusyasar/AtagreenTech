@@ -66,6 +66,13 @@ describe('toApiError', () => {
     expect(error.fieldErrors['Translations[1].Name']).toEqual(['Ad boş olamaz.'])
   })
 
+  it('surfaces AUTH_BAD_REQUEST message when field errors are absent', () => {
+    expect(
+      toApiError(httpError(400, { code: 'AUTH_BAD_REQUEST', message: 'Mevcut şifreniz hatalı.' }), 'tr')
+        .message,
+    ).toBe('Mevcut şifreniz hatalı.')
+  })
+
   it.each([
     [401, 'Your session has expired, please sign in again.'],
     [403, 'You are not allowed to perform this action or access this tenant.'],
@@ -73,6 +80,13 @@ describe('toApiError', () => {
     [500, 'An unexpected server error occurred.'],
   ])('describes HTTP %i', (status, message) => {
     expect(toApiError(httpError(status, undefined), 'en')).toMatchObject({ status, message })
+  })
+
+  it('prefers server message on 401 credential challenges', () => {
+    expect(
+      toApiError(httpError(401, { code: 'AUTH_INVALID_CREDENTIALS', message: 'Mevcut şifreniz hatalı.' }), 'tr')
+        .message,
+    ).toBe('Mevcut şifreniz hatalı.')
   })
 
   it('reports network failures without a status', () => {

@@ -1,11 +1,9 @@
-import type { CSSProperties } from 'react'
-
 export interface BrandMarkProps {
-  /** Logo yüksekliği (px). */
+  /** Logo yüksekliği / genişliği (px). */
   size?: number
   /** Marka adını metin olarak göster. */
   showName?: boolean
-  /** Metin stili (ör. sider'da `colorPrimary`). */
-  nameStyle?: CSSProperties
+  /** Marka adı satırına ek Tailwind sınıfları. */
+  nameClassName?: string
   className?: string
 }

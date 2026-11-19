@@ -24,6 +24,7 @@ export function FormFloatingInput<TFieldValues extends FieldValues>({
         <FloatingInput
           {...inputProps}
           name={field.name}
+          ref={field.ref}
           value={field.value ?? ''}
           onBlur={field.onBlur}
           onChange={(event) => {

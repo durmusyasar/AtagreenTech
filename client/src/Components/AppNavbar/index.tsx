@@ -46,7 +46,8 @@ export function AppNavbar({
     >
       <div
         className={[
-          'flex h-full w-full min-w-0 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5',
+          // box-border: content-box + w-full + px-* toplam genişliği viewport dışına taşırır.
+          'box-border flex h-full w-full min-w-0 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-5',
           isAuthenticated ? '' : 'mx-auto max-w-7xl sm:px-8',
         ].join(' ')}
       >
@@ -70,24 +71,26 @@ export function AppNavbar({
           >
             <BrandMark
               size={isAuthenticated ? 28 : 36}
-              nameStyle={{ fontSize: isAuthenticated ? 16 : 18, margin: 0 }}
+              nameClassName={
+                isAuthenticated ? 'text-base leading-none' : 'text-lg leading-none'
+              }
             />
           </Link>
         </div>
 
-        <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="flex min-w-0 max-w-full items-center justify-end gap-1.5 sm:gap-2">
           {isAuthenticated && onOpenCommandPalette ? (
             <button
               type="button"
               onClick={onOpenCommandPalette}
               aria-label={`${t('header.commandPalette')} (${shortcut})`}
-              className={`${chipClass} max-w-[11rem] lg:min-w-[10.5rem] lg:justify-between lg:px-3`}
+              className={`${chipClass} max-w-[9.5rem] lg:max-w-[12rem] lg:justify-between lg:px-3`}
             >
               <span className="inline-flex min-w-0 items-center gap-2">
                 <SearchOutlined className="shrink-0 text-sm opacity-80" />
                 <span className="hidden truncate lg:inline">{t('header.search')}</span>
               </span>
-              <kbd className="hidden rounded-md border border-subtle/80 bg-surface/90 px-1.5 py-0.5 font-mono text-[10px] text-muted lg:inline">
+              <kbd className="hidden shrink-0 rounded-md border border-subtle/80 bg-surface/90 px-1.5 py-0.5 font-mono text-[10px] text-muted lg:inline">
                 {shortcut}
               </kbd>
             </button>
@@ -99,6 +102,9 @@ export function AppNavbar({
           {isAuthenticated ? (
             <Dropdown
               trigger={['click']}
+              placement="bottomRight"
+              // Sağ kenardaki tetikleyicide bottomLeft menüyü viewport dışına iter → yatay scroll.
+              autoAdjustOverflow
               menu={{
                 items: [
                   {
@@ -118,11 +124,14 @@ export function AppNavbar({
                 ],
               }}
             >
-              <button type="button" className={`${chipClass} max-w-[9.5rem] xl:max-w-[14rem]`}>
+              <button
+                type="button"
+                className={`${chipClass} min-w-0 max-w-[8.5rem] sm:max-w-[10rem] xl:max-w-[13rem]`}
+              >
                 <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand/15 text-brand">
                   <UserOutlined className="text-xs" />
                 </span>
-                <span className="hidden truncate md:inline">
+                <span className="hidden min-w-0 truncate md:inline">
                   {claims?.email ?? claims?.subject ?? t('header.account')}
                 </span>
               </button>

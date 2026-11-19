@@ -1,6 +1,7 @@
 {
   "errors.AUTH_ACCOUNT_INACTIVE": "Hesabınız pasif durumdadır. Lütfen sistem yöneticinizle iletişime geçin.",
   "errors.AUTH_ACCOUNT_LOCKED": "Çok fazla başarısız deneme nedeniyle hesabınız geçici olarak kilitlendi. Lütfen daha sonra tekrar deneyin.",
+  "errors.AUTH_EMAIL_NOT_FOUND": "Bu e-posta adresi sistemde kayıtlı değil.",
   "errors.AUTH_EMAIL_NOT_VERIFIED": "Giriş yapabilmek için lütfen e-posta adresinizi doğrulayın.",
   "errors.AUTH_INVALID_CREDENTIALS": "E-posta adresi veya şifre hatalı.",
   "errors.AUTH_MFA_INVALID": "Girdiğiniz doğrulama veya kurtarma kodu geçersiz.",

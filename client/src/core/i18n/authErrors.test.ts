@@ -54,4 +54,14 @@ describe('isKnownAuthErrorCode', () => {
     expect(isKnownAuthErrorCode('AUTH_INVALID_CREDENTIALS')).toBe(true)
     expect(isKnownAuthErrorCode('AUTH_MFA_REQUIRED')).toBe(false)
   })
+
+  it('recognizes AUTH_EMAIL_NOT_FOUND', () => {
+    expect(isKnownAuthErrorCode('AUTH_EMAIL_NOT_FOUND')).toBe(true)
+    expect(
+      resolveAuthErrorMessage(
+        new ApiError({ message: 'x', status: 400, code: 'AUTH_EMAIL_NOT_FOUND' }),
+        'tr',
+      ),
+    ).toContain('kayıtlı değil')
+  })
 })

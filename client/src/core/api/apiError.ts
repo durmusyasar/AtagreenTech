@@ -67,7 +67,9 @@ function describe(status: number, problem: ProblemDetails, language: Language): 
   switch (status) {
     case 400: {
       const messages = Object.values(problem.errors ?? {}).flat()
-      return messages.length > 0 ? messages.join(' ') : translate(language, 'error.validation')
+      if (messages.length > 0) return messages.join(' ')
+      // UserService AUTH_BAD_REQUEST (ör. yanlış mevcut şifre) `message` taşır; field `errors` yoktur.
+      return problem.detail ?? problem.message ?? translate(language, 'error.validation')
     }
     case 401:
       return problem.detail ?? problem.message ?? translate(language, 'error.unauthorized')

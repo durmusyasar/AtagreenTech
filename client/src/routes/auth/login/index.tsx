@@ -1,14 +1,21 @@
 import { useState } from 'react'
 import { FormProvider } from 'react-hook-form'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { BrandMark } from '@/Components/BrandMark'
 import { FormAuthCheckbox } from '@/Components/forms/FormAuthCheckbox'
 import { FormFloatingInput } from '@/Components/forms/FormFloatingInput'
 import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
 import { PublicAuthLayout } from '@/Components/PublicAuthLayout'
+import { useLanguage } from '@/core/context/useLanguage'
 import { useTenant } from '@/core/context/useTenant'
 import { TENANT_SELECTION_ENABLED, tenantAddressPattern } from '@/core/tenant'
 import { MfaVerificationStep } from '@/routes/auth/login/components/MfaVerificationStep'
+import {
+  LOGIN_QUERY,
+  LOGIN_QUERY_FLAG,
+  LOGIN_STEP,
+  MFA_MODE,
+} from '@/routes/auth/login/constants'
 import { useLoginForm } from '@/routes/auth/login/hooks/useLoginForm'
 import type { LoginFormValues } from '@/routes/auth/login/type'
 
@@ -16,13 +23,12 @@ import type { LoginFormValues } from '@/routes/auth/login/type'
  * Modern login: FormProvider + Zod; masaüstünde brand paneli + form.
  */
 export function LoginPage() {
+  const { t } = useLanguage()
   const { isTenantFromHost } = useTenant()
+  const [searchParams] = useSearchParams()
   const {
     isAuthenticated,
     from,
-    invitedBanner,
-    resetBanner,
-    passwordChangedBanner,
     form,
     step,
     mfaMode,
@@ -31,17 +37,20 @@ export function LoginPage() {
     resetToCredentials,
     switchMfaMode,
     onSubmit,
-    t,
   } = useLoginForm()
   const [showPassword, setShowPassword] = useState(false)
 
   if (isAuthenticated) return <Navigate to={from} replace />
 
   const tenantReady = isTenantFromHost || TENANT_SELECTION_ENABLED
+  const invitedBanner = searchParams.get(LOGIN_QUERY.invited) === LOGIN_QUERY_FLAG
+  const resetBanner = searchParams.get(LOGIN_QUERY.reset) === LOGIN_QUERY_FLAG
+  const passwordChangedBanner =
+    searchParams.get(LOGIN_QUERY.passwordChanged) === LOGIN_QUERY_FLAG
 
   return (
     <PublicAuthLayout>
-      <div className="auth-panel-rise grid w-full max-w-[920px] overflow-hidden rounded-3xl border border-subtle/80 bg-surface/95 shadow-2xl shadow-slate-900/10 backdrop-blur-sm dark:border-white/10 dark:shadow-black/50 lg:grid-cols-[1.05fr_1fr]">
+      <div className="auth-panel auth-panel-rise grid max-w-[920px] lg:grid-cols-[1.05fr_1fr]">
         <aside className="relative hidden overflow-hidden border-b border-subtle/70 bg-gradient-to-br from-brand/[0.14] via-surface to-surface p-9 dark:border-white/10 dark:from-brand/[0.22] lg:flex lg:flex-col lg:justify-between lg:border-b-0 lg:border-r">
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div className="absolute -right-16 -top-10 h-56 w-56 rounded-full bg-brand/20 blur-3xl" />
@@ -56,7 +65,7 @@ export function LoginPage() {
           </div>
 
           <div className="relative">
-            <BrandMark size={42} nameStyle={{ fontSize: 22, margin: 0 }} />
+            <BrandMark size={42} nameClassName="text-[22px] leading-none" />
           </div>
 
           <div className="relative space-y-4 pt-16">
@@ -72,15 +81,15 @@ export function LoginPage() {
         <div className="relative flex flex-col justify-center p-7 sm:p-9 lg:p-10">
           <div className="mb-7 space-y-2 lg:mb-8">
             <div className="mb-5 lg:hidden">
-              <BrandMark size={34} nameStyle={{ fontSize: 18, margin: 0 }} />
+              <BrandMark size={34} nameClassName="text-lg leading-none" />
             </div>
             <h1 className="text-[1.65rem] font-semibold tracking-tight text-primary">
-              {step === 'CREDENTIALS' ? t('login.title') : t('login.mfaSubtitle')}
+              {step === LOGIN_STEP.Credentials ? t('login.title') : t('login.mfaSubtitle')}
             </h1>
             <p className="text-sm leading-relaxed text-secondary">
-              {step === 'CREDENTIALS'
+              {step === LOGIN_STEP.Credentials
                 ? t('login.subtitle')
-                : mfaMode === 'TOTP'
+                : mfaMode === MFA_MODE.Totp
                   ? t('login.totpPrompt')
                   : t('login.recoveryPrompt')}
             </p>
@@ -115,7 +124,7 @@ export function LoginPage() {
                   </div>
                 ) : null}
 
-                {step === 'CREDENTIALS' ? (
+                {step === LOGIN_STEP.Credentials ? (
                   <>
                     <FormFloatingInput<LoginFormValues>
                       name="email"
@@ -161,6 +170,7 @@ export function LoginPage() {
                     mode={mfaMode}
                     onBack={resetToCredentials}
                     onToggleMode={switchMfaMode}
+                    disabled={isSubmitting}
                   />
                 )}
 
@@ -180,7 +190,7 @@ export function LoginPage() {
                 >
                   {isSubmitting
                     ? t('login.verifying')
-                    : step === 'MFA'
+                    : step === LOGIN_STEP.Mfa
                       ? t('login.verifySubmit')
                       : t('login.submit')}
                 </button>

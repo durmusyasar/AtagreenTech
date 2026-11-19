@@ -16,8 +16,10 @@ export function FormAuthCheckbox<TFieldValues extends FieldValues>({
       render={({ field }) => (
         <AuthCheckbox
           {...checkboxProps}
+          ref={field.ref}
           checked={Boolean(field.value)}
           onChange={field.onChange}
+          onBlur={field.onBlur}
         />
       )}
     />

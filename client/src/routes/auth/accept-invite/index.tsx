@@ -1,29 +1,17 @@
 import { useState } from 'react'
+import { FormProvider, useWatch } from 'react-hook-form'
 import { Link } from 'react-router-dom'
 import { AuthPageShell } from '@/Components/AuthPageShell'
-import { FloatingInput } from '@/Components/FloatingInput'
-import { PasswordStrengthList } from '@/Components/PasswordStrengthList'
+import { FormFloatingInput } from '@/Components/forms/FormFloatingInput'
 import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
+import { PasswordStrengthList } from '@/Components/PasswordStrengthList'
 import { useAcceptInvite } from '@/routes/auth/accept-invite/hooks/useAcceptInvite'
+import type { AcceptInviteFormValues } from '@/routes/auth/accept-invite/type'
 
 export function AcceptInvitePage() {
-  const {
-    t,
-    token,
-    firstName,
-    setFirstName,
-    lastName,
-    setLastName,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
-    fieldErrors,
-    serverError,
-    isSubmitting,
-    handleSubmit,
-  } = useAcceptInvite()
+  const { t, form, token, serverError, isSubmitting, onSubmit } = useAcceptInvite()
   const [showPass, setShowPass] = useState(false)
+  const password = useWatch({ control: form.control, name: 'password' }) ?? ''
 
   return (
     <AuthPageShell title={t('invite.title')} description={t('invite.description')}>
@@ -45,84 +33,73 @@ export function AcceptInvitePage() {
         </div>
       ) : null}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-          <FloatingInput
-            id="invite-first-name"
-            type="text"
-            autoComplete="given-name"
-            label={t('invite.firstName')}
-            value={firstName}
-            onChange={(event) => setFirstName(event.target.value)}
-            error={fieldErrors.firstName ? t(fieldErrors.firstName) : undefined}
-            disabled={!token}
-            autoClear
-            clearLabel={t('common.clear')}
-          />
-          <FloatingInput
-            id="invite-last-name"
-            type="text"
-            autoComplete="family-name"
-            label={t('invite.lastName')}
-            value={lastName}
-            onChange={(event) => setLastName(event.target.value)}
-            error={fieldErrors.lastName ? t(fieldErrors.lastName) : undefined}
-            disabled={!token}
-            autoClear
-            clearLabel={t('common.clear')}
-          />
-        </div>
+      <FormProvider {...form}>
+        <form onSubmit={onSubmit} noValidate className="space-y-4">
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+            <FormFloatingInput<AcceptInviteFormValues>
+              name="firstName"
+              type="text"
+              autoComplete="given-name"
+              label={t('invite.firstName')}
+              disabled={!token}
+              autoClear
+            />
+            <FormFloatingInput<AcceptInviteFormValues>
+              name="lastName"
+              type="text"
+              autoComplete="family-name"
+              label={t('invite.lastName')}
+              disabled={!token}
+              autoClear
+            />
+          </div>
 
-        <div className="space-y-2">
-          <FloatingInput
-            id="invite-password"
+          <div className="space-y-2">
+            <FormFloatingInput<AcceptInviteFormValues>
+              name="password"
+              type={showPass ? 'text' : 'password'}
+              autoComplete="new-password"
+              label={t('invite.password')}
+              disabled={!token}
+              endAdornment={
+                <PasswordVisibilityToggle
+                  visible={showPass}
+                  onToggle={() => setShowPass((value) => !value)}
+                  showLabel={t('login.showPassword')}
+                  hideLabel={t('login.hidePassword')}
+                  disabled={!token}
+                />
+              }
+            />
+            <PasswordStrengthList password={password} />
+          </div>
+
+          <FormFloatingInput<AcceptInviteFormValues>
+            name="confirmPassword"
             type={showPass ? 'text' : 'password'}
             autoComplete="new-password"
-            label={t('invite.password')}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            error={fieldErrors.password ? t(fieldErrors.password) : undefined}
+            label={t('invite.confirmPassword')}
             disabled={!token}
-            endAdornment={
-              <PasswordVisibilityToggle
-                visible={showPass}
-                onToggle={() => setShowPass((value) => !value)}
-                showLabel={t('login.showPassword')}
-                hideLabel={t('login.hidePassword')}
-              />
-            }
           />
-          <PasswordStrengthList password={password} />
-        </div>
 
-        <FloatingInput
-          id="invite-confirm-password"
-          type={showPass ? 'text' : 'password'}
-          autoComplete="new-password"
-          label={t('invite.confirmPassword')}
-          value={confirmPassword}
-          onChange={(event) => setConfirmPassword(event.target.value)}
-          error={fieldErrors.confirmPassword ? t(fieldErrors.confirmPassword) : undefined}
-          disabled={!token}
-        />
-
-        <button
-          type="submit"
-          disabled={isSubmitting || !token}
-          className="auth-submit mt-2 h-12 rounded-xl bg-brand px-4 text-sm font-semibold text-white shadow-[0_10px_24px_-12px_rgb(var(--brand-primary)/0.85)] transition-[background-color,box-shadow] duration-150 hover:bg-brand-hover disabled:opacity-50 disabled:shadow-none"
-        >
-          {isSubmitting ? t('invite.submitting') : t('invite.submit')}
-        </button>
-
-        <div className="pt-1 text-center">
-          <Link
-            to="/login"
-            className="text-xs font-medium text-secondary transition-colors hover:text-primary"
+          <button
+            type="submit"
+            disabled={isSubmitting || !token}
+            className="auth-submit mt-2 h-12 rounded-xl bg-brand px-4 text-sm font-semibold text-white shadow-[0_10px_24px_-12px_rgb(var(--brand-primary)/0.85)] transition-[background-color,box-shadow] duration-150 hover:bg-brand-hover disabled:opacity-50 disabled:shadow-none"
           >
-            ← {t('auth.backToLogin')}
-          </Link>
-        </div>
-      </form>
+            {isSubmitting ? t('invite.submitting') : t('invite.submit')}
+          </button>
+
+          <div className="pt-1 text-center">
+            <Link
+              to="/login"
+              className="text-xs font-medium text-secondary transition-colors hover:text-primary"
+            >
+              ← {t('auth.backToLogin')}
+            </Link>
+          </div>
+        </form>
+      </FormProvider>
     </AuthPageShell>
   )
 }

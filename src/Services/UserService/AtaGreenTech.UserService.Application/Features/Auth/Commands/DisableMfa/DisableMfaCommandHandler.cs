@@ -24,8 +24,9 @@ internal sealed class DisableMfaCommandHandler(
         var user = await users.GetByIdAsync(userId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Kullanıcı bulunamadı.");
 
+        // Yanlış şifre 401 olmamalı: istemci 401'i oturum düşmesi sanıp refresh/signOut yapıyor.
         if (!passwordHasher.Verify(request.Password, user.PasswordHash))
-            throw new UnauthorizedAccessException("Mevcut şifreniz hatalı.");
+            return MessageResult.Fail("Mevcut şifreniz hatalı.");
 
         if (!user.IsMfaEnabled && string.IsNullOrWhiteSpace(user.TotpSecret))
             return MessageResult.Fail("MFA zaten kapalı.");

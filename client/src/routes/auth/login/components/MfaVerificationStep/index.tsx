@@ -1,10 +1,22 @@
 import { FormFloatingInput } from '@/Components/forms/FormFloatingInput'
 import { useLanguage } from '@/core/context/useLanguage'
-import type { LoginFormValues, MfaVerificationStepProps } from '@/routes/auth/login/type'
+import {
+  MFA_MODE,
+  RECOVERY_CODE_LENGTH,
+  TOTP_CODE_LENGTH,
+} from '@/routes/auth/login/constants'
+import type { LoginFormValues } from '@/routes/auth/login/type'
+import type { MfaVerificationStepProps } from '@/routes/auth/login/components/MfaVerificationStep/type'
 
 /** Login MFA ikinci adım — `name="mfaInput"` FormProvider üzerinden Zod’a bağlı. */
-export function MfaVerificationStep({ mode, onToggleMode, onBack }: MfaVerificationStepProps) {
+export function MfaVerificationStep({
+  mode,
+  onToggleMode,
+  onBack,
+  disabled = false,
+}: MfaVerificationStepProps) {
   const { t } = useLanguage()
+  const isTotp = mode === MFA_MODE.Totp
 
   return (
     <div className="space-y-3">
@@ -12,28 +24,28 @@ export function MfaVerificationStep({ mode, onToggleMode, onBack }: MfaVerificat
         name="mfaInput"
         autoFocus
         autoComplete="one-time-code"
-        maxLength={mode === 'TOTP' ? 6 : 8}
-        inputMode={mode === 'TOTP' ? 'numeric' : 'text'}
-        label={mode === 'TOTP' ? t('login.mfaTotpLabel') : t('login.mfaRecoveryLabel')}
+        maxLength={isTotp ? TOTP_CODE_LENGTH : RECOVERY_CODE_LENGTH}
+        inputMode={isTotp ? 'numeric' : 'text'}
+        label={isTotp ? t('login.mfaTotpLabel') : t('login.mfaRecoveryLabel')}
         autoClear
-        transformValue={(value) => (mode === 'RECOVERY' ? value.toUpperCase() : value)}
+        disabled={disabled}
+        transformValue={(value) =>
+          isTotp ? value.replace(/\D/g, '') : value.toUpperCase()
+        }
         className="[&_input]:text-center [&_input]:font-mono [&_input]:tracking-[0.35em]"
       />
 
       <div className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-xs font-medium text-secondary transition-colors hover:text-primary"
-        >
+        <button type="button" onClick={onBack} disabled={disabled} className="auth-text-link">
           ← {t('login.backToCredentials')}
         </button>
         <button
           type="button"
           onClick={onToggleMode}
-          className="text-xs font-medium text-brand transition-colors hover:text-brand-hover"
+          disabled={disabled}
+          className="auth-text-link auth-text-link--brand"
         >
-          {mode === 'TOTP' ? t('login.useRecoveryCode') : t('login.useTotpCode')}
+          {isTotp ? t('login.useRecoveryCode') : t('login.useTotpCode')}
         </button>
       </div>
     </div>
