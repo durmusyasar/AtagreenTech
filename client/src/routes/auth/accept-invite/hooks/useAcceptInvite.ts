@@ -2,42 +2,37 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiError } from '@/core/api/apiError'
 import { useLanguage } from '@/core/context/useLanguage'
 import { useAppMutation } from '@/core/hooks/useAppMutation'
-import { authPublicService } from '@/services/authPublicService'
-import type { AcceptInviteFormValues } from '@/routes/auth/accept-invite/type'
-import { acceptInviteSchema } from '@/routes/auth/accept-invite/validation/acceptInviteSchema'
+import { resolveAuthFormError } from '@/core/i18n/resolveAuthFormError'
+import {
+  authPublicService,
+  type AcceptInvitePayload,
+  type AuthMessageResult,
+} from '@/services/authPublicService'
+import { defaultValues } from '@/routes/auth/accept-invite/defaultValues'
+import { schema, type AcceptInviteFormValues } from '@/routes/auth/accept-invite/schema'
 
-const DEFAULTS: AcceptInviteFormValues = {
-  firstName: '',
-  lastName: '',
-  password: '',
-  confirmPassword: '',
-}
-
-/** Davet kabul — FormProvider + Zod + parola politikası. */
+/** Davet kabul formu — Zod + parola politikası; UI `FormProvider` ile sarar. */
 export function useAcceptInvite() {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token')?.trim() ?? ''
   const [serverError, setServerError] = useState<string>()
 
   const form = useForm<AcceptInviteFormValues>({
-    resolver: zodResolver(acceptInviteSchema),
-    defaultValues: DEFAULTS,
+    resolver: zodResolver(schema),
+    defaultValues,
     mode: 'onBlur',
     reValidateMode: 'onChange',
   })
 
-  const accept = useAppMutation({
+  const accept = useAppMutation<AuthMessageResult, AcceptInvitePayload>({
     mutationFn: authPublicService.acceptInvite,
     onSuccess: () => navigate('/login?invited=1', { replace: true }),
     onError: (error) => {
-      setServerError(
-        error instanceof ApiError && error.message ? error.message : t('invite.failed'),
-      )
+      setServerError(resolveAuthFormError(error, language, t('invite.failed')))
     },
   })
 

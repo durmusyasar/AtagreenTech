@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { FormProvider, useWatch } from 'react-hook-form'
-import { Link } from 'react-router-dom'
 import { AuthPageShell } from '@/Components/AuthPageShell'
+import type { AuthPageBanner } from '@/Components/AuthPageShell/type'
+import { BackToLoginLink } from '@/Components/BackToLoginLink'
 import { FormFloatingInput } from '@/Components/forms/FormFloatingInput'
 import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
 import { PasswordStrengthList } from '@/Components/PasswordStrengthList'
@@ -13,26 +14,30 @@ export function AcceptInvitePage() {
   const [showPass, setShowPass] = useState(false)
   const password = useWatch({ control: form.control, name: 'password' }) ?? ''
 
+  const banner: AuthPageBanner | undefined = !token
+    ? { tone: 'error', message: t('invite.missingToken') }
+    : serverError
+      ? { tone: 'error', message: serverError }
+      : undefined
+
+  if (!token) {
+    return (
+      <AuthPageShell
+        title={t('invite.title')}
+        description={t('invite.description')}
+        banner={banner}
+        footer={<BackToLoginLink />}
+      />
+    )
+  }
+
   return (
-    <AuthPageShell title={t('invite.title')} description={t('invite.description')}>
-      {!token ? (
-        <div
-          role="alert"
-          className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
-        >
-          {t('invite.missingToken')}
-        </div>
-      ) : null}
-
-      {serverError ? (
-        <div
-          role="alert"
-          className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
-        >
-          {serverError}
-        </div>
-      ) : null}
-
+    <AuthPageShell
+      title={t('invite.title')}
+      description={t('invite.description')}
+      banner={banner}
+      footer={<BackToLoginLink />}
+    >
       <FormProvider {...form}>
         <form onSubmit={onSubmit} noValidate className="space-y-4">
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
@@ -41,7 +46,6 @@ export function AcceptInvitePage() {
               type="text"
               autoComplete="given-name"
               label={t('invite.firstName')}
-              disabled={!token}
               autoClear
             />
             <FormFloatingInput<AcceptInviteFormValues>
@@ -49,7 +53,6 @@ export function AcceptInvitePage() {
               type="text"
               autoComplete="family-name"
               label={t('invite.lastName')}
-              disabled={!token}
               autoClear
             />
           </div>
@@ -60,14 +63,12 @@ export function AcceptInvitePage() {
               type={showPass ? 'text' : 'password'}
               autoComplete="new-password"
               label={t('invite.password')}
-              disabled={!token}
               endAdornment={
                 <PasswordVisibilityToggle
                   visible={showPass}
                   onToggle={() => setShowPass((value) => !value)}
                   showLabel={t('login.showPassword')}
                   hideLabel={t('login.hidePassword')}
-                  disabled={!token}
                 />
               }
             />
@@ -79,25 +80,23 @@ export function AcceptInvitePage() {
             type={showPass ? 'text' : 'password'}
             autoComplete="new-password"
             label={t('invite.confirmPassword')}
-            disabled={!token}
+            endAdornment={
+              <PasswordVisibilityToggle
+                visible={showPass}
+                onToggle={() => setShowPass((value) => !value)}
+                showLabel={t('login.showPassword')}
+                hideLabel={t('login.hidePassword')}
+              />
+            }
           />
 
           <button
             type="submit"
-            disabled={isSubmitting || !token}
+            disabled={isSubmitting}
             className="auth-submit mt-2 h-12 rounded-xl bg-brand px-4 text-sm font-semibold text-white shadow-[0_10px_24px_-12px_rgb(var(--brand-primary)/0.85)] transition-[background-color,box-shadow] duration-150 hover:bg-brand-hover disabled:opacity-50 disabled:shadow-none"
           >
             {isSubmitting ? t('invite.submitting') : t('invite.submit')}
           </button>
-
-          <div className="pt-1 text-center">
-            <Link
-              to="/login"
-              className="text-xs font-medium text-secondary transition-colors hover:text-primary"
-            >
-              ← {t('auth.backToLogin')}
-            </Link>
-          </div>
         </form>
       </FormProvider>
     </AuthPageShell>

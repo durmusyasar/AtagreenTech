@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { EMAIL_MAX_LENGTH } from '@/core/validation/emailLimits'
 import {
   LOGIN_PASSWORD_MIN_LENGTH,
   LOGIN_STEP,
@@ -33,6 +34,7 @@ export function createLoginSchema(step: LoginStep, mfaMode: MfaMode) {
       .string()
       .trim()
       .min(1, LOGIN_VALIDATION.emailRequired)
+      .max(EMAIL_MAX_LENGTH, LOGIN_VALIDATION.emailMaxLength)
       .check(z.email({ error: LOGIN_VALIDATION.emailInvalid })),
     password: z
       .string()

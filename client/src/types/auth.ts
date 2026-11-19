@@ -16,10 +16,7 @@ export interface AuthTokens {
 }
 
 /** Login sonrası karşılama / yönlendirme için özet. */
-export interface LoginResult {
-  accessToken: string
-  refreshToken: string
-  expiresAt: string
+export type LoginResult = AuthTokens & {
   userName: string
   tenant: string | null
   roles: string[]

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { FormProvider, useWatch } from 'react-hook-form'
-import { Link } from 'react-router-dom'
 import { AuthPageShell } from '@/Components/AuthPageShell'
+import { BackToLoginLink } from '@/Components/BackToLoginLink'
 import { FormFloatingInput } from '@/Components/forms/FormFloatingInput'
 import { PasswordVisibilityToggle } from '@/Components/forms/PasswordVisibilityToggle'
 import { PasswordStrengthList } from '@/Components/PasswordStrengthList'
@@ -13,26 +13,14 @@ export function ResetPasswordPage() {
   const [showPass, setShowPass] = useState(false)
   const newPassword = useWatch({ control: form.control, name: 'newPassword' }) ?? ''
 
+  const banner = !token
+    ? { tone: 'error' as const, message: t('reset.missingToken') }
+    : serverError
+      ? { tone: 'error' as const, message: serverError }
+      : undefined
+
   return (
-    <AuthPageShell title={t('reset.title')}>
-      {!token ? (
-        <div
-          role="alert"
-          className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
-        >
-          {t('reset.missingToken')}
-        </div>
-      ) : null}
-
-      {serverError ? (
-        <div
-          role="alert"
-          className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs text-red-600 dark:text-red-400"
-        >
-          {serverError}
-        </div>
-      ) : null}
-
+    <AuthPageShell title={t('reset.title')} banner={banner} footer={<BackToLoginLink />}>
       <FormProvider {...form}>
         <form onSubmit={onSubmit} noValidate className="space-y-4">
           <div className="space-y-2">
@@ -70,15 +58,6 @@ export function ResetPasswordPage() {
           >
             {isSubmitting ? t('reset.submitting') : t('reset.submit')}
           </button>
-
-          <div className="pt-1 text-center">
-            <Link
-              to="/login"
-              className="text-xs font-medium text-secondary transition-colors hover:text-primary"
-            >
-              ← {t('auth.backToLogin')}
-            </Link>
-          </div>
         </form>
       </FormProvider>
     </AuthPageShell>

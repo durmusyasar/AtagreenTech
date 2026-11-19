@@ -1,4 +1,4 @@
-import type { LoginFormValues, LoginStep, MfaMode } from '@/routes/auth/login/type'
+import type { LoginStep, MfaMode } from '@/routes/auth/login/type'
 
 /** Auth sonrası varsayılan yönlendirme (state.from yoksa). */
 export const LOGIN_DEFAULT_REDIRECT = '/' as const
@@ -12,14 +12,6 @@ export const MFA_MODE = {
   Totp: 'TOTP',
   Recovery: 'RECOVERY',
 } as const satisfies Record<string, MfaMode>
-
-/** RHF `defaultValues` — alan adları schema ile birebir. */
-export const LOGIN_FORM_DEFAULTS: LoginFormValues = {
-  email: '',
-  password: '',
-  rememberMe: false,
-  mfaInput: '',
-}
 
 /** Query string başarı bayrakları (`?invited=1`). */
 export const LOGIN_QUERY = {
@@ -44,6 +36,7 @@ export const RECOVERY_CODE_PATTERN = new RegExp(`^[A-Za-z0-9]{${RECOVERY_CODE_LE
 /** Zod / UI ortak i18n validation anahtarları. */
 export const LOGIN_VALIDATION = {
   emailRequired: 'validation.emailRequired',
+  emailMaxLength: 'validation.emailMaxLength',
   emailInvalid: 'validation.emailInvalid',
   passwordRequired: 'validation.passwordRequired',
   passwordMinLength: 'validation.passwordMinLength',

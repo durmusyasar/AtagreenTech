@@ -1,4 +1,4 @@
-import { ApiError, toApiError } from '@/core/api/apiError'
+import { toApiError } from '@/core/api/apiError'
 import { axiosClient } from '@/core/api/axiosClient'
 import { sessionStore } from '@/core/session'
 
@@ -26,7 +26,7 @@ async function postAuthMessage(url: string, body: unknown): Promise<AuthMessageR
     return data
   } catch (error) {
     const { language } = sessionStore.getSnapshot()
-    throw error instanceof ApiError ? error : toApiError(error, language)
+    throw toApiError(error, language)
   }
 }
 

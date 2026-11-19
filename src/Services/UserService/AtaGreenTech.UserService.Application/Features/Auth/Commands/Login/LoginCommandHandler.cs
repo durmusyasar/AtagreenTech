@@ -1,4 +1,3 @@
-using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -195,7 +194,7 @@ internal sealed class LoginCommandHandler(
         if (hasTotp)
         {
             valid = !string.IsNullOrWhiteSpace(user.TotpSecret)
-                && totpService.VerifyCode(user.TotpSecret, request.TotpCode!);
+                    && totpService.VerifyCode(user.TotpSecret, request.TotpCode!);
         }
         else if (hasRecovery)
         {

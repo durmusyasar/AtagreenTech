@@ -4,39 +4,37 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useLanguage } from '@/core/context/useLanguage'
 import { useAppMutation } from '@/core/hooks/useAppMutation'
 import { resolveAuthErrorMessage } from '@/core/i18n/authErrors'
-import { authPublicService } from '@/services/authPublicService'
-import type { ForgotPasswordFormValues } from '@/routes/auth/forgot-password/type'
-import { forgotPasswordSchema } from '@/routes/auth/forgot-password/validation/forgotPasswordSchema'
+import { authPublicService, type AuthMessageResult } from '@/services/authPublicService'
+import { defaultValues } from '@/routes/auth/forgot-password/defaultValues'
+import { schema, type ForgotPasswordFormValues } from '@/routes/auth/forgot-password/schema'
 
-const DEFAULTS: ForgotPasswordFormValues = { email: '' }
-
-/** Şifremi unuttum — FormProvider + Zod alan doğrulaması. */
+/** Şifremi unuttum formu — Zod alan doğrulaması; UI `FormProvider` ile sarar. */
 export function useForgotPassword() {
   const { language, t } = useLanguage()
   const [submittedEmail, setSubmittedEmail] = useState<string>()
-  const [formError, setFormError] = useState<string>()
+  const [serverError, setServerError] = useState<string>()
 
   const form = useForm<ForgotPasswordFormValues>({
-    resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: DEFAULTS,
+    resolver: zodResolver(schema),
+    defaultValues,
     mode: 'onBlur',
     reValidateMode: 'onChange',
   })
 
-  const forgot = useAppMutation({
-    mutationFn: (value: string) => authPublicService.forgotPassword(value),
+  const forgot = useAppMutation<AuthMessageResult, string>({
+    mutationFn: authPublicService.forgotPassword,
     onSuccess: (_data, value) => {
-      setFormError(undefined)
+      setServerError(undefined)
       setSubmittedEmail(value)
     },
     onError: (error) => {
       setSubmittedEmail(undefined)
-      setFormError(resolveAuthErrorMessage(error, language))
+      setServerError(resolveAuthErrorMessage(error, language))
     },
   })
 
   const onValid = (values: ForgotPasswordFormValues) => {
-    setFormError(undefined)
+    setServerError(undefined)
     forgot.mutate(values.email)
   }
 
@@ -44,7 +42,7 @@ export function useForgotPassword() {
     t,
     form,
     submittedEmail,
-    formError,
+    serverError,
     isSubmitting: forgot.isPending,
     onSubmit: form.handleSubmit(onValid),
   }

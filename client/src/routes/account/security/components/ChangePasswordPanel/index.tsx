@@ -89,7 +89,7 @@ export function ChangePasswordPanel({
           dependencies={['newPassword']}
           style={{ marginTop: 16 }}
           rules={[
-            { required: true, message: t('invite.confirmPasswordRequired') },
+            { required: true, message: t('validation.confirmPasswordRequired') },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('newPassword') === value) return Promise.resolve()

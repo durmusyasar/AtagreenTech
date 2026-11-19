@@ -1,9 +1,6 @@
-export interface AcceptInviteFormValues {
-  firstName: string
-  lastName: string
-  password: string
-  confirmPassword: string
-}
+import type { AcceptInviteFormValues } from '@/routes/auth/accept-invite/schema'
+
+export type { AcceptInviteFormValues }
 
 /** @deprecated AcceptInviteFormValues kullanın. */
 export type AcceptInviteForm = AcceptInviteFormValues

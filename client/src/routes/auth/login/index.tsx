@@ -83,10 +83,10 @@ export function LoginPage() {
             <div className="mb-5 lg:hidden">
               <BrandMark size={34} nameClassName="text-lg leading-none" />
             </div>
-            <h1 className="text-[1.65rem] font-semibold tracking-tight text-primary">
+            <h1 className="auth-page-title">
               {step === LOGIN_STEP.Credentials ? t('login.title') : t('login.mfaSubtitle')}
             </h1>
-            <p className="text-sm leading-relaxed text-secondary">
+            <p className="auth-page-description">
               {step === LOGIN_STEP.Credentials
                 ? t('login.subtitle')
                 : mfaMode === MFA_MODE.Totp

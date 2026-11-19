@@ -13,12 +13,12 @@ import { AuthErrorCodes, type LoginRequest, type LoginResult } from '@/types/aut
 import { buildLoginRequest } from '@/routes/auth/login/buildLoginRequest'
 import {
   LOGIN_DEFAULT_REDIRECT,
-  LOGIN_FORM_DEFAULTS,
   LOGIN_STEP,
   MFA_MODE,
 } from '@/routes/auth/login/constants'
+import { defaultValues } from '@/routes/auth/login/defaultValues'
+import { createLoginSchema } from '@/routes/auth/login/schema'
 import type { LoginFormValues, LoginStep, MfaMode } from '@/routes/auth/login/type'
-import { createLoginSchema } from '@/routes/auth/login/validation/loginSchema'
 
 function clearMfaField(
   form: ReturnType<typeof useForm<LoginFormValues>>,
@@ -54,7 +54,7 @@ export function useLoginForm() {
     // Adım/mod değişince güncel Zod kurallarını kullan (ilk mount resolver’ı kilitlenmesin).
     resolver: (values, context, options) =>
       zodResolver(schemaRef.current)(values, context, options),
-    defaultValues: LOGIN_FORM_DEFAULTS,
+    defaultValues,
     mode: 'onBlur',
     reValidateMode: 'onChange',
   })

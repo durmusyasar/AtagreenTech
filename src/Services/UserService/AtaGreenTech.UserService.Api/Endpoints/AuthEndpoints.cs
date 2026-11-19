@@ -59,12 +59,8 @@ public sealed class AuthEndpoints : IEndpointModule
         group.MapPost("/sso/{provider}/callback", SsoCallbackAsync).AllowAnonymous();
     }
 
-    private static async Task<IResult> LoginAsync(
-        LoginRequest request,
-        ISender sender,
-        HttpContext httpContext,
-        CancellationToken cancellationToken
-    )
+    private static async Task<IResult> LoginAsync(LoginRequest request, ISender sender, HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
         var result = await sender.Send(
             new LoginCommand(
@@ -78,9 +74,7 @@ public sealed class AuthEndpoints : IEndpointModule
             cancellationToken
         );
 
-        return result.IsSuccess
-            ? TypedResults.Ok(result.Response)
-            : AuthError(result);
+        return result.IsSuccess ? TypedResults.Ok(result.Response) : AuthError(result);
     }
 
     private static async Task<IResult> RefreshAsync(

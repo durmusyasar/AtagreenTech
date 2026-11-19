@@ -2,40 +2,37 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiError } from '@/core/api/apiError'
 import { useLanguage } from '@/core/context/useLanguage'
 import { useAppMutation } from '@/core/hooks/useAppMutation'
-import { authPublicService } from '@/services/authPublicService'
-import type { ResetPasswordFormValues } from '@/routes/auth/reset-password/type'
-import { resetPasswordSchema } from '@/routes/auth/reset-password/validation/resetPasswordSchema'
+import { resolveAuthFormError } from '@/core/i18n/resolveAuthFormError'
+import {
+  authPublicService,
+  type AuthMessageResult,
+  type ResetPasswordPayload,
+} from '@/services/authPublicService'
+import { defaultValues } from '@/routes/auth/reset-password/defaultValues'
+import { schema, type ResetPasswordFormValues } from '@/routes/auth/reset-password/schema'
 
-const DEFAULTS: ResetPasswordFormValues = {
-  newPassword: '',
-  confirmPassword: '',
-}
-
-/** Yeni şifre belirleme — FormProvider + Zod + parola politikası. */
+/** Yeni şifre formu — Zod + parola politikası; UI `FormProvider` ile sarar. */
 export function useResetPassword() {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token')?.trim() ?? ''
   const [serverError, setServerError] = useState<string>()
 
   const form = useForm<ResetPasswordFormValues>({
-    resolver: zodResolver(resetPasswordSchema),
-    defaultValues: DEFAULTS,
+    resolver: zodResolver(schema),
+    defaultValues,
     mode: 'onBlur',
     reValidateMode: 'onChange',
   })
 
-  const reset = useAppMutation({
+  const reset = useAppMutation<AuthMessageResult, ResetPasswordPayload>({
     mutationFn: authPublicService.resetPassword,
     onSuccess: () => navigate('/login?reset=1', { replace: true }),
     onError: (error) => {
-      setServerError(
-        error instanceof ApiError && error.message ? error.message : t('reset.failed'),
-      )
+      setServerError(resolveAuthFormError(error, language, t('reset.failed')))
     },
   })
 

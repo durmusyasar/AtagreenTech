@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
-import { ApiError, toApiError } from '@/core/api/apiError'
+import { toApiError } from '@/core/api/apiError'
 import { axiosClient } from '@/core/api/axiosClient'
 import { sessionStore } from '@/core/session'
 import type { ChangePasswordRequest, MfaSetupData, ActiveSessionItem } from '@/types/security'
@@ -12,7 +12,7 @@ async function wrap<T>(run: () => Promise<T>): Promise<T> {
     return await run()
   } catch (error) {
     const { language } = sessionStore.getSnapshot()
-    throw error instanceof ApiError ? error : toApiError(error, language)
+    throw toApiError(error, language)
   }
 }
 
