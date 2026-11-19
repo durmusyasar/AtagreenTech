@@ -33,13 +33,21 @@ internal sealed class GetNavigationMenusQueryHandler(
 
         var tenantId = currentTenant.Id.Value;
         var permissions = await UserPermissionResolver.ResolveAsync(db, userId, cancellationToken);
-        var cacheKey = BuildCacheKey(tenantId, currentUser.Roles, permissions);
+        var preferred = string.IsNullOrWhiteSpace(request.PreferredLanguage)
+            ? null
+            : NavigationTitleResolver.Normalize(request.PreferredLanguage);
+        var cacheKey = BuildCacheKey(tenantId, currentUser.Roles, permissions, preferred);
 
         if (cache.TryGet(cacheKey, out var cached) && cached is not null)
             return cached;
 
-        var rows = await catalog.GetActiveMenuRowsAsync(tenantId, cancellationToken);
-        var response = NavigationMenuTreeBuilder.Build(rows, permissions);
+        var snapshot = await catalog.GetActiveMenusAsync(tenantId, cancellationToken);
+        var response = NavigationMenuTreeBuilder.Build(
+            snapshot.Rows,
+            permissions,
+            preferred,
+            snapshot.DefaultLanguageCode
+        );
         cache.Set(cacheKey, response);
         return response;
     }
@@ -47,12 +55,16 @@ internal sealed class GetNavigationMenusQueryHandler(
     internal static string BuildCacheKey(
         Guid tenantId,
         IEnumerable<string>? roles,
-        IReadOnlyList<string> permissions
+        IReadOnlyList<string> permissions,
+        string? preferredLanguage
     )
     {
         var rolesPart = string.Join(',', (roles ?? []).OrderBy(r => r, StringComparer.OrdinalIgnoreCase));
         var permsPart = string.Join(',', permissions.OrderBy(p => p, StringComparer.OrdinalIgnoreCase));
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{rolesPart}|{permsPart}")))
+        var langPart = preferredLanguage ?? "-";
+        var hash = Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes($"{rolesPart}|{permsPart}|{langPart}"))
+            )
             .ToLowerInvariant()[..16];
         return $"nav:menus:{tenantId:D}:{hash}";
     }

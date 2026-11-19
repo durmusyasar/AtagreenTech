@@ -16,6 +16,7 @@ import { useNavigationMenus } from '@/hooks/useNavigationMenus'
 import { useNavigationStore } from '@/stores/navigationStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { resolveMenuIcon } from '@/utils/iconMapper'
+import { resolveNavTitle } from '@/utils/resolveNavTitle'
 import { filterByQuery, isCommandPaletteToggle } from '@/Components/command-palette/commandPaletteSearch'
 import type { CommandPaletteProps, PaletteCommand } from '@/Components/command-palette/CommandPalette/type'
 
@@ -31,6 +32,7 @@ const NAV_KEYWORDS: Record<string, string> = {
   '/admin/users': 'users kullanıcı admin invite davet',
   '/admin/roles': 'roles permissions rbac rol izin',
   '/admin/system': 'system sistem health bağlantı token tenant diagnostics',
+  '/system/menus': 'menu menü navigation katalog',
 }
 
 /**
@@ -74,7 +76,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     const pageCommands = flatItems.map(
       (item): PaletteCommand => ({
         id: item.code,
-        titleKey: item.translationKey,
+        title: resolveNavTitle(item.translations, item.title, language),
         categoryKey: 'command.category.pages',
         keywords: `${NAV_KEYWORDS[item.route] ?? ''} ${item.serviceName}`,
         icon: resolveMenuIcon(item.icon),
@@ -86,7 +88,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     if (access.can('stock.write')) {
       actionCommands.push({
         id: 'new-product',
-        titleKey: 'command.newProduct',
+        title: t('command.newProduct'),
         categoryKey: 'command.category.actions',
         keywords: 'new create ekle ürün product',
         icon: <PlusOutlined />,
@@ -99,7 +101,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       ...actionCommands,
       {
         id: 'theme-toggle',
-        titleKey: 'command.toggleTheme',
+        title: t('command.toggleTheme'),
         categoryKey: 'command.category.system',
         keywords: 'theme tema dark light dark mode',
         icon: <BgColorsOutlined />,
@@ -110,7 +112,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       },
       {
         id: 'lang-toggle',
-        titleKey: 'command.toggleLanguage',
+        title: t('command.toggleLanguage'),
         categoryKey: 'command.category.system',
         keywords: 'language dil tr en english türkçe',
         icon: <GlobalOutlined />,
@@ -121,7 +123,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       },
       {
         id: 'sign-out',
-        titleKey: 'header.signOut',
+        title: t('header.signOut'),
         categoryKey: 'command.category.system',
         keywords: 'logout çıkış sign out exit',
         icon: <LogoutOutlined />,
@@ -131,15 +133,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         },
       },
     ]
-  }, [access, flatItems, go, language, setLanguage, setOpen, signOut, toggleTheme])
+  }, [access, flatItems, go, language, setLanguage, setOpen, signOut, t, toggleTheme])
 
   const searchable = useMemo(
     () =>
       commands.map((command) => ({
         ...command,
-        title: t(command.titleKey),
         categoryLabel: t(command.categoryKey),
-        searchText: `${t(command.titleKey)} ${t(command.categoryKey)} ${command.keywords}`,
+        searchText: `${command.title} ${t(command.categoryKey)} ${command.keywords}`,
       })),
     [commands, t],
   )

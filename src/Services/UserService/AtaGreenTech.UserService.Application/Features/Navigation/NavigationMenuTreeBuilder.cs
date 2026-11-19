@@ -11,7 +11,9 @@ public static class NavigationMenuTreeBuilder
 {
     public static NavigationMenusResponse Build(
         IReadOnlyList<NavigationMenuRow> rows,
-        IReadOnlyList<string> userPermissions
+        IReadOnlyList<string> userPermissions,
+        string? preferredLanguage,
+        string? defaultLanguage
     )
     {
         var allowed = rows
@@ -28,14 +30,26 @@ public static class NavigationMenuTreeBuilder
         var roots = byParent.GetValueOrDefault(Guid.Empty) ?? [];
 
         var groups = roots
-            .GroupBy(r => (r.ServiceName, r.ServiceTranslationKey, r.ServiceDisplayOrder))
-            .OrderBy(g => g.Key.ServiceDisplayOrder)
+            .GroupBy(r => (r.ModuleCode, r.ServiceName, r.ModuleDisplayOrder))
+            .OrderBy(g => g.Key.ModuleDisplayOrder)
             .ThenBy(g => g.Key.ServiceName, StringComparer.OrdinalIgnoreCase)
-            .Select(g => new NavigationMenuGroupDto(
-                g.Key.ServiceName,
-                g.Key.ServiceTranslationKey,
-                g.Select(r => ToItem(r, byParent)).ToArray()
-            ))
+            .Select(g =>
+            {
+                var sample = g.First();
+                var moduleTranslations = sample.ModuleTranslations;
+                return new NavigationMenuGroupDto(
+                    g.Key.ModuleCode,
+                    g.Key.ServiceName,
+                    NavigationTitleResolver.Resolve(
+                        moduleTranslations,
+                        preferredLanguage,
+                        defaultLanguage,
+                        g.Key.ModuleCode
+                    ),
+                    moduleTranslations,
+                    g.Select(r => ToItem(r, byParent, preferredLanguage, defaultLanguage, [])).ToArray()
+                );
+            })
             .Where(g => g.Items.Count > 0)
             .ToArray();
 
@@ -44,22 +58,60 @@ public static class NavigationMenuTreeBuilder
 
     private static NavigationMenuItemDto ToItem(
         NavigationMenuRow row,
-        IReadOnlyDictionary<Guid, List<NavigationMenuRow>> byParent
+        IReadOnlyDictionary<Guid, List<NavigationMenuRow>> byParent,
+        string? preferredLanguage,
+        string? defaultLanguage,
+        HashSet<Guid> ancestors
     )
     {
-        var children = byParent.GetValueOrDefault(row.Id);
-        IReadOnlyList<NavigationMenuItemDto>? childDtos = null;
-        if (children is { Count: > 0 })
+        // Döngüsel ParentId zincirinde stack overflow'u engelle.
+        if (!ancestors.Add(row.Id))
         {
-            childDtos = children.Select(c => ToItem(c, byParent)).ToArray();
+            return new NavigationMenuItemDto(
+                row.Code,
+                row.RoutePath,
+                row.IconKey,
+                NavigationTitleResolver.Resolve(
+                    row.Translations,
+                    preferredLanguage,
+                    defaultLanguage,
+                    row.Code
+                ),
+                row.Translations,
+                null,
+                row.RequiredPermission
+            );
         }
 
-        return new NavigationMenuItemDto(
-            row.Code,
-            row.RoutePath,
-            row.IconKey,
-            row.TranslationKey,
-            childDtos
-        );
+        try
+        {
+            var children = byParent.GetValueOrDefault(row.Id);
+            IReadOnlyList<NavigationMenuItemDto>? childDtos = null;
+            if (children is { Count: > 0 })
+            {
+                childDtos = children
+                    .Select(c => ToItem(c, byParent, preferredLanguage, defaultLanguage, ancestors))
+                    .ToArray();
+            }
+
+            return new NavigationMenuItemDto(
+                row.Code,
+                row.RoutePath,
+                row.IconKey,
+                NavigationTitleResolver.Resolve(
+                    row.Translations,
+                    preferredLanguage,
+                    defaultLanguage,
+                    row.Code
+                ),
+                row.Translations,
+                childDtos,
+                row.RequiredPermission
+            );
+        }
+        finally
+        {
+            ancestors.Remove(row.Id);
+        }
     }
 }

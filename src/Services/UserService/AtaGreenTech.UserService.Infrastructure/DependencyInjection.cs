@@ -34,6 +34,7 @@ public static class DependencyInjection
             {
                 services.AddScoped<IUserDbContext, UserQueryContext>();
                 services.AddScoped<INavigationMenuCatalog, NavigationMenuCatalog>();
+                services.AddScoped<ISystemNavigationAdmin, SystemNavigationAdmin>();
                 services.AddSingleton<INavigationMenuCache, MemoryNavigationMenuCache>();
                 services.AddMemoryCache();
                 services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();

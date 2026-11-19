@@ -29,6 +29,7 @@ const SecurityRoute = lazyNamed(() => import('@/routes/account/security'), 'Secu
 const AdminUsersRoute = lazyNamed(() => import('@/routes/admin/users'), 'UsersPage')
 const AdminRolesRoute = lazyNamed(() => import('@/routes/admin/roles'), 'RolesPage')
 const AdminSystemRoute = lazyNamed(() => import('@/routes/admin/system'), 'SystemPage')
+const SystemMenusRoute = lazyNamed(() => import('@/routes/system/menus'), 'SystemMenusPage')
 
 function withSuspense(element: ReactNode) {
   return <Suspense fallback={<PageLoader />}>{element}</Suspense>
@@ -88,6 +89,14 @@ export function createAppRouter() {
           element: withSuspense(
             <RequireAuth permissions="system.read">
               <AdminSystemRoute />
+            </RequireAuth>,
+          ),
+        },
+        {
+          path: 'system/menus',
+          element: withSuspense(
+            <RequireAuth permissions="system.manage">
+              <SystemMenusRoute />
             </RequireAuth>,
           ),
         },

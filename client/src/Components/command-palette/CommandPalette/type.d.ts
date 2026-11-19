@@ -3,7 +3,8 @@ import type { MessageKey } from '@/core/i18n/messages'
 
 export interface PaletteCommand {
   id: string
-  titleKey: MessageKey
+  /** Önceden çözülmüş başlık (API menü veya `t(key)`). */
+  title: string
   categoryKey: MessageKey
   keywords: string
   icon: ReactNode

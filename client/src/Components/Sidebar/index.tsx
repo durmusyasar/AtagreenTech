@@ -4,6 +4,7 @@ import { useLanguage } from '@/core/context/useLanguage'
 import { useNavigationMenus } from '@/hooks/useNavigationMenus'
 import { useNavigationStore } from '@/stores/navigationStore'
 import { resolveMenuIcon } from '@/utils/iconMapper'
+import { resolveNavTitle } from '@/utils/resolveNavTitle'
 
 /**
  * Sol navigasyon — düz, kartsız satırlar; API menü grupları.
@@ -12,7 +13,7 @@ import { resolveMenuIcon } from '@/utils/iconMapper'
 export function Sidebar({ collapsed }: SidebarProps) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
   const { isPending, isError } = useNavigationMenus()
   const groups = useNavigationStore((s) => s.groups)
 
@@ -39,24 +40,27 @@ export function Sidebar({ collapsed }: SidebarProps) {
           <p className="px-2.5 text-xs text-muted">{t('menu.loadError')}</p>
         ) : null}
 
-        {groups.map((group) => (
+        {groups.map((group) => {
+          const groupTitle = resolveNavTitle(group.translations, group.title, language)
+          return (
           <div key={group.serviceName} className="space-y-0.5">
             {!collapsed ? (
               <p className="px-2.5 pb-1 pt-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-muted/80">
-                {t(group.translationKey)}
+                {groupTitle}
               </p>
             ) : (
               <div className="mx-auto mb-1 h-px w-6 bg-subtle/60 dark:bg-white/10" aria-hidden />
             )}
 
             {group.items.map((item) => {
+              const itemTitle = resolveNavTitle(item.translations, item.title, language)
               const active = item.route === '/' ? pathname === '/' : pathname.startsWith(item.route)
               return (
                 <button
                   key={item.code}
                   type="button"
                   onClick={() => navigate(item.route)}
-                  title={collapsed ? t(item.translationKey) : undefined}
+                  title={collapsed ? itemTitle : undefined}
                   className={[
                     'group relative flex w-full appearance-none items-center gap-2.5 rounded-lg border border-transparent bg-transparent px-2.5 py-2 text-left text-[13px] transition-colors duration-150',
                     collapsed ? 'justify-center px-2' : '',
@@ -81,12 +85,13 @@ export function Sidebar({ collapsed }: SidebarProps) {
                   >
                     {resolveMenuIcon(item.icon)}
                   </span>
-                  {!collapsed ? <span className="truncate">{t(item.translationKey)}</span> : null}
+                  {!collapsed ? <span className="truncate">{itemTitle}</span> : null}
                 </button>
               )
             })}
           </div>
-        ))}
+          )
+        })}
       </nav>
     </aside>
   )

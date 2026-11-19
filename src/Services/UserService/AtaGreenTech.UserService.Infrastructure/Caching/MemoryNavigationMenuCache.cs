@@ -42,6 +42,12 @@ internal sealed class MemoryNavigationMenuCache(IMemoryCache memoryCache) : INav
             memoryCache.Remove(key);
     }
 
+    public void InvalidateAll()
+    {
+        foreach (var tenantId in _tenantKeys.Keys.ToArray())
+            InvalidateTenant(tenantId);
+    }
+
     private static bool TryParseTenantId(string cacheKey, out Guid tenantId)
     {
         // nav:menus:{guid}:{hash}
