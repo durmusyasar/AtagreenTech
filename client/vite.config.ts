@@ -17,6 +17,9 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.join(rootDir, 'src'),
+        '@app': path.join(rootDir, 'src/app'),
+        '@core': path.join(rootDir, 'src/core'),
+        '@modules': path.join(rootDir, 'src/modules'),
       },
     },
     server: {
