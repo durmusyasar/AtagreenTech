@@ -14,7 +14,7 @@ vi.mock('../core/session', () => ({
     setTokens: vi.fn(),
     getSnapshot: () => ({
       token: null,
-      refreshToken: null,
+      refreshToken: 'refresh-token',
       expiresAt: null,
       rememberMe: false,
       tenant: 'atagreen',
@@ -39,6 +39,7 @@ import { sessionService } from '@/services/sessionService'
 
 const mockedPost = vi.mocked(axiosClient.post)
 const mockedSignIn = vi.mocked(sessionStore.signIn)
+const mockedSignOut = vi.mocked(sessionStore.signOut)
 const mockedGetMe = vi.mocked(sessionService.getCurrent)
 
 describe('authService.login', () => {
@@ -108,5 +109,52 @@ describe('authService.login', () => {
 
     expect(mockedSignIn).not.toHaveBeenCalled()
     expect(mockedGetMe).not.toHaveBeenCalled()
+  })
+
+  it('signs out when /auth/me fails after tokens are stored', async () => {
+    mockedPost.mockResolvedValue({
+      data: {
+        accessToken: 'access',
+        refreshToken: 'refresh',
+        expiresAt: '2026-11-16T12:00:00Z',
+      },
+    })
+    mockedGetMe.mockRejectedValue(
+      new ApiError({ message: 'me failed', status: 500, code: 'http_500' }),
+    )
+
+    await expect(
+      authService.login({ email: 'admin@omnisync.com', password: 'Admin123!' }),
+    ).rejects.toMatchObject({ code: 'http_500' })
+
+    expect(mockedSignIn).toHaveBeenCalled()
+    expect(mockedSignOut).toHaveBeenCalled()
+  })
+})
+
+describe('authService.logout', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('posts refresh token then signs out', async () => {
+    mockedPost.mockResolvedValue({ data: {} })
+
+    await authService.logout()
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      '/auth/logout',
+      { refreshToken: 'refresh-token' },
+      expect.objectContaining({ skipErrorNotification: true }),
+    )
+    expect(mockedSignOut).toHaveBeenCalled()
+  })
+
+  it('signs out even when logout request fails', async () => {
+    mockedPost.mockRejectedValue(new Error('network'))
+
+    await authService.logout()
+
+    expect(mockedSignOut).toHaveBeenCalled()
   })
 })

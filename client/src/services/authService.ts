@@ -1,22 +1,24 @@
-import axios from 'axios'
-import { ApiError, toApiError } from '@/core/api/apiError'
+import { toApiError } from '@/core/api/apiError'
 import { axiosClient } from '@/core/api/axiosClient'
-import { refreshAccessToken } from '@/core/api/refreshAccessToken'
 import { sessionStore } from '@/core/session'
 import type { AuthTokens, LoginRequest, LoginResult } from '@/types/auth'
+import type { CurrentSession } from '@/types/session'
 import { sessionService } from '@/services/sessionService'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+function displayName(me: CurrentSession): string {
+  return me.email || `${me.firstName} ${me.lastName}`.trim() || me.username
+}
 
 /**
  * Gerçek kimlik akışı: login → token çifti → `/auth/me`; logout sunucuya refresh iptali gönderir.
- * Refresh interceptor `refreshAccessToken` ile tek uçuş rotation yapar.
+ * Refresh interceptor `refreshAccessToken` ile tek uçuş rotation yapar (bu servisten re-export yok).
  */
 export const authService = {
   async login(request: LoginRequest): Promise<LoginResult> {
-    try {
-      const rememberMe = request.rememberMe === true
+    const rememberMe = request.rememberMe === true
+    const { language } = sessionStore.getSnapshot()
 
+    try {
       const { data } = await axiosClient.post<AuthTokens>(
         '/auth/login',
         {
@@ -36,31 +38,31 @@ export const authService = {
         rememberMe,
       })
 
-      const me = await sessionService.getCurrent()
-      return {
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        expiresAt: data.expiresAt,
-        userName: me.email || `${me.firstName} ${me.lastName}`.trim() || me.username,
-        tenant: sessionStore.getSnapshot().tenant,
-        roles: me.roles,
+      try {
+        const me = await sessionService.getCurrent()
+        return {
+          ...data,
+          userName: displayName(me),
+          tenant: sessionStore.getSnapshot().tenant,
+          roles: me.roles,
+        }
+      } catch (error) {
+        sessionStore.signOut()
+        throw toApiError(error, language)
       }
     } catch (error) {
-      const { language } = sessionStore.getSnapshot()
-      throw error instanceof ApiError ? error : toApiError(error, language)
+      throw toApiError(error, language)
     }
   },
-
-  refresh: refreshAccessToken,
 
   async logout(): Promise<void> {
     const { refreshToken } = sessionStore.getSnapshot()
     try {
       if (refreshToken) {
-        await axios.post(
-          `${API_BASE_URL}/auth/logout`,
+        await axiosClient.post(
+          '/auth/logout',
           { refreshToken },
-          { headers: { Accept: 'application/json' }, timeout: 10_000 },
+          { skipErrorNotification: true },
         )
       }
     } catch {

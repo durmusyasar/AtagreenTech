@@ -1,25 +1,23 @@
 /** @vitest-environment happy-dom */
 import { describe, expect, it } from 'vitest'
 import {
-  LOGIN_FORM_DEFAULTS,
   LOGIN_PASSWORD_MIN_LENGTH,
   LOGIN_STEP,
   LOGIN_VALIDATION,
   MFA_MODE,
 } from '@/routes/auth/login/constants'
-import { createLoginSchema } from '@/routes/auth/login/validation/loginSchema'
+import { defaultValues } from '@/routes/auth/login/defaultValues'
+import { createLoginSchema } from '@/routes/auth/login/schema'
 
 const validCredentials = {
-  ...LOGIN_FORM_DEFAULTS,
+  ...defaultValues,
   email: 'admin@omnisync.com',
   password: 'secret1',
 }
 
 describe('createLoginSchema', () => {
   it('rejects empty email/password with i18n keys', () => {
-    const result = createLoginSchema(LOGIN_STEP.Credentials, MFA_MODE.Totp).safeParse(
-      LOGIN_FORM_DEFAULTS,
-    )
+    const result = createLoginSchema(LOGIN_STEP.Credentials, MFA_MODE.Totp).safeParse(defaultValues)
     expect(result.success).toBe(false)
     if (result.success) return
     const messages = result.error.issues.map((issue) => issue.message)
@@ -29,7 +27,7 @@ describe('createLoginSchema', () => {
 
   it('rejects invalid email', () => {
     const result = createLoginSchema(LOGIN_STEP.Credentials, MFA_MODE.Totp).safeParse({
-      ...LOGIN_FORM_DEFAULTS,
+      ...defaultValues,
       email: 'not-an-email',
       password: 'secret1',
     })
@@ -42,7 +40,7 @@ describe('createLoginSchema', () => {
 
   it('rejects bare local-part email like "asd"', () => {
     const result = createLoginSchema(LOGIN_STEP.Credentials, MFA_MODE.Totp).safeParse({
-      ...LOGIN_FORM_DEFAULTS,
+      ...defaultValues,
       email: 'asd',
       password: 'secret1',
     })
@@ -56,7 +54,7 @@ describe('createLoginSchema', () => {
 
   it('rejects password shorter than minimum length', () => {
     const result = createLoginSchema(LOGIN_STEP.Credentials, MFA_MODE.Totp).safeParse({
-      ...LOGIN_FORM_DEFAULTS,
+      ...defaultValues,
       email: 'admin@omnisync.com',
       password: 'a'.repeat(LOGIN_PASSWORD_MIN_LENGTH - 1),
     })

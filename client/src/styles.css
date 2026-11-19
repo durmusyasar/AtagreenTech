@@ -156,6 +156,19 @@
   animation: auth-panel-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* AuthPageShell + LoginPage ortak başlık / açıklama */
+.auth-page-title {
+  @apply text-[1.65rem] font-semibold tracking-tight text-primary;
+}
+
+.auth-page-description {
+  @apply text-sm leading-relaxed text-secondary;
+}
+
+.auth-page-banner {
+  @apply rounded-2xl border p-3.5 text-xs leading-relaxed;
+}
+
 .app-shell-rise {
   animation: auth-panel-rise 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
