@@ -24,7 +24,8 @@ export function MenuFormDrawer({ open, menu, onClose, onSaved }: MenuFormDrawerP
   const serverErrors = useServerErrors(form, {
     rootFields: ['code', 'moduleId', 'routePath', 'iconKey', 'requiredPermission'],
   })
-  const [activeLanguage, setActiveLanguage] = useState(language)
+  // API dil kodları UI Language union'ından bağımsız olabilir.
+  const [activeLanguage, setActiveLanguage] = useState<string>(language)
 
   const languagesQuery = useQuery({ ...systemMenusQueries.languages(), enabled: open })
   const modulesQuery = useQuery({ ...systemMenusQueries.modules(), enabled: open })
