@@ -1,34 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
 import { Button, DatePicker, Drawer, Flex, Space, Switch, Table, Tag, Typography } from 'antd'
-import dayjs, { type Dayjs } from 'dayjs'
+import dayjs from 'dayjs'
 import { useEffect, useMemo, useState } from 'react'
 import { useLanguage } from '@/core/context/useLanguage'
 import {
   tenantsQueries,
-  type TenantListItem,
   type TenantModuleItem,
   type TenantModuleItemRequest,
 } from '@modules/system/api/tenantsService'
-
-interface TenantModulesDrawerProps {
-  tenant: TenantListItem | null
-  saving: boolean
-  onClose: () => void
-  onSave: (modules: TenantModuleItemRequest[]) => void
-}
-
-interface DraftRow {
-  moduleId: string
-  code: string
-  name: string
-  isCore: boolean
-  isEnabled: boolean
-  expiresAtUtc: Dayjs | null
-}
+import type {
+  TenantModuleDraftRow,
+  TenantModulesDrawerProps,
+} from '@modules/system/components/TenantModulesDrawer/type'
 
 export function TenantModulesDrawer({ tenant, saving, onClose, onSave }: TenantModulesDrawerProps) {
   const { t } = useLanguage()
-  const [draft, setDraft] = useState<DraftRow[]>([])
+  const [draft, setDraft] = useState<TenantModuleDraftRow[]>([])
 
   const modulesQuery = useQuery({
     ...tenantsQueries.modules(tenant?.id ?? ''),
@@ -67,7 +54,7 @@ export function TenantModulesDrawer({ tenant, saving, onClose, onSave }: TenantM
       }
     >
       <Typography.Paragraph type="secondary">{t('tenants.modulesHint')}</Typography.Paragraph>
-      <Table<DraftRow>
+      <Table<TenantModuleDraftRow>
         rowKey="moduleId"
         size="small"
         loading={modulesQuery.isFetching}
@@ -131,7 +118,7 @@ export function TenantModulesDrawer({ tenant, saving, onClose, onSave }: TenantM
   )
 }
 
-function toDraft(item: TenantModuleItem): DraftRow {
+function toDraft(item: TenantModuleItem): TenantModuleDraftRow {
   return {
     moduleId: item.moduleId,
     code: item.code,
@@ -142,7 +129,7 @@ function toDraft(item: TenantModuleItem): DraftRow {
   }
 }
 
-function fromDraft(row: DraftRow): TenantModuleItemRequest {
+function fromDraft(row: TenantModuleDraftRow): TenantModuleItemRequest {
   return {
     moduleId: row.moduleId,
     isEnabled: row.isEnabled,

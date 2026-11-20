@@ -1,24 +1,14 @@
 import { Form, Input, Modal } from 'antd'
 import { useEffect } from 'react'
 import { useLanguage } from '@/core/context/useLanguage'
-import type { CreateTenantRequest } from '@modules/system/api/tenantsService'
-
-interface TenantCreateModalProps {
-  open: boolean
-  confirming: boolean
-  onClose: () => void
-  onSubmit: (body: CreateTenantRequest) => void
-}
-
-interface FormValues {
-  name: string
-  slug: string
-  adminEmail?: string
-}
+import type {
+  TenantCreateFormValues,
+  TenantCreateModalProps,
+} from '@modules/system/components/TenantCreateModal/type'
 
 export function TenantCreateModal({ open, confirming, onClose, onSubmit }: TenantCreateModalProps) {
   const { t } = useLanguage()
-  const [form] = Form.useForm<FormValues>()
+  const [form] = Form.useForm<TenantCreateFormValues>()
 
   useEffect(() => {
     if (!open) form.resetFields()
