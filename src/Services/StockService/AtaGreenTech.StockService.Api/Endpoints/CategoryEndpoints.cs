@@ -5,6 +5,7 @@ using AtaGreenTech.StockService.Application.Features.Categories.Commands.UpdateC
 using AtaGreenTech.StockService.Application.Features.Categories.Queries.GetCategoriesWithPagination;
 using MediatR;
 using OmniSync.Core.Domain.Common;
+using AtaGreenTech.StockService.Api.Security;
 using OmniSync.Core.Infrastructure.Endpoints;
 
 namespace AtaGreenTech.StockService.Api.Endpoints;
@@ -20,6 +21,8 @@ public sealed class CategoryEndpoints : IEndpointModule
 
     public void MapEndpoints(RouteGroupBuilder group)
     {
+        group.RequireModule(ModuleCodes.Stock);
+
         group.MapGet("", (
             ISender sender,
             CancellationToken cancellationToken,

@@ -4,6 +4,7 @@ using AtaGreenTech.StockService.Application.Features.UnitsOfMeasure.Commands.Cre
 using AtaGreenTech.StockService.Application.Features.UnitsOfMeasure.Commands.UpdateUnitOfMeasure;
 using AtaGreenTech.StockService.Application.Features.UnitsOfMeasure.Queries.GetUnitsOfMeasure;
 using MediatR;
+using AtaGreenTech.StockService.Api.Security;
 using OmniSync.Core.Infrastructure.Endpoints;
 
 namespace AtaGreenTech.StockService.Api.Endpoints;
@@ -19,6 +20,8 @@ public sealed class UnitOfMeasureEndpoints : IEndpointModule
 
     public void MapEndpoints(RouteGroupBuilder group)
     {
+        group.RequireModule(ModuleCodes.Stock);
+
         group.MapGet("", (
             ISender sender,
             CancellationToken cancellationToken,

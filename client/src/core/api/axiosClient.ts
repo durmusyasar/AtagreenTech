@@ -5,6 +5,7 @@ import { toApiError } from '@/core/api/apiError'
 import { delay, NETWORK_RETRY_DELAY_MS, nextRetryConfig, shouldRetryNetworkError } from '@/core/api/networkRetry'
 import { notify } from '@/core/api/notifier'
 import { refreshAccessToken } from '@/core/api/refreshAccessToken'
+import { useNavigationStore } from '@/stores/navigationStore'
 
 declare module 'axios' {
   interface AxiosRequestConfig {
@@ -147,6 +148,31 @@ axiosClient.interceptors.response.use(
         if (!(isAxiosError(error) && error.config?.skipErrorNotification)) {
           notify('warning', translate(language, 'error.unauthorized'), 'unauthorized')
         }
+      }
+    } else if (
+      apiError.status === 403 &&
+      apiError.code === 'MODULE_NOT_SUBSCRIBED'
+    ) {
+      // Tenant aboneliği kapandı (#67): store'dan modülü düşür → ModuleGuard NotSubscribed gösterir.
+      const raw = isAxiosError(error) ? error.response?.data : null
+      const moduleCode =
+        raw && typeof raw === 'object' && 'moduleCode' in raw && typeof raw.moduleCode === 'string'
+          ? raw.moduleCode
+          : null
+      if (moduleCode) {
+        useNavigationStore.getState().revokeModule(moduleCode)
+      }
+      if (!(isAxiosError(error) && error.config?.skipErrorNotification)) {
+        const labelKey = moduleCode ? (`modules.${moduleCode}` as const) : null
+        const label =
+          labelKey && moduleCode
+            ? translate(language, labelKey, [])
+            : moduleCode ?? 'module'
+        notify(
+          'warning',
+          translate(language, 'moduleUnavailable.description', [label]),
+          'MODULE_NOT_SUBSCRIBED',
+        )
       }
     } else if (!(isAxiosError(error) && error.config?.skipErrorNotification)) {
       if (!(apiError.code === 'network_error' && !isOnline)) {

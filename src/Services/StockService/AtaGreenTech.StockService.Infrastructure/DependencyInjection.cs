@@ -5,6 +5,7 @@ using AtaGreenTech.StockService.Application.Interfaces;
 using AtaGreenTech.StockService.Domain.Localization;
 using AtaGreenTech.StockService.Infrastructure.Persistence;
 using AtaGreenTech.StockService.Infrastructure.Persistence.Master;
+using AtaGreenTech.StockService.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSync.Core.Infrastructure.Authentication;
@@ -34,6 +35,8 @@ public static class DependencyInjection
                 services.AddScoped<IStockDbContext, StockQueryContext>();
                 services.AddScoped<IStockBalanceLocker, StockBalanceLocker>();
                 services.AddScoped<ITenantBrandingReader, TenantBrandingReader>();
+                services.AddMemoryCache();
+                services.AddScoped<IModuleSubscriptionChecker, ModuleSubscriptionChecker>();
 
                 // UserService JWT sözleşmesi: Issuer/Audience JwtContract ile birebir aynı olmalı.
                 services.AddOptions<JwtOptions>()

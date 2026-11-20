@@ -17,6 +17,8 @@ export interface ProblemDetails {
   errors?: Record<string, string[]>
   resourceKey?: string
   parameters?: string[]
+  /** #67 MODULE_NOT_SUBSCRIBED yanıtında kapalı modül kodu. */
+  moduleCode?: string
 }
 
 export interface PagedResult<T> {

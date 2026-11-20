@@ -66,6 +66,7 @@ describe('navigationStore', () => {
     expect(useNavigationStore.getState().groups).toEqual([])
     expect(useNavigationStore.getState().flatItems).toEqual([])
     expect(useNavigationStore.getState().subscribedModuleCodes).toEqual([])
+    expect(useNavigationStore.getState().isMenusLoaded).toBe(false)
   })
 
   it('stores subscribedModuleCodes for ModuleGuard prep', () => {
@@ -75,5 +76,35 @@ describe('navigationStore', () => {
       'STOCK',
       'SYSTEM',
     ])
+    expect(useNavigationStore.getState().isMenusLoaded).toBe(true)
+  })
+
+  it('revokeModule drops subscription and menu group', () => {
+    useNavigationStore.getState().setMenus(
+      [
+        {
+          moduleCode: 'STOCK',
+          serviceName: 'StockService',
+          title: 'Stok',
+          translations: { tr: 'Stok' },
+          items: [
+            {
+              code: 'stock.products',
+              route: '/products',
+              icon: 'products',
+              title: 'Ürünler',
+              translations: { tr: 'Ürünler' },
+            },
+          ],
+        },
+      ],
+      ['GENERAL', 'STOCK'],
+    )
+
+    useNavigationStore.getState().revokeModule('STOCK')
+
+    expect(useNavigationStore.getState().subscribedModuleCodes).toEqual(['GENERAL'])
+    expect(useNavigationStore.getState().groups).toEqual([])
+    expect(useNavigationStore.getState().flatItems).toEqual([])
   })
 })
