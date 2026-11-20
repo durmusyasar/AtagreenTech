@@ -64,9 +64,9 @@ public sealed class TenantIdentitySeeder(
             );
         }
 
-        var (passwordOk, passwordMessage) = PasswordRules.Validate(resolved.Password);
+        var (passwordOk, passwordErrorCode, _) = PasswordRules.Validate(resolved.Password);
         if (!passwordOk)
-            throw new ArgumentException($"Geçersiz başlangıç şifresi: {passwordMessage}", nameof(request));
+            throw new ArgumentException($"Geçersiz başlangıç şifresi: {passwordErrorCode}", nameof(request));
 
         var admin = new User(
             email,

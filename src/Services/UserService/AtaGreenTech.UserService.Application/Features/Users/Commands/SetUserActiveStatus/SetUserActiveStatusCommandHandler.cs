@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -25,7 +26,7 @@ internal sealed class SetUserActiveStatusCommandHandler(
             throw new UnauthorizedAccessException("Geçerli bir oturum bulunamadı.");
 
         if (request.Id == adminId && !request.IsActive)
-            return MessageResult.Fail("Kendi hesabınızı pasife alamazsınız.");
+            return MessageResult.Fail(ErrorCodes.UserCannotModifySelf);
 
         var user = await users.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(User), request.Id);
@@ -45,7 +46,7 @@ internal sealed class SetUserActiveStatusCommandHandler(
                     cancellationToken
                 );
                 if (otherActiveAdmins == 0)
-                    return MessageResult.Fail("Son aktif Admin hesabı pasife alınamaz.");
+                    return MessageResult.Fail(ErrorCodes.UserLastAdmin);
             }
 
             user.Deactivate();

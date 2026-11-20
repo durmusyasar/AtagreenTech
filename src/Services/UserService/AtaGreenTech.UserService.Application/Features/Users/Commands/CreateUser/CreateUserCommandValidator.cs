@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Domain.Entities;
 using FluentValidation;
@@ -13,16 +14,20 @@ internal sealed class CreateUserCommandValidator : AbstractValidator<CreateUserC
         Role.Names.Viewer,
     ];
 
-    public CreateUserCommandValidator()
+    public CreateUserCommandValidator(IErrorLocalizer localizer)
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(User.EmailMaxLength);
-        RuleFor(x => x.Password).ApplyStrongPassword();
+        RuleFor(x => x.Password).ApplyStrongPassword(localizer);
         RuleFor(x => x.FirstName).NotEmpty().MaximumLength(User.NameMaxLength);
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(User.NameMaxLength);
         RuleFor(x => x.Roles)
             .NotEmpty()
             .Must(roles => roles.All(r =>
                 AllowedRoles.Contains(Role.NormalizeName(r), StringComparer.OrdinalIgnoreCase)))
-            .WithMessage($"Roles must be one or more of: {string.Join(", ", AllowedRoles)}.");
+            .WithLocalizedMessage(
+                localizer,
+                ErrorCodes.UserRolesInvalid,
+                string.Join(", ", AllowedRoles)
+            );
     }
 }

@@ -14,7 +14,7 @@ public class InventoryValidatorTests
     [Fact]
     public void Valid_outbound_command_passes()
     {
-        Assert.True(new CreateOutboundMovementCommandValidator().Validate(ValidOutbound()).IsValid);
+        Assert.True(new CreateOutboundMovementCommandValidator(TestLocalizers.Passthrough).Validate(ValidOutbound()).IsValid);
     }
 
     [Theory]
@@ -23,7 +23,7 @@ public class InventoryValidatorTests
     [InlineData(0.00001)]
     public void Invalid_quantity_fails(decimal quantity)
     {
-        var result = new CreateOutboundMovementCommandValidator().Validate(ValidOutbound() with { Quantity = quantity });
+        var result = new CreateOutboundMovementCommandValidator(TestLocalizers.Passthrough).Validate(ValidOutbound() with { Quantity = quantity });
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateOutboundMovementCommand.Quantity));
     }
@@ -33,7 +33,7 @@ public class InventoryValidatorTests
     [InlineData(1.001)]
     public void Invalid_unit_price_fails(decimal unitPrice)
     {
-        var result = new CreateOutboundMovementCommandValidator().Validate(ValidOutbound() with { UnitPrice = unitPrice });
+        var result = new CreateOutboundMovementCommandValidator(TestLocalizers.Passthrough).Validate(ValidOutbound() with { UnitPrice = unitPrice });
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateOutboundMovementCommand.UnitPrice));
     }
@@ -46,7 +46,7 @@ public class InventoryValidatorTests
             DocumentReference = new string('x', StockMovement.DocumentReferenceMaxLength + 1),
         };
 
-        var result = new CreateOutboundMovementCommandValidator().Validate(command);
+        var result = new CreateOutboundMovementCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateOutboundMovementCommand.DocumentReference));
     }
@@ -57,7 +57,7 @@ public class InventoryValidatorTests
         var warehouseId = Guid.NewGuid();
         var command = new CreateTransferMovementCommand(warehouseId, warehouseId, Guid.NewGuid(), 1m, 0m, null, null);
 
-        var result = new CreateTransferMovementCommandValidator().Validate(command);
+        var result = new CreateTransferMovementCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateTransferMovementCommand.TargetWarehouseId));
     }
@@ -68,7 +68,7 @@ public class InventoryValidatorTests
     [InlineData("", false)]
     public void Warehouse_code_format_is_validated(string code, bool isValid)
     {
-        var result = new CreateWarehouseCommandValidator().Validate(new CreateWarehouseCommand("Merkez", code, null));
+        var result = new CreateWarehouseCommandValidator(TestLocalizers.Passthrough).Validate(new CreateWarehouseCommand("Merkez", code, null));
 
         Assert.Equal(isValid, result.IsValid);
     }
@@ -78,7 +78,7 @@ public class InventoryValidatorTests
     {
         var now = DateTimeOffset.UtcNow;
 
-        var result = new GetStockMovementsQueryValidator().Validate(new GetStockMovementsQuery(From: now, To: now.AddDays(-1)));
+        var result = new GetStockMovementsQueryValidator(TestLocalizers.Passthrough).Validate(new GetStockMovementsQuery(From: now, To: now.AddDays(-1)));
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(GetStockMovementsQuery.To));
     }

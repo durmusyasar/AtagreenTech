@@ -12,18 +12,18 @@ public sealed class PasswordRulesTests
     [InlineData("NoSpecial1")]
     public void Validate_rejects_weak_passwords(string password)
     {
-        var (isValid, message) = PasswordRules.Validate(password);
+        var (isValid, errorCode, _) = PasswordRules.Validate(password);
 
         Assert.False(isValid);
-        Assert.False(string.IsNullOrWhiteSpace(message));
+        Assert.False(string.IsNullOrWhiteSpace(errorCode));
     }
 
     [Fact]
     public void Validate_accepts_strong_password()
     {
-        var (isValid, message) = PasswordRules.Validate("Admin123!");
+        var (isValid, errorCode, _) = PasswordRules.Validate("Admin123!");
 
         Assert.True(isValid);
-        Assert.Equal(string.Empty, message);
+        Assert.Equal(string.Empty, errorCode);
     }
 }

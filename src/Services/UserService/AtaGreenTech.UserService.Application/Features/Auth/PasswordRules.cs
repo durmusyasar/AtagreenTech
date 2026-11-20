@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using AtaGreenTech.SharedKernel.Localization;
 using FluentValidation;
 
 namespace AtaGreenTech.UserService.Application.Features.Auth;
@@ -11,38 +12,39 @@ public static partial class PasswordRules
     public const int MinLength = 8;
     public const int MaxLength = 128;
 
-    public static (bool IsValid, string Message) Validate(string? password)
+    public static (bool IsValid, string ErrorCode, object[] Args) Validate(string? password)
     {
         if (string.IsNullOrWhiteSpace(password) || password.Length < MinLength)
-            return (false, "Şifre en az 8 karakter uzunluğunda olmalıdır.");
+            return (false, ErrorCodes.ValidationPasswordMinLength, [MinLength]);
 
         if (password.Length > MaxLength)
-            return (false, $"Şifre en fazla {MaxLength} karakter olabilir.");
+            return (false, ErrorCodes.ValidationPasswordMaxLength, [MaxLength]);
 
         if (!password.Any(char.IsUpper))
-            return (false, "Şifre en az bir büyük harf içermelidir.");
+            return (false, ErrorCodes.ValidationPasswordUpper, []);
 
         if (!password.Any(char.IsLower))
-            return (false, "Şifre en az bir küçük harf içermelidir.");
+            return (false, ErrorCodes.ValidationPasswordLower, []);
 
         if (!password.Any(char.IsDigit))
-            return (false, "Şifre en az bir rakam içermelidir.");
+            return (false, ErrorCodes.ValidationPasswordDigit, []);
 
         if (!SpecialCharRegex().IsMatch(password))
-            return (false, "Şifre en az bir özel karakter içermelidir.");
+            return (false, ErrorCodes.ValidationPasswordSpecial, []);
 
-        return (true, string.Empty);
+        return (true, string.Empty, []);
     }
 
     public static IRuleBuilderOptionsConditions<T, string> ApplyStrongPassword<T>(
-        this IRuleBuilder<T, string> rule
+        this IRuleBuilder<T, string> rule,
+        IErrorLocalizer localizer
     ) =>
         rule.Custom(
             (password, context) =>
             {
-                var (isValid, message) = Validate(password);
+                var (isValid, errorCode, args) = Validate(password);
                 if (!isValid)
-                    context.AddFailure(message);
+                    context.AddFailure(localizer.Localize(errorCode, args));
             }
         );
 

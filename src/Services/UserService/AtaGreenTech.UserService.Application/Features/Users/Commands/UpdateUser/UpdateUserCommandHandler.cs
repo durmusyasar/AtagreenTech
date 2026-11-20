@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.DTOs;
 using AtaGreenTech.UserService.Application.Features.Users;
 using AtaGreenTech.UserService.Application.Interfaces;
@@ -31,7 +32,7 @@ internal sealed class UpdateUserCommandHandler(
         {
             var desired = await UserManagementHelpers.ResolveRolesAsync(db.Roles, request.Roles, cancellationToken);
             if (desired.Count == 0)
-                return UserWriteResult.Fail("En az bir geçerli rol seçilmelidir.");
+                return UserWriteResult.Fail(ErrorCodes.UserRoleRequired);
 
             var existing = await userRoles.GetAllByFilterAsync(ur => ur.UserId == user.Id, cancellationToken);
             var desiredIds = desired.Select(r => r.Id).ToHashSet();

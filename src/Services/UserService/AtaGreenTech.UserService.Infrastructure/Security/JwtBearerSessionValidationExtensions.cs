@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.SharedKernel.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
@@ -50,6 +51,7 @@ internal static class JwtBearerSessionValidationExtensions
                 if (context.HttpContext.Items.TryGetValue(AccessTokenErrorCodes.TokenRevoked, out var code)
                     && code is string errorCode)
                 {
+                    var localizer = context.HttpContext.RequestServices.GetRequiredService<IErrorLocalizer>();
                     context.HandleResponse();
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     context.Response.ContentType = "application/json";
@@ -57,8 +59,7 @@ internal static class JwtBearerSessionValidationExtensions
                         new
                         {
                             errorCode,
-                            detail = context.ErrorDescription
-                                ?? "Access token is no longer valid.",
+                            detail = localizer.Localize(ErrorCodes.TokenRevoked),
                         }
                     );
                 }

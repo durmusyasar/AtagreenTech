@@ -1,10 +1,11 @@
 using AtaGreenTech.UserService.Application.Features.Users.Commands.CreateUser;
+using AtaGreenTech.UserService.Tests;
 
 namespace AtaGreenTech.UserService.Tests.Application;
 
 public sealed class CreateUserCommandValidatorTests
 {
-    private readonly CreateUserCommandValidator _validator = new();
+    private readonly CreateUserCommandValidator _validator = new(TestLocalizers.Passthrough);
 
     [Fact]
     public async Task Valid_command_passes()

@@ -20,24 +20,30 @@ function httpError(status: number, data: unknown): AxiosError {
 }
 
 describe('toApiError', () => {
-  it('translates a business rule (422) by resource key and parameters', () => {
-    const error = toApiError(
+  it('prefers backend detail on 422 and falls back to resource key', () => {
+    const withDetail = toApiError(
       httpError(422, {
         errorCode: 'business_rule_violation',
         resourceKey: 'Localization.TranslationsBelowMinimum',
         parameters: ['2'],
+        detail: 'En az 2 farklı dilde çeviri girilmelidir.',
         traceId: 'trace-1',
       }),
       'tr',
     )
 
-    expect(error.message).toBe('En az 2 farklı dilde çeviri girilmelidir.')
-    expect(error).toMatchObject({ status: 422, code: 'business_rule_violation', traceId: 'trace-1' })
-    expect(toApiError(httpError(422, { resourceKey: 'Localization.DefaultLanguageMissing', parameters: ['tr'] }), 'en').message)
-      .toBe('Translations must include the system default language (tr).')
+    expect(withDetail.message).toBe('En az 2 farklı dilde çeviri girilmelidir.')
+    expect(withDetail).toMatchObject({ status: 422, code: 'business_rule_violation', traceId: 'trace-1' })
+
+    expect(
+      toApiError(
+        httpError(422, { resourceKey: 'Localization.DefaultLanguageMissing', parameters: ['tr'] }),
+        'en',
+      ).message,
+    ).toBe('Translations must include the system default language (tr).')
   })
 
-  it('formats numeric parameters in the UI language and keeps the raw parameters', () => {
+  it('formats numeric parameters only when detail is absent', () => {
     const problem = {
       resourceKey: 'Inventory.InsufficientStock',
       parameters: ['w-1', 'p-1', '1250.5000', '2000'],
@@ -45,6 +51,7 @@ describe('toApiError', () => {
 
     expect(toApiError(httpError(422, problem), 'tr').message).toBe('Yetersiz stok: mevcut 1.250,5, istenen 2.000.')
     expect(toApiError(httpError(422, problem), 'en').message).toBe('Insufficient stock: available 1,250.5, requested 2,000.')
+    expect(toApiError(httpError(422, { ...problem, detail: 'BE detail' }), 'tr').message).toBe('BE detail')
     expect(toApiError(httpError(422, problem), 'tr').parameters).toEqual(problem.parameters)
   })
 

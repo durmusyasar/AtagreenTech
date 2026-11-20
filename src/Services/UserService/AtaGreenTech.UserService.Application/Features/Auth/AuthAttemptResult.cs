@@ -9,7 +9,8 @@ public sealed record AuthAttemptResult(
     string? ErrorMessage,
     string? ErrorCode = null,
     int StatusCode = 401,
-    bool MfaRequired = false
+    bool MfaRequired = false,
+    IReadOnlyList<object>? ErrorArgs = null
 )
 {
     public bool IsSuccess => Response is not null;
@@ -21,10 +22,18 @@ public sealed record AuthAttemptResult(
     public static AuthAttemptResult Fail(string errorCode, string errorMessage, int statusCode = 401) =>
         new(null, errorMessage, errorCode, statusCode);
 
+    public static AuthAttemptResult Fail(
+        string errorCode,
+        string errorMessage,
+        int statusCode,
+        params object[] args
+    ) =>
+        new(null, errorMessage, errorCode, statusCode, MfaRequired: false, ErrorArgs: args);
+
     public static AuthAttemptResult RequireMfa() =>
         new(
             null,
-            "İki aşamalı doğrulama kodu gereklidir.",
+            null,
             AuthErrorCodes.MfaRequired,
             StatusCode: 401,
             MfaRequired: true

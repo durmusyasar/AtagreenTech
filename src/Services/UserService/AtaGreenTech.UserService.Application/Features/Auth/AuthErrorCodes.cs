@@ -1,15 +1,20 @@
+using AtaGreenTech.SharedKernel.Localization;
+
 namespace AtaGreenTech.UserService.Application.Features.Auth;
 
-/// <summary>Kimlik doğrulama uç noktaları için tutarlı hata kodları.</summary>
+/// <summary>
+/// Kimlik doğrulama uç noktaları için tutarlı hata kodları.
+/// Değerler <see cref="ErrorCodes"/> ile aynıdır (#71 AUTH_* korunur).
+/// </summary>
 public static class AuthErrorCodes
 {
-    public const string InvalidCredentials = "AUTH_INVALID_CREDENTIALS";
-    public const string AccountLocked = "AUTH_ACCOUNT_LOCKED";
-    public const string AccountInactive = "AUTH_ACCOUNT_INACTIVE";
-    public const string EmailNotVerified = "AUTH_EMAIL_NOT_VERIFIED";
-    public const string EmailNotFound = "AUTH_EMAIL_NOT_FOUND";
-    public const string RateLimitExceeded = "AUTH_RATE_LIMIT_EXCEEDED";
-    public const string MfaRequired = "AUTH_MFA_REQUIRED";
-    public const string MfaInvalid = "AUTH_MFA_INVALID";
-    public const string SsoNotImplemented = "SSO_NOT_IMPLEMENTED";
+    public const string InvalidCredentials = ErrorCodes.AuthInvalidCredentials;
+    public const string AccountLocked = ErrorCodes.AuthAccountLocked;
+    public const string AccountInactive = ErrorCodes.AuthAccountInactive;
+    public const string EmailNotVerified = ErrorCodes.AuthEmailNotVerified;
+    public const string EmailNotFound = ErrorCodes.AuthEmailNotFound;
+    public const string RateLimitExceeded = ErrorCodes.AuthRateLimitExceeded;
+    public const string MfaRequired = ErrorCodes.AuthMfaRequired;
+    public const string MfaInvalid = ErrorCodes.AuthMfaInvalid;
+    public const string SsoNotImplemented = ErrorCodes.SsoNotImplemented;
 }

@@ -68,7 +68,8 @@ internal sealed class LoginCommandHandler(
             return AuthAttemptResult.Fail(
                 AuthErrorCodes.AccountLocked,
                 $"Çok fazla başarısız deneme. Lütfen {minutesLeft} dakika sonra tekrar deneyin.",
-                statusCode: 423
+                statusCode: 423,
+                minutesLeft
             );
         }
 

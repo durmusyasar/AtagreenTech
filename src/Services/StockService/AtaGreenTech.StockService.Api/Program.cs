@@ -1,5 +1,6 @@
 using AtaGreenTech.StockService.Api.Hosting;
 using System.Text.Json.Serialization;
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Api.Services;
 using AtaGreenTech.StockService.Application.Interfaces;
@@ -19,6 +20,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Enum'lar (ör. hareket tipi) yanıtlarda adıyla yazılır; isteklerde hem ad hem sayı kabul edilir.
 builder.Services.ConfigureHttpJsonOptions(json => json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddScoped<IRequestOriginProvider, HttpRequestOriginProvider>();
+
+// #71: Business-rule 422 handler OmniSync GlobalExceptionHandler'dan önce kaydedilmeli.
+builder.Services.AddAtaGreenLocalization();
+builder.Services.AddExceptionHandler<LocalizedBusinessRuleExceptionHandler>();
 
 builder.AddOmniSyncCore(options =>
 {
@@ -50,6 +55,9 @@ if (args is ["migrate-tenants"])
     var summary = await app.MigrateTenantDatabasesAsync();
     return summary.HasFailures ? 1 : 0;
 }
+
+// #71: Culture, OmniSync auth/tenant/endpoint hattından önce set edilmeli (401/403 mesaj dili).
+app.UseRequestLocalization();
 
 // Routing, tenant çözümlemesi, CORS, authentication ve authorization burada sırasıyla eklenir;
 // UseCors/UseAuthentication/UseAuthorization ayrıca çağrılmamalıdır.

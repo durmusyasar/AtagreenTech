@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using FluentValidation;
 
@@ -5,9 +6,9 @@ namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.ResetPassw
 
 internal sealed class ResetPasswordCommandValidator : AbstractValidator<ResetPasswordCommand>
 {
-    public ResetPasswordCommandValidator()
+    public ResetPasswordCommandValidator(IErrorLocalizer localizer)
     {
         RuleFor(x => x.Token).NotEmpty().MaximumLength(512);
-        RuleFor(x => x.NewPassword).ApplyStrongPassword();
+        RuleFor(x => x.NewPassword).ApplyStrongPassword(localizer);
     }
 }

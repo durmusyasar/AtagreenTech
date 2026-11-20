@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -26,10 +27,10 @@ internal sealed class DisableMfaCommandHandler(
 
         // Yanlış şifre 401 olmamalı: istemci 401'i oturum düşmesi sanıp refresh/signOut yapıyor.
         if (!passwordHasher.Verify(request.Password, user.PasswordHash))
-            return MessageResult.Fail("Mevcut şifreniz hatalı.");
+            return MessageResult.Fail(ErrorCodes.AuthPasswordMismatch);
 
         if (!user.IsMfaEnabled && string.IsNullOrWhiteSpace(user.TotpSecret))
-            return MessageResult.Fail("MFA zaten kapalı.");
+            return MessageResult.Fail(ErrorCodes.AuthMfaAlreadyDisabled);
 
         user.DisableMfa();
         await auditLogger.LogAsync(

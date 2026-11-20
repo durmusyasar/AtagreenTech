@@ -13,7 +13,7 @@ public class CategoryValidatorTests
     [Fact]
     public void Valid_command_passes()
     {
-        Assert.True(new CreateCategoryCommandValidator().Validate(ValidCommand()).IsValid);
+        Assert.True(new CreateCategoryCommandValidator(TestLocalizers.Passthrough).Validate(ValidCommand()).IsValid);
     }
 
     [Fact]
@@ -21,7 +21,7 @@ public class CategoryValidatorTests
     {
         var command = ValidCommand() with { Translations = [new("en", "Seeds", "Agricultural seeds")] };
 
-        Assert.True(new CreateCategoryCommandValidator().Validate(command).IsValid);
+        Assert.True(new CreateCategoryCommandValidator(TestLocalizers.Passthrough).Validate(command).IsValid);
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public class CategoryValidatorTests
     {
         var command = new CreateCategoryCommand("", []);
 
-        var result = new CreateCategoryCommandValidator().Validate(command);
+        var result = new CreateCategoryCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateCategoryCommand.Code));
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateCategoryCommand.Translations));
@@ -40,7 +40,7 @@ public class CategoryValidatorTests
     {
         var command = ValidCommand() with { Translations = [new("tr", "Tohum", null), new(" TR ", "Tohumlar", null)] };
 
-        var result = new CreateCategoryCommandValidator().Validate(command);
+        var result = new CreateCategoryCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateCategoryCommand.Translations));
     }
@@ -53,7 +53,7 @@ public class CategoryValidatorTests
     {
         var command = ValidCommand() with { Translations = [new("tr", "Tohum", null), new(language, name, null)] };
 
-        var result = new CreateCategoryCommandValidator().Validate(command);
+        var result = new CreateCategoryCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == $"Translations[1].{property}");
     }
@@ -70,7 +70,7 @@ public class CategoryValidatorTests
             ],
         };
 
-        var result = new CreateCategoryCommandValidator().Validate(command);
+        var result = new CreateCategoryCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == "Translations[1].Name");
         Assert.Contains(result.Errors, e => e.PropertyName == "Translations[1].Description");
@@ -81,7 +81,7 @@ public class CategoryValidatorTests
     {
         var command = ValidCommand() with { ParentCategoryId = Guid.Empty };
 
-        Assert.False(new CreateCategoryCommandValidator().Validate(command).IsValid);
+        Assert.False(new CreateCategoryCommandValidator(TestLocalizers.Passthrough).Validate(command).IsValid);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class CategoryValidatorTests
             IsActive: true
         );
 
-        var result = new UpdateCategoryCommandValidator().Validate(command);
+        var result = new UpdateCategoryCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(UpdateCategoryCommand.Translations));
     }
@@ -108,6 +108,6 @@ public class CategoryValidatorTests
     {
         var query = new GetCategoriesQuery(Language: language);
 
-        Assert.Equal(isValid, new GetCategoriesQueryValidator().Validate(query).IsValid);
+        Assert.Equal(isValid, new GetCategoriesQueryValidator(TestLocalizers.Passthrough).Validate(query).IsValid);
     }
 }

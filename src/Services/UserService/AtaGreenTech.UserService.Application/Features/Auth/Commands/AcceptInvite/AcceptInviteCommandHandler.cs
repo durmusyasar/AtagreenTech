@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -17,7 +18,7 @@ internal sealed class AcceptInviteCommandHandler(
         var user = await users.GetAsync(u => u.InvitationTokenHash == tokenHash, cancellationToken);
 
         if (user is null || !user.IsInvitationChallengeValid(tokenHash, DateTime.UtcNow))
-            return MessageResult.Fail("Geçersiz veya süresi dolmuş davet bağlantısı.");
+            return MessageResult.Fail(ErrorCodes.AuthInviteTokenInvalid);
 
         user.AcceptInvitation(passwordHasher.Hash(request.Password), request.FirstName, request.LastName);
         return MessageResult.Ok("Hesabınız başarıyla oluşturuldu. Artık giriş yapabilirsiniz.");

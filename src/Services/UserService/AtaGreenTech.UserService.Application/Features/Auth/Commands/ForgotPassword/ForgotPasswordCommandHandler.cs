@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
@@ -22,7 +23,7 @@ internal sealed class ForgotPasswordCommandHandler(
         var user = await users.GetAsync(u => u.Email == email, cancellationToken);
 
         if (user is null || !user.IsActive)
-            return MessageResult.Fail("Bu e-posta adresi sistemde kayıtlı değil.");
+            return MessageResult.Fail(ErrorCodes.AuthEmailNotFound);
 
         var hours = Math.Max(1, authOptions.Value.PasswordResetHours);
         var (plaintext, hash) = EmailVerificationTokenFactory.Create();

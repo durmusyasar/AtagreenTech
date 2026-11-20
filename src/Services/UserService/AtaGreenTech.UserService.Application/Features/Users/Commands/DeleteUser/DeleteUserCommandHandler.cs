@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -25,7 +26,7 @@ internal sealed class DeleteUserCommandHandler(
             throw new UnauthorizedAccessException("Geçerli bir oturum bulunamadı.");
 
         if (request.Id == adminId)
-            return MessageResult.Fail("Kendi hesabınızı silemezsiniz.");
+            return MessageResult.Fail(ErrorCodes.UserCannotModifySelf);
 
         var user = await users.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(User), request.Id);
@@ -43,7 +44,7 @@ internal sealed class DeleteUserCommandHandler(
                 cancellationToken
             );
             if (otherActiveAdmins == 0)
-                return MessageResult.Fail("Son aktif Admin hesabı silinemez.");
+                return MessageResult.Fail(ErrorCodes.UserLastAdmin);
         }
 
         user.Deactivate();

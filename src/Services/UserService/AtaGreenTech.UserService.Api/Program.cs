@@ -1,5 +1,6 @@
 using AtaGreenTech.UserService.Api.Hosting;
 using System.Text.Json.Serialization;
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.UserService.Application;
 using AtaGreenTech.UserService.Infrastructure;
@@ -16,6 +17,10 @@ if (args is [ContainerHealthProbe.Command])
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ConfigureHttpJsonOptions(json => json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+// #71: Business-rule 422 handler OmniSync GlobalExceptionHandler'dan önce kaydedilmeli.
+builder.Services.AddAtaGreenLocalization();
+builder.Services.AddExceptionHandler<LocalizedBusinessRuleExceptionHandler>();
 
 builder.AddOmniSyncCore(options =>
 {
@@ -51,6 +56,9 @@ if (args is ["migrate-tenants"])
 // `seed-tenant <subdomain> [--email=...] [--password=...]`: RBAC + varsayılan Admin (add-tenant otomasyonu).
 if (args is [TenantSeedCli.Command, ..])
     return await TenantSeedCli.RunAsync(app, args);
+
+// #71: Culture, OmniSync auth/tenant/endpoint hattından önce set edilmeli (401/403 mesaj dili).
+app.UseRequestLocalization();
 
 // Routing, tenant çözümlemesi, CORS, authentication ve authorization burada sırasıyla eklenir;
 // UseCors/UseAuthentication/UseAuthorization ayrıca çağrılmamalıdır.

@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Domain.Entities;
 using FluentValidation;
 
@@ -12,7 +13,7 @@ internal sealed class UpdateUserCommandValidator : AbstractValidator<UpdateUserC
         Role.Names.Viewer,
     ];
 
-    public UpdateUserCommandValidator()
+    public UpdateUserCommandValidator(IErrorLocalizer localizer)
     {
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.FirstName).NotEmpty().MaximumLength(User.NameMaxLength);
@@ -20,10 +21,14 @@ internal sealed class UpdateUserCommandValidator : AbstractValidator<UpdateUserC
         RuleFor(x => x.Roles)
             .Must(roles => roles is null || roles.Count == 0 || roles.All(r =>
                 AllowedRoles.Contains(Role.NormalizeName(r), StringComparer.OrdinalIgnoreCase)))
-            .WithMessage($"Roles must be one or more of: {string.Join(", ", AllowedRoles)}.");
+            .WithLocalizedMessage(
+                localizer,
+                ErrorCodes.UserRolesInvalid,
+                string.Join(", ", AllowedRoles)
+            );
         RuleFor(x => x.Roles)
             .Must(roles => roles is null || roles.Count > 0)
-            .WithMessage("En az bir geçerli rol seçilmelidir.")
+            .WithLocalizedMessage(localizer, ErrorCodes.UserRoleRequired)
             .When(x => x.Roles is not null);
     }
 }

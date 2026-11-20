@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -27,7 +28,7 @@ internal sealed class ChangePasswordCommandHandler(
 
         // Yanlış şifre 401 olmamalı: istemci 401'i oturum düşmesi sanıp refresh/signOut yapıyor.
         if (!passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
-            return MessageResult.Fail("Mevcut şifreniz hatalı.");
+            return MessageResult.Fail(ErrorCodes.AuthPasswordMismatch);
 
         user.ChangePassword(passwordHasher.Hash(request.NewPassword));
         await SessionRevocation.RevokeAllRefreshTokensAsync(

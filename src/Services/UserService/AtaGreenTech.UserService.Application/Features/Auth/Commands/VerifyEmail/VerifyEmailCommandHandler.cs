@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Domain.Entities;
 using OmniSync.Core.Application.Messaging;
@@ -14,7 +15,7 @@ internal sealed class VerifyEmailCommandHandler(IRepository<User> users)
         var user = await users.GetAsync(u => u.EmailVerificationTokenHash == tokenHash, cancellationToken);
 
         if (user is null || !user.IsEmailVerificationChallengeValid(tokenHash, DateTime.UtcNow))
-            return MessageResult.Fail("Geçersiz veya süresi dolmuş doğrulama bağlantısı.");
+            return MessageResult.Fail(ErrorCodes.AuthVerifyTokenInvalid);
 
         user.MarkEmailVerified();
         return MessageResult.Ok("E-posta adresiniz başarıyla doğrulandı.");

@@ -1,31 +1,69 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.StockService.Domain.Entities;
 using FluentValidation;
 
 namespace AtaGreenTech.StockService.Application.Features.StockMovements;
 
-/// <summary>
-/// Giriş, çıkış ve transfer komutlarının ortak alan kuralları.
-/// </summary>
 internal static class MovementValidationRules
 {
     private const int AmountPrecision = 18;
     private const int PriceScale = 2;
 
-    public static IRuleBuilderOptions<T, decimal> ValidQuantity<T>(this IRuleBuilder<T, decimal> rule) =>
-        rule.GreaterThan(0).WithMessage("Miktar 0'dan büyük olmalıdır.")
+    public static IRuleBuilderOptions<T, decimal> ValidQuantity<T>(
+        this IRuleBuilder<T, decimal> rule,
+        IErrorLocalizer localizer
+    ) =>
+        rule.GreaterThan(0)
+            .WithLocalizedMessage(
+                localizer,
+                ErrorCodes.ValidationGreaterThanZero,
+                localizer.Localize(ErrorCodes.Fields.Quantity)
+            )
             .PrecisionScale(AmountPrecision, StockBalance.QuantityScale, ignoreTrailingZeros: true)
-            .WithMessage($"Miktar en fazla {StockBalance.QuantityScale} ondalık basamak içerebilir.");
+            .WithLocalizedMessage(
+                localizer,
+                ErrorCodes.ValidationPrecision,
+                localizer.Localize(ErrorCodes.Fields.Quantity),
+                StockBalance.QuantityScale
+            );
 
-    public static IRuleBuilderOptions<T, decimal> ValidUnitPrice<T>(this IRuleBuilder<T, decimal> rule) =>
-        rule.GreaterThanOrEqualTo(0).WithMessage("Birim fiyat 0'dan küçük olamaz.")
+    public static IRuleBuilderOptions<T, decimal> ValidUnitPrice<T>(
+        this IRuleBuilder<T, decimal> rule,
+        IErrorLocalizer localizer
+    ) =>
+        rule.GreaterThanOrEqualTo(0)
+            .WithLocalizedMessage(
+                localizer,
+                ErrorCodes.ValidationGreaterOrEqualZero,
+                localizer.Localize(ErrorCodes.Fields.UnitPrice)
+            )
             .PrecisionScale(AmountPrecision, PriceScale, ignoreTrailingZeros: true)
-            .WithMessage($"Birim fiyat en fazla {PriceScale} ondalık basamak içerebilir.");
+            .WithLocalizedMessage(
+                localizer,
+                ErrorCodes.ValidationPrecision,
+                localizer.Localize(ErrorCodes.Fields.UnitPrice),
+                PriceScale
+            );
 
-    public static IRuleBuilderOptions<T, string?> ValidDocumentReference<T>(this IRuleBuilder<T, string?> rule) =>
+    public static IRuleBuilderOptions<T, string?> ValidDocumentReference<T>(
+        this IRuleBuilder<T, string?> rule,
+        IErrorLocalizer localizer
+    ) =>
         rule.MaximumLength(StockMovement.DocumentReferenceMaxLength)
-            .WithMessage($"Belge numarası en fazla {StockMovement.DocumentReferenceMaxLength} karakter olabilir.");
+            .WithMaxLengthMessage(
+                localizer,
+                ErrorCodes.Fields.Document,
+                StockMovement.DocumentReferenceMaxLength
+            );
 
-    public static IRuleBuilderOptions<T, string?> ValidDescription<T>(this IRuleBuilder<T, string?> rule) =>
+    public static IRuleBuilderOptions<T, string?> ValidDescription<T>(
+        this IRuleBuilder<T, string?> rule,
+        IErrorLocalizer localizer
+    ) =>
         rule.MaximumLength(StockMovement.DescriptionMaxLength)
-            .WithMessage($"Açıklama en fazla {StockMovement.DescriptionMaxLength} karakter olabilir.");
+            .WithMaxLengthMessage(
+                localizer,
+                ErrorCodes.Fields.Description,
+                StockMovement.DescriptionMaxLength
+            );
 }

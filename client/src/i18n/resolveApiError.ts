@@ -28,6 +28,7 @@ function authError(locale: Language | undefined, code: string): string {
 
 /**
  * Backend / ApiError kodunu `enum:errors.<CODE>` üzerinden kullanıcı mesajına çevirir.
+ * Stock 422 detay önceliği `toApiError`/`describe` tarafındadır (#71).
  */
 export function resolveApiError(error: unknown, locale?: Language): string {
   if (error instanceof ApiError) {

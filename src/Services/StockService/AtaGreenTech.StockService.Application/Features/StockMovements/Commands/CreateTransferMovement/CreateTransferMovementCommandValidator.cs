@@ -1,19 +1,26 @@
+using AtaGreenTech.SharedKernel.Localization;
 using FluentValidation;
 
 namespace AtaGreenTech.StockService.Application.Features.StockMovements.Commands.CreateTransferMovement;
 
 internal sealed class CreateTransferMovementCommandValidator : AbstractValidator<CreateTransferMovementCommand>
 {
-    public CreateTransferMovementCommandValidator()
+    public CreateTransferMovementCommandValidator(IErrorLocalizer localizer)
     {
-        RuleFor(x => x.SourceWarehouseId).NotEmpty().WithMessage("Kaynak depo seçilmelidir.");
+        RuleFor(x => x.SourceWarehouseId).NotEmpty().WithRequiredMessage(localizer, ErrorCodes.Fields.SourceWarehouse);
         RuleFor(x => x.TargetWarehouseId)
-            .NotEmpty().WithMessage("Hedef depo seçilmelidir.")
-            .NotEqual(x => x.SourceWarehouseId).WithMessage("Kaynak ve hedef depo aynı olamaz.");
-        RuleFor(x => x.ProductId).NotEmpty().WithMessage("Ürün seçilmelidir.");
-        RuleFor(x => x.Quantity).ValidQuantity();
-        RuleFor(x => x.UnitPrice).ValidUnitPrice();
-        RuleFor(x => x.DocumentReference).ValidDocumentReference();
-        RuleFor(x => x.Description).ValidDescription();
+            .NotEmpty().WithRequiredMessage(localizer, ErrorCodes.Fields.TargetWarehouse)
+            .NotEqual(x => x.SourceWarehouseId)
+            .WithLocalizedMessage(
+                localizer,
+                ErrorCodes.ValidationMustDiffer,
+                localizer.Localize(ErrorCodes.Fields.SourceWarehouse),
+                localizer.Localize(ErrorCodes.Fields.TargetWarehouse)
+            );
+        RuleFor(x => x.ProductId).NotEmpty().WithRequiredMessage(localizer, ErrorCodes.Fields.Product);
+        RuleFor(x => x.Quantity).ValidQuantity(localizer);
+        RuleFor(x => x.UnitPrice).ValidUnitPrice(localizer);
+        RuleFor(x => x.DocumentReference).ValidDocumentReference(localizer);
+        RuleFor(x => x.Description).ValidDescription(localizer);
     }
 }

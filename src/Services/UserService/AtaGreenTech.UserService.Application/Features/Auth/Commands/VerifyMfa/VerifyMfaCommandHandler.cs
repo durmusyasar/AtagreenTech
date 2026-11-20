@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -25,13 +26,13 @@ internal sealed class VerifyMfaCommandHandler(
             ?? throw new UnauthorizedAccessException("Kullanıcı bulunamadı.");
 
         if (user.IsMfaEnabled)
-            return MessageResult.Fail("MFA zaten etkin.");
+            return MessageResult.Fail(ErrorCodes.AuthMfaAlreadyEnabled);
 
         if (string.IsNullOrWhiteSpace(user.TotpSecret))
-            return MessageResult.Fail("Önce MFA kurulumunu başlatın.");
+            return MessageResult.Fail(ErrorCodes.AuthMfaSetupRequired);
 
         if (!totpService.VerifyCode(user.TotpSecret, request.Code))
-            return MessageResult.Fail("Geçersiz TOTP kodu.");
+            return MessageResult.Fail(ErrorCodes.AuthMfaInvalid);
 
         user.EnableMfa();
         await auditLogger.LogAsync(

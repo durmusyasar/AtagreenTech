@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -20,7 +21,7 @@ internal sealed class ResetPasswordCommandHandler(
         var user = await users.GetAsync(u => u.PasswordResetTokenHash == tokenHash, cancellationToken);
 
         if (user is null || !user.IsPasswordResetChallengeValid(tokenHash, DateTime.UtcNow))
-            return MessageResult.Fail("Geçersiz veya süresi dolmuş sıfırlama bağlantısı.");
+            return MessageResult.Fail(ErrorCodes.AuthResetTokenInvalid);
 
         user.ChangePassword(passwordHasher.Hash(request.NewPassword));
         await SessionRevocation.RevokeAllRefreshTokensAsync(
