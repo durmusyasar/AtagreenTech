@@ -29,6 +29,8 @@ export interface NavigationMenuGroup {
 
 export interface NavigationMenusResponse {
   groups: NavigationMenuGroup[]
+  /** Tenant'ta abone (görünür) modül kodları — #67 ModuleGuard. */
+  subscribedModuleCodes?: string[]
 }
 
 /** Sidebar / ⌘K ortak düzleştirilmiş satır. */

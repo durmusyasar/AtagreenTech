@@ -19,7 +19,9 @@ export function useNavigationMenus() {
   })
 
   useEffect(() => {
-    if (query.data?.groups) setMenus(query.data.groups)
+    if (query.data?.groups) {
+      setMenus(query.data.groups, query.data.subscribedModuleCodes ?? [])
+    }
   }, [query.data, setMenus])
 
   useEffect(() => {

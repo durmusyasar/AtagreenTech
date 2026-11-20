@@ -1,6 +1,9 @@
 namespace AtaGreenTech.UserService.Application.Features.Navigation.DTOs;
 
-public sealed record NavigationMenusResponse(IReadOnlyList<NavigationMenuGroupDto> Groups);
+public sealed record NavigationMenusResponse(
+    IReadOnlyList<NavigationMenuGroupDto> Groups,
+    IReadOnlyList<string> SubscribedModuleCodes
+);
 
 public sealed record NavigationMenuGroupDto(
     string ModuleCode,

@@ -33,6 +33,7 @@ const NAV_KEYWORDS: Record<string, string> = {
   '/admin/roles': 'roles permissions rbac rol izin',
   '/admin/system': 'system sistem health bağlantı token tenant diagnostics',
   '/system/menus': 'menu menü navigation katalog',
+  '/system/tenants': 'tenant kiracı module abonelik subscription',
 }
 
 /**
