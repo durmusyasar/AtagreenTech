@@ -32,6 +32,11 @@ export default defineConfig(({ mode }) => {
           target: userTarget,
           changeOrigin: true,
         },
+        // Menü / dil kataloğu UserService'te; health rewrite kurallarından önce eşleşmeli.
+        '^/api/v1/system/(languages|menus|modules)(/|$)': {
+          target: userTarget,
+          changeOrigin: true,
+        },
         '/api/v1/system/health/user': {
           target: userTarget,
           changeOrigin: true,

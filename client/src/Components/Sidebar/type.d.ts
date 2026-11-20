@@ -4,19 +4,26 @@ export interface SidebarProps {
   onCollapse?: (collapsed: boolean) => void
 }
 
+/** Dil kodu → görünen ad (API `translations` map). */
+export type NavigationTranslations = Record<string, string>
+
 /** API `GET /navigation/menus` menü öğesi. */
 export interface NavigationMenuItem {
   code: string
   route: string
   icon: string
-  translationKey: string
+  title: string
+  translations: NavigationTranslations
   children?: NavigationMenuItem[]
+  requiredPermission?: string | null
 }
 
 /** Servis grubu (General / StockService / UserService…). */
 export interface NavigationMenuGroup {
+  moduleCode: string
   serviceName: string
-  translationKey: string
+  title: string
+  translations: NavigationTranslations
   items: NavigationMenuItem[]
 }
 
@@ -29,7 +36,10 @@ export interface FlatNavigationItem {
   code: string
   route: string
   icon: string
-  translationKey: string
+  title: string
+  translations: NavigationTranslations
   serviceName: string
-  serviceTranslationKey: string
+  moduleCode: string
+  moduleTitle: string
+  moduleTranslations: NavigationTranslations
 }

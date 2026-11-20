@@ -4,25 +4,31 @@ namespace AtaGreenTech.UserService.Application.Interfaces;
 public interface INavigationMenuCatalog
 {
     /// <summary>
-    /// Tenant için etkin servislerdeki aktif menü satırlarını döner (yetki filtresi uygulanmamış).
+    /// Tenant için etkin servislerdeki aktif menü satırlarını ve varsayılan dil kodunu döner.
     /// </summary>
-    Task<IReadOnlyList<NavigationMenuRow>> GetActiveMenuRowsAsync(
+    Task<NavigationCatalogSnapshot> GetActiveMenusAsync(
         Guid tenantId,
         CancellationToken cancellationToken = default
     );
 }
 
-/// <summary>Master'dan okunan düz menü satırı.</summary>
+public sealed record NavigationCatalogSnapshot(
+    IReadOnlyList<NavigationMenuRow> Rows,
+    string? DefaultLanguageCode
+);
+
+/// <summary>Master'dan okunan düz menü satırı + dil map.</summary>
 public sealed record NavigationMenuRow(
     Guid Id,
     string Code,
+    string ModuleCode,
     string ServiceName,
-    string ServiceTranslationKey,
     Guid? ParentId,
     string RoutePath,
     string IconKey,
-    string TranslationKey,
     string? RequiredPermission,
     int DisplayOrder,
-    int ServiceDisplayOrder
+    int ModuleDisplayOrder,
+    IReadOnlyDictionary<string, string> ModuleTranslations,
+    IReadOnlyDictionary<string, string> Translations
 );

@@ -11,4 +11,7 @@ public interface INavigationMenuCache
 
     /// <summary>Tenant'a ait tüm <c>nav:menus:{tenantId}:*</c> girdilerini siler.</summary>
     void InvalidateTenant(Guid tenantId);
+
+    /// <summary>Master menü kataloğu değişince tüm tenant önbelleklerini temizler.</summary>
+    void InvalidateAll();
 }

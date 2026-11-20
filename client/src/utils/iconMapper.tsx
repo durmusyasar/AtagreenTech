@@ -4,6 +4,7 @@ import {
   ColumnWidthOutlined,
   DashboardOutlined,
   LockOutlined,
+  MenuOutlined,
   SafetyCertificateOutlined,
   ShopOutlined,
   SwapOutlined,
@@ -32,6 +33,8 @@ const ICON_REGISTRY: Record<string, ReactNode> = {
   users: <TeamOutlined />,
   roles: <SafetyCertificateOutlined />,
   system: <AppstoreOutlined />,
+  menus: <MenuOutlined />,
+  menu: <MenuOutlined />,
 }
 
 function DefaultDotIcon() {

@@ -10,20 +10,24 @@ describe('navigationStore', () => {
   it('flattens nested menu items for command palette', () => {
     const groups: NavigationMenuGroup[] = [
       {
+        moduleCode: 'STOCK',
         serviceName: 'StockService',
-        translationKey: 'services.stock',
+        title: 'Stok',
+        translations: { tr: 'Stok', en: 'Stock' },
         items: [
           {
             code: 'stock.root',
             route: '/stock',
             icon: 'warehouse',
-            translationKey: 'menu.products',
+            title: 'Ürünler',
+            translations: { tr: 'Ürünler', en: 'Products' },
             children: [
               {
                 code: 'stock.units',
                 route: '/units-of-measure',
                 icon: 'units',
-                translationKey: 'menu.unitsOfMeasure',
+                title: 'Ölçü Birimleri',
+                translations: { tr: 'Ölçü Birimleri', en: 'Units of Measure' },
               },
             ],
           },
@@ -35,15 +39,26 @@ describe('navigationStore', () => {
 
     const { flatItems } = useNavigationStore.getState()
     expect(flatItems.map((i) => i.code)).toEqual(['stock.root', 'stock.units'])
-    expect(flatItems[1]?.serviceTranslationKey).toBe('services.stock')
+    expect(flatItems[1]?.moduleTitle).toBe('Stok')
+    expect(flatItems[1]?.translations.en).toBe('Units of Measure')
   })
 
   it('clears menus on logout path', () => {
     useNavigationStore.getState().setMenus([
       {
+        moduleCode: 'GENERAL',
         serviceName: 'General',
-        translationKey: 'services.general',
-        items: [{ code: 'general.dashboard', route: '/', icon: 'dashboard', translationKey: 'menu.dashboard' }],
+        title: 'Genel',
+        translations: { tr: 'Genel', en: 'General' },
+        items: [
+          {
+            code: 'general.dashboard',
+            route: '/',
+            icon: 'dashboard',
+            title: 'Genel Bakış',
+            translations: { tr: 'Genel Bakış', en: 'Overview' },
+          },
+        ],
       },
     ])
 

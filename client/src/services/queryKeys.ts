@@ -12,6 +12,8 @@ export const queryKeys = {
   navigation: ['navigation'],
   /** Sistem sayfası servis sağlık probe'ları. */
   systemDiagnostics: ['system', 'diagnostics'],
+  /** Master menü / dil kataloğu (`/system/menus`). */
+  systemMenus: ['system', 'menus'],
   /** Genel bakış analitik özeti. */
   dashboard: ['dashboard'],
   users: ['users'],
