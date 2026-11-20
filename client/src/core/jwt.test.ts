@@ -19,6 +19,7 @@ describe('readTokenClaims', () => {
         role: ['Admin', 'Stock'],
         permission: ['users.read', 'stock.*'],
         tenant_id: 't-1',
+        sid: 's-1',
         exp: 2000,
       }),
     )
@@ -29,6 +30,7 @@ describe('readTokenClaims', () => {
       roles: ['Admin', 'Stock'],
       permissions: ['users.read', 'stock.*'],
       tenantId: 't-1',
+      sessionId: 's-1',
       expiresAt: 2000,
     })
   })

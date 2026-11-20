@@ -1,5 +1,6 @@
 using AtaGreenTech.UserService.Api.Hosting;
 using System.Text.Json.Serialization;
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.UserService.Application;
 using AtaGreenTech.UserService.Infrastructure;
 using AtaGreenTech.UserService.Infrastructure.Persistence.Master;
@@ -37,6 +38,7 @@ if (args is ["migrate-master"])
     await master.Database.MigrateAsync();
     // OmniSync Tenant modeline dokunmadan menü kataloğu + servis aboneliklerini master'a ekler.
     await MasterNavigationSchema.EnsureAsync(master);
+    await master.Database.EnsureAccessTokenRevocationSchemaAsync();
     return 0;
 }
 
@@ -55,6 +57,10 @@ if (args is [TenantSeedCli.Command, ..])
 app.UseOmniSyncCore();
 app.UseRateLimiter();
 app.MapOmniSyncEndpoints();
+
+PermissionPolicyStartupAudit.LogRegisteredPolicies(
+    app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("PermissionPolicies")
+);
 
 await app.RunAsync();
 return 0;

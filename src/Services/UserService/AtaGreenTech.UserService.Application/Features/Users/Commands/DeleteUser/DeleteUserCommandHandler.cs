@@ -13,7 +13,8 @@ internal sealed class DeleteUserCommandHandler(
     IRepository<User> users,
     IRepository<RefreshToken> refreshTokens,
     IUserDbContext db,
-    ICurrentUser currentUser
+    ICurrentUser currentUser,
+    AccessTokenLifecycle accessTokenLifecycle
 ) : ICommandHandler<DeleteUserCommand, MessageResult>
 {
     public async Task<MessageResult> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
@@ -46,7 +47,14 @@ internal sealed class DeleteUserCommandHandler(
         }
 
         user.Deactivate();
-        await SessionRevocation.RevokeAllRefreshTokensAsync(refreshTokens, user.Id, cancellationToken);
+        user.InvalidateCredentialStamp();
+        await SessionRevocation.RevokeAllRefreshTokensAsync(
+            refreshTokens,
+            user.Id,
+            cancellationToken,
+            accessTokenLifecycle
+        );
+        await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
         users.Delete(user);
 
         return MessageResult.Ok("Kullanıcı silindi.");

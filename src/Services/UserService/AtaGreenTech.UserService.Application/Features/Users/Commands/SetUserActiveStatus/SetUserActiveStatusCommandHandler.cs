@@ -13,7 +13,8 @@ internal sealed class SetUserActiveStatusCommandHandler(
     IRepository<User> users,
     IRepository<RefreshToken> refreshTokens,
     IUserDbContext db,
-    ICurrentUser currentUser
+    ICurrentUser currentUser,
+    AccessTokenLifecycle accessTokenLifecycle
 ) : ICommandHandler<SetUserActiveStatusCommand, MessageResult>
 {
     public async Task<MessageResult> Handle(SetUserActiveStatusCommand request, CancellationToken cancellationToken)
@@ -48,7 +49,14 @@ internal sealed class SetUserActiveStatusCommandHandler(
             }
 
             user.Deactivate();
-            await SessionRevocation.RevokeAllRefreshTokensAsync(refreshTokens, user.Id, cancellationToken);
+            user.InvalidateCredentialStamp();
+            await SessionRevocation.RevokeAllRefreshTokensAsync(
+                refreshTokens,
+                user.Id,
+                cancellationToken,
+                accessTokenLifecycle
+            );
+            await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
             return MessageResult.Ok("Kullanıcı pasife alındı.");
         }
 

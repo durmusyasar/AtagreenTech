@@ -21,10 +21,16 @@ internal sealed class JwtAccessTokenIssuer(
         Guid userId,
         string email,
         Guid tenantId,
+        Guid sessionId,
+        string securityStamp,
         IReadOnlyCollection<string> roles,
         IReadOnlyCollection<string> permissions
     )
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(securityStamp);
+        if (sessionId == Guid.Empty)
+            throw new ArgumentException("Session id is required.", nameof(sessionId));
+
         var jwt = jwtOptions.Value;
         var minutes = authOptions.Value.AccessTokenMinutes;
         if (minutes <= 0)
@@ -37,6 +43,8 @@ internal sealed class JwtAccessTokenIssuer(
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(JwtContract.Claims.Email, email),
             new(JwtContract.Claims.TenantId, tenantId.ToString()),
+            new(JwtContract.Claims.SessionId, sessionId.ToString()),
+            new(JwtContract.Claims.SecurityStamp, securityStamp.Trim()),
         };
 
         foreach (var role in roles)

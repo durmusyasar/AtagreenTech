@@ -28,6 +28,13 @@ public static class JwtContract
 
         /// <summary>Granüler RBAC izni (ör. <c>users.read</c>). OmniSync TokenClaimTypes'ta yoktur; yerel sözleşmedir.</summary>
         public const string Permission = "permission";
+
+        /// <summary>Refresh token ailesi / oturum kimliği (#70). Logout ve session revoke bu değerle access'i iptal eder.</summary>
+        public const string SessionId = "sid";
+
+        /// <summary><c>User.SecurityStamp</c> anlık görüntüsü (#70). Stamp dönünce eski access reddedilir.</summary>
+        public const string SecurityStamp = "sst";
     }
 }
+
 

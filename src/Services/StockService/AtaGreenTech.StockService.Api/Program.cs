@@ -1,5 +1,6 @@
 using AtaGreenTech.StockService.Api.Hosting;
 using System.Text.Json.Serialization;
+using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Api.Services;
 using AtaGreenTech.StockService.Application.Interfaces;
 using AtaGreenTech.StockService.Infrastructure;
@@ -40,6 +41,7 @@ if (args is ["migrate-master"])
     await master.Database.MigrateAsync();
     // OmniSync Tenant modeline dokunmadan marka tablosunu master'a ekler.
     await MasterBrandingSchema.EnsureAsync(master);
+    await master.Database.EnsureAccessTokenRevocationSchemaAsync();
     return 0;
 }
 
@@ -53,6 +55,10 @@ if (args is ["migrate-tenants"])
 // UseCors/UseAuthentication/UseAuthorization ayrıca çağrılmamalıdır.
 app.UseOmniSyncCore();
 app.MapOmniSyncEndpoints();
+
+PermissionPolicyStartupAudit.LogRegisteredPolicies(
+    app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("PermissionPolicies")
+);
 
 await app.RunAsync();
 return 0;

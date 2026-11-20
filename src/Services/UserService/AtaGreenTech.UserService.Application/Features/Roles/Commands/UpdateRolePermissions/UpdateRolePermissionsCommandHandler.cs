@@ -1,4 +1,5 @@
 using AtaGreenTech.UserService.Application.DTOs;
+using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,8 @@ internal sealed class UpdateRolePermissionsCommandHandler(
     IIdentityAuditLogger auditLogger,
     ICurrentUser currentUser,
     ICurrentTenant currentTenant,
-    INavigationMenuCache navigationMenuCache
+    INavigationMenuCache navigationMenuCache,
+    AccessTokenLifecycle accessTokenLifecycle
 ) : ICommandHandler<UpdateRolePermissionsCommand, RoleWriteResult>
 {
     public async Task<RoleWriteResult> Handle(
@@ -65,6 +67,16 @@ internal sealed class UpdateRolePermissionsCommandHandler(
             .Select(p => p.Name)
             .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
             .ToArray();
+
+        var affectedUsers = await db.Users
+            .Where(u => u.UserRoles.Any(ur => ur.RoleId == role.Id && !ur.IsDeleted))
+            .ToListAsync(cancellationToken);
+
+        foreach (var user in affectedUsers)
+        {
+            user.InvalidateCredentialStamp();
+            await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
+        }
 
         Guid? actorId = Guid.TryParse(currentUser.UserId, out var id) ? id : null;
         var actorEmail = string.IsNullOrWhiteSpace(currentUser.Email) ? "unknown" : currentUser.Email;

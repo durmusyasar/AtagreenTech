@@ -11,7 +11,8 @@ internal sealed class ChangePasswordCommandHandler(
     IRepository<User> users,
     IRepository<RefreshToken> refreshTokens,
     IPasswordHasher passwordHasher,
-    ICurrentUser currentUser
+    ICurrentUser currentUser,
+    AccessTokenLifecycle accessTokenLifecycle
 ) : ICommandHandler<ChangePasswordCommand, MessageResult>
 {
     public async Task<MessageResult> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
@@ -29,7 +30,13 @@ internal sealed class ChangePasswordCommandHandler(
             return MessageResult.Fail("Mevcut şifreniz hatalı.");
 
         user.ChangePassword(passwordHasher.Hash(request.NewPassword));
-        await SessionRevocation.RevokeAllRefreshTokensAsync(refreshTokens, user.Id, cancellationToken);
+        await SessionRevocation.RevokeAllRefreshTokensAsync(
+            refreshTokens,
+            user.Id,
+            cancellationToken,
+            accessTokenLifecycle
+        );
+        await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
 
         return MessageResult.Ok("Şifreniz başarıyla değiştirildi. Lütfen tekrar giriş yapın.");
     }

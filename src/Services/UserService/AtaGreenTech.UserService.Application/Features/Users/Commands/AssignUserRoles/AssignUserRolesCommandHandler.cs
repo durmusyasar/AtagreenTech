@@ -1,4 +1,5 @@
 using AtaGreenTech.UserService.Application.DTOs;
+using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Features.Users;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -14,7 +15,8 @@ internal sealed class AssignUserRolesCommandHandler(
     IRepository<UserRole> userRoles,
     IUserDbContext db,
     IIdentityAuditLogger auditLogger,
-    ICurrentUser currentUser
+    ICurrentUser currentUser,
+    AccessTokenLifecycle accessTokenLifecycle
 ) : ICommandHandler<AssignUserRolesCommand, UserWriteResult>
 {
     public async Task<UserWriteResult> Handle(
@@ -47,6 +49,9 @@ internal sealed class AssignUserRolesCommandHandler(
 
         if (rolesChanged)
         {
+            user.InvalidateCredentialStamp();
+            await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
+
             Guid? actorId = Guid.TryParse(currentUser.UserId, out var id) ? id : null;
             var actorEmail = string.IsNullOrWhiteSpace(currentUser.Email) ? "unknown" : currentUser.Email;
             await auditLogger.LogAsync(

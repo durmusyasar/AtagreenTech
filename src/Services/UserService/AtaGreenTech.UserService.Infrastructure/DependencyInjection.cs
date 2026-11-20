@@ -11,6 +11,7 @@ using AtaGreenTech.UserService.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSync.Core.Infrastructure.Hosting;
+using OmniSync.Core.Infrastructure.Persistence;
 
 namespace AtaGreenTech.UserService.Infrastructure;
 
@@ -47,6 +48,11 @@ public static class DependencyInjection
                 services.AddSingleton<IEmailVerificationSender, LoggingEmailVerificationSender>();
                 services.AddSingleton<IPasswordResetSender, LoggingPasswordResetSender>();
                 services.AddSingleton<IUserInvitationSender, LoggingUserInvitationSender>();
+                services.AddScoped<AccessTokenLifecycle>();
+                services.AddAccessTokenSessionStores<MasterDbContext>(sp =>
+                    ActivatorUtilities.CreateInstance<UserAccessTokenSessionValidator>(sp)
+                );
+                services.AddJwtBearerAccessTokenSessionValidation();
 
                 services.AddAuthorization(options => options.AddAtaGreenPermissionPolicies());
 

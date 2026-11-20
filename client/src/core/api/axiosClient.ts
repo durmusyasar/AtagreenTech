@@ -51,7 +51,9 @@ function isAuthBootstrapUrl(url: string | undefined): boolean {
     url.includes('/auth/verify-email') ||
     url.includes('/auth/resend-verification') ||
     url.includes('/auth/forgot-password') ||
-    url.includes('/auth/reset-password')
+    url.includes('/auth/reset-password') ||
+    // Login öncesi marka (#70 preflight istisnası; sunucu AllowAnonymous).
+    url.includes('/tenant/config')
   )
 }
 
@@ -66,6 +68,14 @@ function isPasswordConfirmationUrl(url: string | undefined): boolean {
 
 axiosClient.interceptors.request.use((config) => {
   const { token, refreshToken, tenant, isTenantFromHost, language } = sessionStore.getSnapshot()
+
+  // #70 preflight: auth whitelist dışındaki isteklerde Bearer yoksa sunucuya gitme.
+  if (!token && !isAuthBootstrapUrl(config.url)) {
+    sessionStore.signOut()
+    return Promise.reject(
+      new Error('Missing access token; request blocked before reaching the API.'),
+    )
+  }
 
   if (token) config.headers.Authorization = `Bearer ${token}`
 
@@ -173,6 +183,11 @@ axiosClient.interceptors.response.use(
           translate(language, 'moduleUnavailable.description', [label]),
           'MODULE_NOT_SUBSCRIBED',
         )
+      }
+    } else if (apiError.status === 403 && apiError.code === 'PERMISSION_DENIED') {
+      // #70: sunucu yetki reddi — menü gizlense bile doğrudan API çağrısı.
+      if (!(isAxiosError(error) && error.config?.skipErrorNotification)) {
+        notify('warning', translate(language, 'error.forbidden'), 'PERMISSION_DENIED')
       }
     } else if (!(isAxiosError(error) && error.config?.skipErrorNotification)) {
       if (!(apiError.code === 'network_error' && !isOnline)) {

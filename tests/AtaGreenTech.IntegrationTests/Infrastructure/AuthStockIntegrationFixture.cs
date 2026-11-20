@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -42,6 +43,7 @@ public sealed class AuthStockIntegrationFixture : IAsyncLifetime
         {
             var master = scope.ServiceProvider.GetRequiredService<MasterDbContext>();
             await master.Database.MigrateAsync();
+            await master.Database.EnsureAccessTokenRevocationSchemaAsync();
 
             var onboarding = scope.ServiceProvider.GetRequiredService<ITenantOnboardingService>();
             await onboarding.RegisterTenantAsync(

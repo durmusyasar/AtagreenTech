@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSync.Core.Infrastructure.Authentication;
 using OmniSync.Core.Infrastructure.Hosting;
+using OmniSync.Core.Infrastructure.Persistence;
 
 namespace AtaGreenTech.StockService.Infrastructure;
 
@@ -37,6 +38,8 @@ public static class DependencyInjection
                 services.AddScoped<ITenantBrandingReader, TenantBrandingReader>();
                 services.AddMemoryCache();
                 services.AddScoped<IModuleSubscriptionChecker, ModuleSubscriptionChecker>();
+                services.AddAccessTokenSessionStores<MasterDbContext>();
+                services.AddJwtBearerAccessTokenSessionValidation();
 
                 // UserService JWT sözleşmesi: Issuer/Audience JwtContract ile birebir aynı olmalı.
                 services.AddOptions<JwtOptions>()
