@@ -10,7 +10,7 @@ export function Footer() {
   const { config } = useTenantTheme()
 
   return (
-    <footer className="w-full border-t border-subtle/70 bg-surface/90 px-4 py-3.5 backdrop-blur-sm dark:border-white/10 sm:px-6">
+    <footer className="w-full border-t border-subtle bg-surface px-4 py-3.5 sm:px-6">
       <div className="mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-2 text-xs text-muted sm:flex-row">
         <span className="text-center text-secondary/90">
           {t('footer.line', config.name, COPYRIGHT_YEAR, APP_VERSION)}

@@ -2,6 +2,10 @@ export interface SidebarProps {
   collapsed: boolean
   /** Navbar toggle kullanıldığında opsiyonel (alt collapse şeridi yok). */
   onCollapse?: (collapsed: boolean) => void
+  /** `<lg` çekmece açık mı (#68). */
+  mobileOpen?: boolean
+  /** Mobilde rota seçilince çekmeceyi kapat. */
+  onNavigate?: () => void
 }
 
 /** Dil kodu → görünen ad (API `translations` map). */
@@ -33,7 +37,7 @@ export interface NavigationMenusResponse {
   subscribedModuleCodes?: string[]
 }
 
-/** Sidebar / ⌘K ortak düzleştirilmiş satır. */
+/** Sidebar / ⌘K ortak düzlaştırilmiş satır. */
 export interface FlatNavigationItem {
   code: string
   route: string

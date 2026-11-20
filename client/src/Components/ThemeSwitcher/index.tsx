@@ -8,7 +8,7 @@ const MODE_OPTIONS: { label: string; value: ThemeMode }[] = [
 ]
 
 const CONTROL_SURFACE =
-  'appearance-none rounded-full border border-subtle/80 bg-surface shadow-sm transition-all duration-200 hover:bg-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/25'
+  'appearance-none rounded-full border border-subtle bg-surface shadow-sm transition-all duration-200 hover:bg-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/25'
 /**
  * Tema seçici. Varsayılan `toggle`: dil dropdown ile aynı yüzey yüksekliği.
  * `segmented`: light / dark / system.

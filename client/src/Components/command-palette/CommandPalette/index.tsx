@@ -192,7 +192,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       destroyOnHidden
       className="command-palette-modal"
       styles={{ body: { padding: 0 } }}
-      style={{ top: 72 }}
+      style={{ top: 80 }}
     >
       <div style={{ padding: '12px 16px', borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
         <Input
