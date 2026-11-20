@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Features.Navigation.DTOs;
 using AtaGreenTech.UserService.Application.Interfaces;
@@ -26,10 +27,10 @@ internal sealed class GetNavigationMenusQueryHandler(
         if (!currentUser.IsAuthenticated
             || string.IsNullOrWhiteSpace(currentUser.UserId)
             || !Guid.TryParse(currentUser.UserId, out var userId))
-            throw new ForbiddenAccessException("Authentication required.");
+            throw new ForbiddenAccessException(ErrorCodes.Forbidden);
 
         if (!currentTenant.IsAvailable || currentTenant.Id is null)
-            throw new ForbiddenAccessException("Tenant could not be resolved.");
+            throw new ForbiddenAccessException(ErrorCodes.AuthTenantUnresolved);
 
         var tenantId = currentTenant.Id.Value;
         var permissions = await UserPermissionResolver.ResolveAsync(db, userId, cancellationToken);

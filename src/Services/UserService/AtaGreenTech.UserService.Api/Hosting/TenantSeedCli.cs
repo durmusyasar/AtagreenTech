@@ -1,5 +1,6 @@
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
+using OmniSync.Core.Domain.Exceptions;
 using OmniSync.Core.Domain.Tenants;
 
 namespace AtaGreenTech.UserService.Api.Hosting;
@@ -33,14 +34,14 @@ public static class TenantSeedCli
         try
         {
             var tenants = app.Services.GetRequiredService<ITenantExecutionContext>();
-            TenantIdentitySeedResult? result = null;
 
-            await tenants.RunInTenantScopeAsync(
+            // OmniSync generic overload: sonuç scope dışına güvenle döner (closure + null-forgiving yok).
+            var result = await tenants.RunInTenantScopeAsync(
                 subdomain,
                 async (sp, ct) =>
                 {
                     var seeder = sp.GetRequiredService<ITenantIdentitySeeder>();
-                    result = await seeder.EnsureAsync(
+                    return await seeder.EnsureAsync(
                         request,
                         TenantIdentitySeedMode.UpsertAdmin,
                         ct
@@ -50,7 +51,7 @@ public static class TenantSeedCli
             );
 
             Console.WriteLine(
-                $"[SEED] Tenant={result!.TenantIdentifier} | Admin={result.AdminEmail} | Created={result.AdminCreated} | UserId={result.AdminUserId}"
+                $"[SEED] Tenant={result.TenantIdentifier} | Admin={result.AdminEmail} | Created={result.AdminCreated} | UserId={result.AdminUserId}"
             );
             return 0;
         }
@@ -58,6 +59,11 @@ public static class TenantSeedCli
         {
             Console.Error.WriteLine($"[SEED] Geçersiz girdi: {ex.Message}");
             return 65;
+        }
+        catch (NotFoundException ex)
+        {
+            Console.Error.WriteLine($"[SEED] Tenant bulunamadı: {ex.Message}");
+            return 66;
         }
         catch (Exception ex)
         {

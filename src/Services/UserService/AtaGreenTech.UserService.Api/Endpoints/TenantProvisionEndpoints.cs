@@ -56,13 +56,16 @@ public sealed class TenantProvisionEndpoints : IEndpointModule
 
         try
         {
-            TenantIdentitySeedResult? result = null;
-            await tenants.RunInTenantScopeAsync(
+            var result = await tenants.RunInTenantScopeAsync(
                 subdomain,
                 async (sp, ct) =>
                 {
                     var seeder = sp.GetRequiredService<ITenantIdentitySeeder>();
-                    result = await seeder.EnsureAsync(seedRequest, TenantIdentitySeedMode.UpsertAdmin, ct);
+                    return await seeder.EnsureAsync(
+                        seedRequest,
+                        TenantIdentitySeedMode.UpsertAdmin,
+                        ct
+                    );
                 },
                 cancellationToken
             );

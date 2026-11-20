@@ -4,65 +4,82 @@ using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using OmniSync.Core.Infrastructure.Authentication;
 
-namespace AtaGreenTech.UserService.Infrastructure.Security;
-
-/// <summary>
-/// Access token'ları OmniSync <see cref="JwtTokenSigning"/> ile imzalar; claim adları <see cref="JwtContract"/> ile aynıdır.
-/// </summary>
-internal sealed class JwtAccessTokenIssuer(
-    IOptions<JwtOptions> jwtOptions,
-    IOptions<AuthOptions> authOptions
-) : IAccessTokenIssuer
+namespace AtaGreenTech.UserService.Infrastructure.Security
 {
-    public AccessTokenResult Create(
-        Guid userId,
-        string email,
-        Guid tenantId,
-        Guid sessionId,
-        string securityStamp,
-        IReadOnlyCollection<string> roles,
-        IReadOnlyCollection<string> permissions
-    )
+
+    /// <summary>
+    /// Access token'ları OmniSync <see cref="JwtTokenSigning"/> ile imzalar; claim adları <see cref="JwtContract"/> ile aynıdır
+    /// (<c>sub</c>, <c>email</c>, <c>tenant_id</c>, <c>sid</c>, <c>sst</c>, <c>role</c>, <c>permission</c>).
+    /// </summary>
+    internal sealed class JwtAccessTokenIssuer(
+        IOptions<JwtOptions> jwtOptions,
+        IOptions<AuthOptions> authOptions
+    ) : IAccessTokenIssuer
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(securityStamp);
-        if (sessionId == Guid.Empty)
-            throw new ArgumentException("Session id is required.", nameof(sessionId));
-
-        var jwt = jwtOptions.Value;
-        var minutes = authOptions.Value.AccessTokenMinutes;
-        if (minutes <= 0)
-            minutes = JwtContract.DefaultAccessTokenMinutes;
-
-        var expires = DateTime.UtcNow.AddMinutes(minutes);
-        var claims = new List<Claim>
+        /// <inheritdoc />
+        public AccessTokenResult Create(
+            Guid userId,
+            string email,
+            Guid tenantId,
+            Guid sessionId,
+            string securityStamp,
+            IReadOnlyCollection<string> roles,
+            IReadOnlyCollection<string> permissions
+        )
         {
-            new(JwtContract.Claims.Subject, userId.ToString()),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(JwtContract.Claims.Email, email),
-            new(JwtContract.Claims.TenantId, tenantId.ToString()),
-            new(JwtContract.Claims.SessionId, sessionId.ToString()),
-            new(JwtContract.Claims.SecurityStamp, securityStamp.Trim()),
-        };
+            if (userId == Guid.Empty)
+                throw new ArgumentException("User id is required.", nameof(userId));
+            if (tenantId == Guid.Empty)
+                throw new ArgumentException("Tenant id is required.", nameof(tenantId));
+            if (sessionId == Guid.Empty)
+                throw new ArgumentException("Session id is required.", nameof(sessionId));
+            ArgumentException.ThrowIfNullOrWhiteSpace(email);
+            ArgumentException.ThrowIfNullOrWhiteSpace(securityStamp);
+            ArgumentNullException.ThrowIfNull(roles);
+            ArgumentNullException.ThrowIfNull(permissions);
 
-        foreach (var role in roles)
-            claims.Add(new Claim(JwtContract.Claims.Role, role));
+            var jwt = jwtOptions.Value;
+            var minutes = authOptions.Value.AccessTokenMinutes;
+            if (minutes <= 0)
+                minutes = JwtContract.DefaultAccessTokenMinutes;
 
-        foreach (var permission in permissions.Distinct(StringComparer.OrdinalIgnoreCase))
-            claims.Add(new Claim(JwtContract.Claims.Permission, permission));
+            var now = DateTime.UtcNow;
+            var expires = now.AddMinutes(minutes);
+            var claims = new List<Claim>
+            {
+                new(JwtContract.Claims.Subject, userId.ToString()),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new(JwtContract.Claims.Email, email.Trim()),
+                new(JwtContract.Claims.TenantId, tenantId.ToString()),
+                new(JwtContract.Claims.SessionId, sessionId.ToString()),
+                new(JwtContract.Claims.SecurityStamp, securityStamp.Trim()),
+            };
 
-        var credentials = JwtTokenSigning.CreateSigningCredentials(jwt);
-        var token = new JwtSecurityToken(
-            issuer: jwt.Issuer,
-            audience: jwt.Audience,
-            claims: claims,
-            notBefore: DateTime.UtcNow,
-            expires: expires,
-            signingCredentials: credentials
-        );
+            foreach (var role in roles.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrWhiteSpace(role))
+                    claims.Add(new Claim(JwtContract.Claims.Role, role.Trim()));
+            }
 
-        return new AccessTokenResult(new JwtSecurityTokenHandler().WriteToken(token), expires);
+            foreach (var permission in permissions.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrWhiteSpace(permission))
+                    claims.Add(new Claim(JwtContract.Claims.Permission, permission.Trim()));
+            }
+
+            var credentials = JwtTokenSigning.CreateSigningCredentials(jwt);
+            var token = new JwtSecurityToken(
+                issuer: jwt.Issuer,
+                audience: jwt.Audience,
+                claims: claims,
+                notBefore: now,
+                expires: expires,
+                signingCredentials: credentials
+            );
+
+            return new AccessTokenResult(new JwtSecurityTokenHandler().WriteToken(token), expires);
+        }
     }
 }

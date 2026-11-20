@@ -1,66 +1,35 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
-using AtaGreenTech.UserService.Application.Options;
-using Microsoft.Extensions.Options;
 
-namespace AtaGreenTech.UserService.Infrastructure.Security;
-
-/// <summary>
-/// V1 OIDC SSO iskeleti. Feature-flag kapalıysa veya V1 kapsamında implemente edilmemişse
-/// <see cref="NotImplementedException"/> fırlatır; API bunu 501'e map eder.
-/// </summary>
-internal sealed class OidcPlaceholderService(
-    IOptions<FeatureFlagsOptions> featureFlags,
-    IOptions<OidcOptions> oidcOptions
-) : IOidcAuthService
+namespace AtaGreenTech.UserService.Infrastructure.Security
 {
-    public Task<OidcAuthorizationUrlResponse> GetAuthorizationUrlAsync(
-        string provider,
-        string redirectUri,
-        CancellationToken cancellationToken = default
-    )
+    /// <summary>
+    /// V1 OIDC SSO iskeleti. Tüm çağrılar <see cref="NotImplementedException"/> +
+    /// <see cref="ErrorCodes.SsoNotImplemented"/> → API 501 + lokalize (#71).
+    /// Feature-flag / sağlayıcı ayarları V2 gerçek implementasyonda kullanılır.
+    /// </summary>
+    internal sealed class OidcPlaceholderService : IOidcAuthService
     {
-        EnsureSsoEnabled();
-        EnsureKnownProvider(provider);
-        throw new NotImplementedException(
-            $"OIDC sağlayıcısı ('{NormalizeProvider(provider)}') henüz V1 sürümünde aktif değildir."
-        );
-    }
+        /// <inheritdoc />
+        public Task<OidcAuthorizationUrlResponse> GetAuthorizationUrlAsync(
+            string provider,
+            string redirectUri,
+            CancellationToken cancellationToken = default
+        ) =>
+            throw SsoNotImplemented();
 
-    public Task<AuthResponse> HandleCallbackAsync(
-        string provider,
-        OidcCallbackRequest request,
-        CancellationToken cancellationToken = default
-    )
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        EnsureSsoEnabled();
-        EnsureKnownProvider(provider);
-        throw new NotImplementedException(
-            $"OIDC callback akışı ('{NormalizeProvider(provider)}') henüz V1 sürümünde aktif değildir."
-        );
-    }
-
-    private void EnsureSsoEnabled()
-    {
-        if (!featureFlags.Value.EnableOidcSso)
+        /// <inheritdoc />
+        public Task<AuthResponse> HandleCallbackAsync(
+            string provider,
+            OidcCallbackRequest request,
+            CancellationToken cancellationToken = default
+        )
         {
-            throw new NotImplementedException(
-                "SSO / OpenID Connect özelliği sistem yapılandırmasında devre dışı (Feature-Flag kapalı)."
-            );
+            throw SsoNotImplemented();
         }
+
+        private static NotImplementedException SsoNotImplemented() =>
+            new(ErrorCodes.SsoNotImplemented);
     }
-
-    private void EnsureKnownProvider(string provider)
-    {
-        if (oidcOptions.Value.TryGetProvider(provider, out _))
-            return;
-
-        throw new NotImplementedException(
-            $"Bilinmeyen veya yapılandırılmamış OIDC sağlayıcısı: '{NormalizeProvider(provider)}'."
-        );
-    }
-
-    private static string NormalizeProvider(string provider) =>
-        string.IsNullOrWhiteSpace(provider) ? string.Empty : provider.Trim();
 }

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using AtaGreenTech.UserService.Application.Common;
 using AtaGreenTech.UserService.Application.Features.Tenants.DTOs;
 using AtaGreenTech.UserService.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -219,7 +220,7 @@ internal sealed class TenantManagementAdmin(MasterDbContext master) : ITenantMan
                            FROM "ModuleLanguages" ml
                            INNER JOIN "Languages" l ON l."Id" = ml."LanguageId"
                            WHERE ml."ModuleId" = mod."Id"
-                       ), '{}'::jsonb)::text AS "TranslationsJson"
+                       ), '{{}}'::jsonb)::text AS "TranslationsJson"
                 FROM "Modules" mod
                 LEFT JOIN "TenantModuleSubscriptions" s
                     ON s."ModuleId" = mod."Id" AND s."TenantId" = {0}
@@ -236,7 +237,7 @@ internal sealed class TenantManagementAdmin(MasterDbContext master) : ITenantMan
                 var translations = ParseTranslations(r.TranslationsJson);
                 var name = translations.TryGetValue(lang, out var localized) && !string.IsNullOrWhiteSpace(localized)
                     ? localized
-                    : translations.Values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? r.Code;
+                    : StringHelpers.FirstNonEmpty(translations.Values) ?? r.Code;
                 return new TenantModuleItemDto(
                     r.ModuleId,
                     r.Code,

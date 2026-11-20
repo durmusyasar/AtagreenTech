@@ -53,7 +53,7 @@ internal sealed class SystemNavigationAdmin(MasterDbContext master) : ISystemNav
                            FROM "ModuleLanguages" ml
                            INNER JOIN "Languages" l ON l."Id" = ml."LanguageId"
                            WHERE ml."ModuleId" = mod."Id"
-                       ), '{}'::jsonb)::text AS "TranslationsJson"
+                       ), '{{}}'::jsonb)::text AS "TranslationsJson"
                 FROM "Modules" mod
                 ORDER BY mod."DisplayOrder", mod."Code"
                 """
@@ -88,7 +88,7 @@ internal sealed class SystemNavigationAdmin(MasterDbContext master) : ISystemNav
                            FROM "MenuLanguages" ml
                            INNER JOIN "Languages" l ON l."Id" = ml."LanguageId"
                            WHERE ml."MenuId" = m."Id"
-                       ), '{}'::jsonb)::text AS "TranslationsJson"
+                       ), '{{}}'::jsonb)::text AS "TranslationsJson"
                 FROM "MenuDefinitions" m
                 INNER JOIN "Modules" mod ON mod."Id" = m."ModuleId"
                 ORDER BY mod."DisplayOrder", m."DisplayOrder", m."Code"
@@ -128,7 +128,7 @@ internal sealed class SystemNavigationAdmin(MasterDbContext master) : ISystemNav
                            FROM "MenuLanguages" ml
                            INNER JOIN "Languages" l ON l."Id" = ml."LanguageId"
                            WHERE ml."MenuId" = m."Id"
-                       ), '{}'::jsonb)::text AS "TranslationsJson"
+                       ), '{{}}'::jsonb)::text AS "TranslationsJson"
                 FROM "MenuDefinitions" m
                 WHERE m."Id" = {0}
                 """,

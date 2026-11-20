@@ -31,6 +31,38 @@
   <data name="AUTH_MFA_ALREADY_ENABLED" xml:space="preserve"><value>MFA is already enabled.</value></data>
   <data name="AUTH_MFA_ALREADY_DISABLED" xml:space="preserve"><value>MFA is already disabled.</value></data>
   <data name="AUTH_MFA_SETUP_REQUIRED" xml:space="preserve"><value>Start MFA setup first.</value></data>
+  <data name="AUTH_TENANT_UNRESOLVED" xml:space="preserve"><value>Tenant could not be resolved from the host. Use the correct domain.</value></data>
+  <data name="AUTH_LOGOUT_SUCCESS" xml:space="preserve"><value>Signed out successfully.</value></data>
+  <data name="AUTH_VERIFY_EMAIL_SUCCESS" xml:space="preserve"><value>Your email address has been verified successfully.</value></data>
+  <data name="AUTH_RESEND_VERIFICATION_SUCCESS" xml:space="preserve"><value>A verification email has been sent (if the account is eligible).</value></data>
+  <data name="AUTH_FORGOT_PASSWORD_SUCCESS" xml:space="preserve"><value>A password reset link has been sent to your email (if the account is eligible).</value></data>
+  <data name="AUTH_RESET_PASSWORD_SUCCESS" xml:space="preserve"><value>Your password has been reset successfully. All active sessions have been signed out.</value></data>
+  <data name="AUTH_CHANGE_PASSWORD_SUCCESS" xml:space="preserve"><value>Your password has been changed successfully. Please sign in again.</value></data>
+  <data name="AUTH_ACCEPT_INVITE_SUCCESS" xml:space="preserve"><value>Your account has been created successfully. You can sign in now.</value></data>
+  <data name="AUTH_VERIFY_MFA_SUCCESS" xml:space="preserve"><value>MFA has been enabled successfully.</value></data>
+  <data name="AUTH_DISABLE_MFA_SUCCESS" xml:space="preserve"><value>MFA has been disabled successfully.</value></data>
+  <data name="AUDIT_LOGIN_SUCCESS" xml:space="preserve"><value>Successful sign-in.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE" xml:space="preserve"><value>Failed sign-in.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE_LOCKED" xml:space="preserve"><value>Failed sign-in: account locked.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE_BAD_PASSWORD" xml:space="preserve"><value>Failed sign-in: invalid password.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE_INACTIVE" xml:space="preserve"><value>Failed sign-in: account inactive.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE_EMAIL_UNVERIFIED" xml:space="preserve"><value>Failed sign-in: email not verified.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE_MFA_INVALID" xml:space="preserve"><value>Failed sign-in: invalid MFA code.</value></data>
+  <data name="AUDIT_PASSWORD_RESET" xml:space="preserve"><value>Password was reset.</value></data>
+  <data name="AUDIT_MFA_ENABLED" xml:space="preserve"><value>User enabled TOTP MFA.</value></data>
+  <data name="AUDIT_MFA_DISABLED" xml:space="preserve"><value>User disabled MFA.</value></data>
+  <data name="AUDIT_USER_INVITED" xml:space="preserve"><value>Invitation email sent. Role: {0}. Invited by: {1}.</value></data>
+  <data name="AUDIT_USER_ROLES_UPDATED" xml:space="preserve"><value>Roles updated for {0}: {1}.</value></data>
+  <data name="AUDIT_ROLE_PERMISSIONS_UPDATED" xml:space="preserve"><value>Permissions updated for role {0}: {1}.</value></data>
+  <data name="AUDIT_TENANT_IDENTITY_SEEDED" xml:space="preserve"><value>Default Admin and RBAC catalog seeded for tenant '{0}'.</value></data>
+  <data name="AUDIT_ACTOR_UNKNOWN" xml:space="preserve"><value>unknown</value></data>
+
+
+
+
+
+
+
   <data name="USER_CANNOT_MODIFY_SELF" xml:space="preserve"><value>You cannot perform this action on your own account.</value></data>
   <data name="USER_LAST_ADMIN" xml:space="preserve"><value>This action cannot be performed on the last active Admin account.</value></data>
   <data name="USER_EMAIL_EXISTS" xml:space="preserve"><value>A user with this email address already exists.</value></data>
@@ -79,6 +111,20 @@
   <data name="FIELD_UNIT_ID" xml:space="preserve"><value>Unit id</value></data>
   <data name="FIELD_WAREHOUSE_ID" xml:space="preserve"><value>Warehouse id</value></data>
   <data name="FIELD_ROLES" xml:space="preserve"><value>Roles</value></data>
+  <data name="FIELD_USER_ID" xml:space="preserve"><value>User id</value></data>
+  <data name="FIELD_SESSION_ID" xml:space="preserve"><value>Session id</value></data>
+  <data name="FIELD_SECURITY_STAMP" xml:space="preserve"><value>Security stamp</value></data>
+  <data name="FIELD_EMAIL" xml:space="preserve"><value>Email</value></data>
+  <data name="FIELD_PASSWORD" xml:space="preserve"><value>Password</value></data>
+  <data name="FIELD_CURRENT_PASSWORD" xml:space="preserve"><value>Current password</value></data>
+  <data name="FIELD_NEW_PASSWORD" xml:space="preserve"><value>New password</value></data>
+
+  <data name="FIELD_REFRESH_TOKEN" xml:space="preserve"><value>Refresh token</value></data>
+  <data name="FIELD_TOKEN" xml:space="preserve"><value>Token</value></data>
+  <data name="FIELD_FIRST_NAME" xml:space="preserve"><value>First name</value></data>
+  <data name="FIELD_LAST_NAME" xml:space="preserve"><value>Last name</value></data>
+
+
   <data name="Catalog.CategoryCannotBeItsOwnParent" xml:space="preserve"><value>A category cannot be its own parent.</value></data>
   <data name="Catalog.CategoryHierarchyCycle" xml:space="preserve"><value>This parent would create a cycle in the hierarchy.</value></data>
   <data name="Catalog.CategoryNotFound" xml:space="preserve"><value>Category not found.</value></data>

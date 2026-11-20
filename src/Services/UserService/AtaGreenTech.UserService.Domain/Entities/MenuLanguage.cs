@@ -1,12 +1,17 @@
-namespace AtaGreenTech.UserService.Domain.Entities;
-
-/// <summary>Menü adı çevirisi (MenuId + LanguageId unique).</summary>
-public sealed class MenuLanguage
+namespace AtaGreenTech.UserService.Domain.Entities
 {
-    public const int NameMaxLength = 128;
+    /// <summary>
+    /// Master menü adı çevirisi şekli (MenuId + LanguageId unique).
+    /// EF aggregate değildir; satırlar SQL ile yönetilir. <see cref="NameMaxLength"/>
+    /// Infrastructure normalizasyonunda kullanılır.
+    /// </summary>
+    public sealed class MenuLanguage
+    {
+        public const int NameMaxLength = 128;
 
-    public Guid Id { get; init; }
-    public Guid MenuId { get; init; }
-    public Guid LanguageId { get; init; }
-    public string Name { get; init; } = null!;
+        public Guid Id { get; init; }
+        public Guid MenuId { get; init; }
+        public Guid LanguageId { get; init; }
+        public string Name { get; init; } = null!;
+    }
 }

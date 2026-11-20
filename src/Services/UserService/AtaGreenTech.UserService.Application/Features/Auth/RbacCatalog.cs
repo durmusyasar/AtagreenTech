@@ -2,96 +2,100 @@ using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.UserService.Domain.Entities;
 using OmniSync.Core.Domain.Repositories;
 
-namespace AtaGreenTech.UserService.Application.Features.Auth;
-
-/// <summary>İzin kataloğu ve varsayılan rol eşlemelerini idempotent olarak sağlar.</summary>
-internal static class RbacCatalog
+namespace AtaGreenTech.UserService.Application.Features.Auth
 {
-    public static async Task EnsureAsync(
-        IRepository<Role> roles,
-        IRepository<Permission> permissions,
-        IRepository<RolePermission> rolePermissions,
-        IUnitOfWork unitOfWork,
-        CancellationToken cancellationToken
-    )
+    /// <summary>İzin kataloğu ve varsayılan rol eşlemelerini idempotent olarak sağlar.</summary>
+    internal static class RbacCatalog
     {
-        foreach (var (name, description) in Permissions.Catalog)
-            await EnsurePermissionAsync(permissions, name, description, cancellationToken);
-
-        var roleByName = new Dictionary<string, Role>(StringComparer.OrdinalIgnoreCase);
-        foreach (var (roleName, _) in Permissions.DefaultRoleGrants)
+        /// <summary>
+        /// <see cref="Permissions.Catalog"/> izinlerini, varsayılan rolleri ve
+        /// <see cref="Permissions.DefaultRoleGrants"/> atamalarını tenant DB'de oluşturur / tamamlar.
+        /// İkinci çağrıda mevcut kayıtları çoğaltmaz.
+        /// </summary>
+        public static async Task EnsureAsync(
+            IRepository<Role> roles,
+            IRepository<Permission> permissions,
+            IRepository<RolePermission> rolePermissions,
+            IUnitOfWork unitOfWork,
+            CancellationToken cancellationToken
+        )
         {
-            var description = roleName switch
+            foreach (var (name, description) in Permissions.Catalog)
+                await EnsurePermissionAsync(permissions, name, description, cancellationToken);
+
+            var roleByName = new Dictionary<string, Role>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (roleName, _) in Permissions.DefaultRoleGrants)
             {
-                Role.Names.Admin => "System Administrator",
-                Role.Names.Manager => "Tenant manager",
-                Role.Names.Viewer => "Read-only viewer",
-                _ => $"{roleName} Role",
-            };
-            roleByName[roleName] = await EnsureRoleAsync(roles, roleName, description, cancellationToken);
-        }
-
-        // Roller/izinler AsNoTracking login sorgusunda görünsün diye ara kayıt.
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var allPermissions = await permissions.GetAllByFilterAsync(_ => true, cancellationToken);
-        var permissionByName = allPermissions.ToDictionary(
-            p => p.Name,
-            StringComparer.OrdinalIgnoreCase
-        );
-
-        foreach (var (roleName, grantNames) in Permissions.DefaultRoleGrants)
-        {
-            var role = roleByName[roleName];
-            var existing = await rolePermissions.GetAllByFilterAsync(
-                rp => rp.RoleId == role.Id,
-                cancellationToken
-            );
-            var existingIds = existing.Select(rp => rp.PermissionId).ToHashSet();
-
-            foreach (var grantName in grantNames)
-            {
-                var key = Permission.NormalizeName(grantName);
-                if (!permissionByName.TryGetValue(key, out var permission))
-                    continue;
-
-                if (existingIds.Contains(permission.Id))
-                    continue;
-
-                await rolePermissions.AddAsync(new RolePermission(role.Id, permission.Id), cancellationToken);
+                var description = Permissions.DefaultRoleDescriptions.TryGetValue(roleName, out var known)
+                    ? known
+                    : $"{roleName} Role";
+                roleByName[roleName] = await EnsureRoleAsync(roles, roleName, description, cancellationToken);
             }
+
+            // Roller/izinler AsNoTracking login sorgusunda görünsün diye ara kayıt.
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var allPermissions = await permissions.GetAllByFilterAsync(_ => true, cancellationToken);
+            var permissionByName = allPermissions.ToDictionary(
+                p => p.Name,
+                StringComparer.OrdinalIgnoreCase
+            );
+
+            foreach (var (roleName, grantNames) in Permissions.DefaultRoleGrants)
+            {
+                var role = roleByName[roleName];
+                var existing = await rolePermissions.GetAllByFilterAsync(
+                    rp => rp.RoleId == role.Id,
+                    cancellationToken
+                );
+                var existingIds = existing.Select(rp => rp.PermissionId).ToHashSet();
+
+                foreach (var grantName in grantNames)
+                {
+                    var key = Permission.NormalizeName(grantName);
+                    if (!permissionByName.TryGetValue(key, out var permission))
+                        continue;
+
+                    if (existingIds.Contains(permission.Id))
+                        continue;
+
+                    await rolePermissions.AddAsync(new RolePermission(role.Id, permission.Id), cancellationToken);
+                }
+            }
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-    }
+        /// <summary>İzin yoksa ekler; varsa no-op.</summary>
+        private static async Task EnsurePermissionAsync(
+            IRepository<Permission> permissions,
+            string name,
+            string description,
+            CancellationToken cancellationToken
+        )
+        {
+            var normalized = Permission.NormalizeName(name);
+            var existing = (await permissions.GetAllByFilterAsync(p => p.Name == normalized, cancellationToken))
+                .FirstOrDefault();
+            if (existing is not null)
+                return;
 
-    private static async Task EnsurePermissionAsync(
-        IRepository<Permission> permissions,
-        string name,
-        string description,
-        CancellationToken cancellationToken
-    )
-    {
-        var normalized = Permission.NormalizeName(name);
-        var existing = (await permissions.GetAllByFilterAsync(p => p.Name == normalized, cancellationToken))
-            .FirstOrDefault();
-        if (existing is not null)
-            return;
+            await permissions.AddAsync(new Permission(normalized, description), cancellationToken);
+        }
 
-        await permissions.AddAsync(new Permission(normalized, description), cancellationToken);
-    }
+        /// <summary>Rol yoksa ekler; varsa mevcut kaydı döner.</summary>
+        private static async Task<Role> EnsureRoleAsync(
+            IRepository<Role> roles,
+            string name,
+            string description,
+            CancellationToken cancellationToken
+        )
+        {
+            var existing = (await roles.GetAllByFilterAsync(r => r.Name == name, cancellationToken)).FirstOrDefault();
+            if (existing is not null)
+                return existing;
 
-    private static async Task<Role> EnsureRoleAsync(
-        IRepository<Role> roles,
-        string name,
-        string description,
-        CancellationToken cancellationToken
-    )
-    {
-        var existing = (await roles.GetAllByFilterAsync(r => r.Name == name, cancellationToken)).FirstOrDefault();
-        if (existing is not null)
-            return existing;
-
-        return await roles.AddAsync(new Role(name, description), cancellationToken);
+            return await roles.AddAsync(new Role(name, description), cancellationToken);
+        }
     }
 }

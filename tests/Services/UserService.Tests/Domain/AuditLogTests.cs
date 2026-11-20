@@ -1,3 +1,4 @@
+using AtaGreenTech.UserService.Domain;
 using AtaGreenTech.UserService.Domain.Entities;
 
 namespace AtaGreenTech.UserService.Tests.Domain;
@@ -22,6 +23,29 @@ public sealed class AuditLogTests
     }
 
     [Fact]
+    public void Constructor_requires_action_and_email()
+    {
+        var missingAction = Assert.Throws<ArgumentException>(() =>
+            new AuditLog("  ", "a@b.com"));
+        Assert.StartsWith(DomainErrorCodes.ValidationRequired, missingAction.Message, StringComparison.Ordinal);
+        Assert.Equal("action", missingAction.ParamName);
+
+        var missingEmail = Assert.Throws<ArgumentException>(() =>
+            new AuditLog(AuditLog.Actions.LoginSuccess, "  "));
+        Assert.StartsWith(DomainErrorCodes.ValidationRequired, missingEmail.Message, StringComparison.Ordinal);
+        Assert.Equal("email", missingEmail.ParamName);
+    }
+
+    [Fact]
+    public void Constructor_rejects_action_over_max_length()
+    {
+        var tooLong = new string('A', AuditLog.ActionMaxLength + 1);
+        var ex = Assert.Throws<ArgumentException>(() => new AuditLog(tooLong, "a@b.com"));
+        Assert.StartsWith(DomainErrorCodes.ValidationMaxLength, ex.Message, StringComparison.Ordinal);
+        Assert.Equal("action", ex.ParamName);
+    }
+
+    [Fact]
     public void Constructor_truncates_long_details()
     {
         var details = new string('x', AuditLog.DetailsMaxLength + 50);
@@ -30,3 +54,4 @@ public sealed class AuditLogTests
         Assert.Equal(AuditLog.DetailsMaxLength, log.Details!.Length);
     }
 }
+

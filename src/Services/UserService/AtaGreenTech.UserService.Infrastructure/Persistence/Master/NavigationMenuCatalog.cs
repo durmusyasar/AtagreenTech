@@ -66,13 +66,13 @@ internal sealed class NavigationMenuCatalog(MasterDbContext master) : INavigatio
                            FROM "ModuleLanguages" ml
                            INNER JOIN "Languages" l ON l."Id" = ml."LanguageId" AND l."IsActive" = TRUE
                            WHERE ml."ModuleId" = mod."Id"
-                       ), '{}'::jsonb)::text AS "ModuleTranslationsJson",
+                       ), '{{}}'::jsonb)::text AS "ModuleTranslationsJson",
                        COALESCE((
                            SELECT jsonb_object_agg(l."Code", menul."Name")
                            FROM "MenuLanguages" menul
                            INNER JOIN "Languages" l ON l."Id" = menul."LanguageId" AND l."IsActive" = TRUE
                            WHERE menul."MenuId" = m."Id"
-                       ), '{}'::jsonb)::text AS "TranslationsJson"
+                       ), '{{}}'::jsonb)::text AS "TranslationsJson"
                 FROM "MenuDefinitions" m
                 INNER JOIN "Modules" mod ON mod."Id" = m."ModuleId" AND mod."IsActive" = TRUE
                 LEFT JOIN "TenantModuleSubscriptions" s

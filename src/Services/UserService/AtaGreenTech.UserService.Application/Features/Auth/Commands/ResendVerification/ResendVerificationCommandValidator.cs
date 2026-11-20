@@ -1,11 +1,27 @@
+using AtaGreenTech.SharedKernel.Localization;
+using AtaGreenTech.UserService.Domain.Entities;
 using FluentValidation;
 
-namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.ResendVerification;
-
-internal sealed class ResendVerificationCommandValidator : AbstractValidator<ResendVerificationCommand>
+namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.ResendVerification
 {
-    public ResendVerificationCommandValidator()
+    /// <summary>
+    /// Yeniden doğrulama isteği alan doğrulaması. Mesajlar <see cref="IErrorLocalizer"/> / <see cref="ErrorCodes"/> (#71).
+    /// </summary>
+    internal sealed class ResendVerificationCommandValidator : AbstractValidator<ResendVerificationCommand>
     {
-        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(256);
+        public ResendVerificationCommandValidator(IErrorLocalizer localizer)
+        {
+            RuleFor(x => x.Email)
+                .NotEmpty()
+                .WithRequiredMessage(localizer, ErrorCodes.Fields.Email)
+                .EmailAddress()
+                .WithLocalizedMessage(
+                    localizer,
+                    ErrorCodes.ValidationInvalid,
+                    localizer.Localize(ErrorCodes.Fields.Email)
+                )
+                .MaximumLength(User.EmailMaxLength)
+                .WithMaxLengthMessage(localizer, ErrorCodes.Fields.Email, User.EmailMaxLength);
+        }
     }
 }

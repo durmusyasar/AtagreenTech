@@ -31,4 +31,5 @@ export const AuthErrorCodes = {
   AccountInactive: 'AUTH_ACCOUNT_INACTIVE',
   EmailNotVerified: 'AUTH_EMAIL_NOT_VERIFIED',
   RateLimitExceeded: 'AUTH_RATE_LIMIT_EXCEEDED',
+  TenantUnresolved: 'AUTH_TENANT_UNRESOLVED',
 } as const

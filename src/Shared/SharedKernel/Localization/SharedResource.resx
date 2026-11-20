@@ -31,6 +31,38 @@
   <data name="AUTH_MFA_ALREADY_ENABLED" xml:space="preserve"><value>MFA zaten etkin.</value></data>
   <data name="AUTH_MFA_ALREADY_DISABLED" xml:space="preserve"><value>MFA zaten kapalı.</value></data>
   <data name="AUTH_MFA_SETUP_REQUIRED" xml:space="preserve"><value>Önce MFA kurulumunu başlatın.</value></data>
+  <data name="AUTH_TENANT_UNRESOLVED" xml:space="preserve"><value>İstekten kiracı (tenant) çözümlenemedi. Doğru alan adını kullanın.</value></data>
+  <data name="AUTH_LOGOUT_SUCCESS" xml:space="preserve"><value>Başarıyla çıkış yapıldı.</value></data>
+  <data name="AUTH_VERIFY_EMAIL_SUCCESS" xml:space="preserve"><value>E-posta adresiniz başarıyla doğrulandı.</value></data>
+  <data name="AUTH_RESEND_VERIFICATION_SUCCESS" xml:space="preserve"><value>Doğrulama e-postası gönderildi (hesap uygunsa).</value></data>
+  <data name="AUTH_FORGOT_PASSWORD_SUCCESS" xml:space="preserve"><value>Şifre sıfırlama bağlantısı e-posta adresinize gönderildi (hesap uygunsa).</value></data>
+  <data name="AUTH_RESET_PASSWORD_SUCCESS" xml:space="preserve"><value>Şifreniz başarıyla sıfırlandı. Tüm aktif oturumlarınız sonlandırıldı.</value></data>
+  <data name="AUTH_CHANGE_PASSWORD_SUCCESS" xml:space="preserve"><value>Şifreniz başarıyla değiştirildi. Lütfen tekrar giriş yapın.</value></data>
+  <data name="AUTH_ACCEPT_INVITE_SUCCESS" xml:space="preserve"><value>Hesabınız başarıyla oluşturuldu. Artık giriş yapabilirsiniz.</value></data>
+  <data name="AUTH_VERIFY_MFA_SUCCESS" xml:space="preserve"><value>MFA başarıyla etkinleştirildi.</value></data>
+  <data name="AUTH_DISABLE_MFA_SUCCESS" xml:space="preserve"><value>MFA başarıyla kapatıldı.</value></data>
+  <data name="AUDIT_LOGIN_SUCCESS" xml:space="preserve"><value>Başarılı giriş.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE" xml:space="preserve"><value>Başarısız giriş.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE_LOCKED" xml:space="preserve"><value>Başarısız giriş: hesap kilitli.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE_BAD_PASSWORD" xml:space="preserve"><value>Başarısız giriş: hatalı parola.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE_INACTIVE" xml:space="preserve"><value>Başarısız giriş: hesap pasif.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE_EMAIL_UNVERIFIED" xml:space="preserve"><value>Başarısız giriş: e-posta doğrulanmamış.</value></data>
+  <data name="AUDIT_LOGIN_FAILURE_MFA_INVALID" xml:space="preserve"><value>Başarısız giriş: MFA kodu geçersiz.</value></data>
+  <data name="AUDIT_PASSWORD_RESET" xml:space="preserve"><value>Parola sıfırlandı.</value></data>
+  <data name="AUDIT_MFA_ENABLED" xml:space="preserve"><value>Kullanıcı TOTP MFA'yı etkinleştirdi.</value></data>
+  <data name="AUDIT_MFA_DISABLED" xml:space="preserve"><value>Kullanıcı MFA'yı kapattı.</value></data>
+  <data name="AUDIT_USER_INVITED" xml:space="preserve"><value>Yeni kullanıcı davet e-postası gönderildi. Rol: {0}. Davet eden: {1}.</value></data>
+  <data name="AUDIT_USER_ROLES_UPDATED" xml:space="preserve"><value>{0} kullanıcısının rolleri güncellendi: {1}.</value></data>
+  <data name="AUDIT_ROLE_PERMISSIONS_UPDATED" xml:space="preserve"><value>{0} rolünün izinleri güncellendi: {1}.</value></data>
+  <data name="AUDIT_TENANT_IDENTITY_SEEDED" xml:space="preserve"><value>Tenant '{0}' için varsayılan Admin ve RBAC kataloğu seed edildi.</value></data>
+  <data name="AUDIT_ACTOR_UNKNOWN" xml:space="preserve"><value>bilinmiyor</value></data>
+
+
+
+
+
+
+
   <data name="USER_CANNOT_MODIFY_SELF" xml:space="preserve"><value>Kendi hesabınız üzerinde bu işlemi yapamazsınız.</value></data>
   <data name="USER_LAST_ADMIN" xml:space="preserve"><value>Son aktif Admin hesabı üzerinde bu işlem yapılamaz.</value></data>
   <data name="USER_EMAIL_EXISTS" xml:space="preserve"><value>Bu e-posta adresiyle kayıtlı bir kullanıcı zaten mevcut.</value></data>
@@ -79,6 +111,20 @@
   <data name="FIELD_UNIT_ID" xml:space="preserve"><value>Birim kimliği</value></data>
   <data name="FIELD_WAREHOUSE_ID" xml:space="preserve"><value>Depo kimliği</value></data>
   <data name="FIELD_ROLES" xml:space="preserve"><value>Roller</value></data>
+  <data name="FIELD_USER_ID" xml:space="preserve"><value>Kullanıcı kimliği</value></data>
+  <data name="FIELD_SESSION_ID" xml:space="preserve"><value>Oturum kimliği</value></data>
+  <data name="FIELD_SECURITY_STAMP" xml:space="preserve"><value>Güvenlik damgası</value></data>
+  <data name="FIELD_EMAIL" xml:space="preserve"><value>E-posta</value></data>
+  <data name="FIELD_PASSWORD" xml:space="preserve"><value>Şifre</value></data>
+  <data name="FIELD_CURRENT_PASSWORD" xml:space="preserve"><value>Mevcut şifre</value></data>
+  <data name="FIELD_NEW_PASSWORD" xml:space="preserve"><value>Yeni şifre</value></data>
+  <data name="FIELD_REFRESH_TOKEN" xml:space="preserve"><value>Yenileme jetonu</value></data>
+
+  <data name="FIELD_TOKEN" xml:space="preserve"><value>Jeton</value></data>
+  <data name="FIELD_FIRST_NAME" xml:space="preserve"><value>Ad</value></data>
+  <data name="FIELD_LAST_NAME" xml:space="preserve"><value>Soyad</value></data>
+
+
   <data name="Catalog.CategoryCannotBeItsOwnParent" xml:space="preserve"><value>Bir kategori kendisinin üst kategorisi olamaz.</value></data>
   <data name="Catalog.CategoryHierarchyCycle" xml:space="preserve"><value>Bu üst kategori seçimi hiyerarşide döngü oluşturur.</value></data>
   <data name="Catalog.CategoryNotFound" xml:space="preserve"><value>Kategori bulunamadı.</value></data>

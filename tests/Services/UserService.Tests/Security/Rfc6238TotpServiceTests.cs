@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Infrastructure.Security;
 
 namespace AtaGreenTech.UserService.Tests.Security;
@@ -24,6 +25,29 @@ public sealed class Rfc6238TotpServiceTests
         Assert.Contains("secret=JBSWY3DPEHPK3PXP", uri);
         Assert.Contains("issuer=OmniSync", uri);
     }
+
+    [Fact]
+    public void BuildAuthenticatorUri_rejects_blank_inputs_with_validation_required()
+    {
+        var sut = new Rfc6238TotpService();
+
+        var email = Assert.Throws<ArgumentException>(() =>
+            sut.BuildAuthenticatorUri("  ", "JBSWY3DPEHPK3PXP", "OmniSync")
+        );
+        Assert.StartsWith(ErrorCodes.ValidationRequired, email.Message, StringComparison.Ordinal);
+        Assert.Equal("email", email.ParamName);
+
+        var secret = Assert.Throws<ArgumentException>(() =>
+            sut.BuildAuthenticatorUri("a@b.com", "", "OmniSync")
+        );
+        Assert.Equal("secretBase32", secret.ParamName);
+
+        var issuer = Assert.Throws<ArgumentException>(() =>
+            sut.BuildAuthenticatorUri("a@b.com", "JBSWY3DPEHPK3PXP", " ")
+        );
+        Assert.Equal("issuer", issuer.ParamName);
+    }
+
 
     [Fact]
     public void VerifyCode_accepts_current_window_code()

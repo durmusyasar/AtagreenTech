@@ -1,3 +1,5 @@
+using AtaGreenTech.UserService.Application.Common;
+
 namespace AtaGreenTech.UserService.Application.Features.Navigation;
 
 /// <summary>Accept-Language → varsayılan dil → kod fallback.</summary>
@@ -23,8 +25,7 @@ public static class NavigationTitleResolver
             && !string.IsNullOrWhiteSpace(def))
             return def;
 
-        var first = translations.Values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
-        return string.IsNullOrWhiteSpace(first) ? fallbackCode : first;
+        return StringHelpers.FirstNonEmpty(translations.Values) ?? fallbackCode;
     }
 
     public static string Normalize(string languageCode)

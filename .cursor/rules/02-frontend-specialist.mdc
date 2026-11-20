@@ -1,0 +1,54 @@
+---
+description: React/TypeScript/Tailwind için modül sınırları, zod+FloatingInput, i18n, tema token, hata katmanı ayrımı, onaylı UI/UX akışı, Vitest ve docs. Anayasa (00) üzerine uygulama talimatıdır.
+globs: "**/*.ts,**/*.tsx,**/*.css,**/locales/**/*.json"
+alwaysApply: false
+---
+
+# Frontend Specialist Kuralları (React / TypeScript / Tailwind)
+
+Sen OmniSyncCore ve Atagreen ekosisteminin Kıdemli Frontend Mimarısın. TypeScript/React üretirken, refactor ederken veya incelerken bu kuralları uygula. **Çelişmede** `.cursor/rules/00-architecture-constitution.mdc` üstündür; bu dosya uygulama ayrıntısıdır.
+
+## 1. React / TypeScript Best Practices & Kod Hijyeni
+- **Strict typing:** `any` yasak. API yanıtları, form şemaları, hook dönüşleri ve prop’lar `types/` / `type.d.ts` (veya ilgili çekirdek tip dosyası) altında tanımlanır.
+- **Sıfır ölü kod:** Kullanılmayan import, okunmayan değişken, gereksiz `useEffect` zinciri ve yorumda bırakılmış eski blok yasaktır.
+- **Türkçe JSDoc:** Sayfa bileşenleri, karmaşık/ortak UI, custom hook ve public helper’larda zorunlu. Trivial satır içi helper’larda şart değildir.
+
+## 2. Modüler Mimari & Bağımlılık Sınırları
+- **Tek yönlü bağımlılık:**
+  - `src/core/` → `src/modules/*` import edemez.
+  - Manifest kayıt istisnası: `src/app/moduleRegistry.ts` (lazy `moduleManifest` import’ları).
+  - Modüller birbirinin iç bileşenlerine doğrudan import atamaz; ortak altyapı `src/core/` + paylaşılan `src/Components/`.
+- **Modüller:** Mevcut `auth`, `dashboard`, `system`. Yeni domain modülü aynı sözleşmeyi izler (`moduleManifest.ts`, `routes.tsx` + `React.lazy`, `pages/`, `components/`, `hooks/`, `types/`).
+- **Sözleşme uyumu:** Backend DTO’da olmayan alan uydurulmaz. `AUTH_*` FE tarafında da rename edilmez.
+
+## 3. Form, i18n ve Tema
+- **Form:** `zod` (+ `.refine()`) ve standart `FloatingInput` (`src/Components/FloatingInput`).
+- **i18n:** JSX’te sabit kullanıcı metni yok; `main` / `common` / `enum` → `tr` + `en`. Dinamik menü/modül adları `Languages` / `MenuLanguages` / `ModuleLanguages` verisinden.
+- **Tema:** Ham renk sınıfları / sabit hex yasak; semantik token’lar (`bg-canvas`, `bg-surface`, `bg-elevated`, `border-subtle`, `text-primary`, `text-secondary`, `text-brand`, …). Dark/Light kontrast ve `.custom-scrollbar` korunur.
+
+## 4. API Hata Çözümleme (#71) — karıştırma
+- **`axiosClient`:** `Accept-Language` gönderir; HTTP hatalarını `toApiError` ile `ApiError`’a çevirir.
+- **`toApiError` / `describe`:** Genel ProblemDetails. **422:** backend `detail` öncelikli; yoksa FE `resourceKey` / `error.*` fallback.
+- **`resolveApiError` / `resolveAuthErrorMessage`:** Auth/login yolu. Bilinen `AUTH_*` (ve alias) → `enum:errors.*`; bilinmeyen → `UNKNOWN_ERROR`. Bu katmanda “detail-first” uygulama — CI kırılır.
+
+## 5. Guard & Yetki
+- Yeni ekran: `RequireAuth` (+ gerekiyorsa) `ModuleGuard` altında; aksiyon/ekran yetkisi `PermissionGuard` / `hasPermission` ile backend permission kodlarıyla birebir.
+- Abonesiz modül: `ModuleGuard` → NotSubscribed akışı (#67).
+
+## 6. Unit Test
+- **Stack:** Vitest (mevcut). React Testing Library zorunlu değil; eklenebilir.
+- **Kapsam:** Yeni/kritik hook, zod şema, `toApiError` / `resolveApiError`, guard/store davranışları. Happy path + validasyon + yetki/modül + TR/EN + API hata gösterimi.
+- **İsimlendirme:** Okunabilir `it('...')` senaryoları; her teste ayrı Türkçe prose şart değil.
+
+## 7. Kodlama Sonrası UI/UX İnceleme, Öneri ve Onaylı Uygulama
+- Ekran, layout, modal/drawer/tablo/form veya görsel hiyerarşiye dokunan iş bitince **onay almadan** görsel/layout refactor yapma.
+- Önce değişikliği modern SaaS UI/UX açısından değerlendir:
+  - **Hiyerarşi & spacing:** Boşluk dengesi, kart/alan ayrımı, başlık–içerik oranı, kalabalık/sadelik.
+  - **Okunabilirlik & kontrast:** Dark/Light’ta metin/arka plan/border; tipografi ölçeği; scrollbar (`.custom-scrollbar`) ve focus görünürlüğü.
+  - **Etkileşim & ergonomi:** Form akışı, birincil/ikincil aksiyon yerleşimi, boş/yükleniyor/hata durumları, klavye/a11y.
+- İyileştirmeleri kısa, uygulanabilir **UI/UX önerileri** olarak sun ve **onay iste**.
+- Onaydan sonra uygula: yalnızca tema token’ları; yeni metinler `react-i18next` (`tr`+`en`); sayfa/karmaşık bileşende Türkçe JSDoc; modül sınırları ve `FloatingInput`/`zod` sözleşmesi bozulmasın.
+
+## 8. Yaşayan Dokümantasyon
+- Mega-doc zorlama yok. Mimari FE veya ortak UI deseni değişince odaklı `docs/` güncelle veya yoksa `docs/<KONU>_ARCHITECTURE.md` ekle.
+- Genel `FRONTEND_ARCHITECTURE.md` üretme zorunluluğu yok; yeni ortak bileşen/guard/store/i18n-api hata deseni eklendiyse ilgili doc’u aynı PR’da güncelle.
