@@ -10,7 +10,8 @@ internal sealed class ResetPasswordCommandHandler(
     IRepository<User> users,
     IRepository<RefreshToken> refreshTokens,
     IPasswordHasher passwordHasher,
-    IIdentityAuditLogger auditLogger
+    IIdentityAuditLogger auditLogger,
+    AccessTokenLifecycle accessTokenLifecycle
 ) : ICommandHandler<ResetPasswordCommand, MessageResult>
 {
     public async Task<MessageResult> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
@@ -22,7 +23,13 @@ internal sealed class ResetPasswordCommandHandler(
             return MessageResult.Fail("Geçersiz veya süresi dolmuş sıfırlama bağlantısı.");
 
         user.ChangePassword(passwordHasher.Hash(request.NewPassword));
-        await SessionRevocation.RevokeAllRefreshTokensAsync(refreshTokens, user.Id, cancellationToken);
+        await SessionRevocation.RevokeAllRefreshTokensAsync(
+            refreshTokens,
+            user.Id,
+            cancellationToken,
+            accessTokenLifecycle
+        );
+        await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
 
         await auditLogger.LogAsync(
             AuditLog.Actions.PasswordReset,

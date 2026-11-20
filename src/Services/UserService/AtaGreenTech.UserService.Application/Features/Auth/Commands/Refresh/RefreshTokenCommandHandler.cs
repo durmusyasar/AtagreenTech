@@ -15,7 +15,8 @@ internal sealed class RefreshTokenCommandHandler(
     IRepository<RefreshToken> refreshTokens,
     IAccessTokenIssuer accessTokenIssuer,
     ICurrentTenant currentTenant,
-    IOptions<AuthOptions> authOptions
+    IOptions<AuthOptions> authOptions,
+    AccessTokenLifecycle accessTokenLifecycle
 ) : ICommandHandler<RefreshTokenCommand, AuthAttemptResult>
 {
     public async Task<AuthAttemptResult> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
@@ -33,6 +34,7 @@ internal sealed class RefreshTokenCommandHandler(
         if (existing.IsRevoked)
         {
             await RevokeFamilyAsync(existing.FamilyId, cancellationToken);
+            await accessTokenLifecycle.RevokeSessionAsync(existing.FamilyId, cancellationToken);
             return AuthAttemptResult.Fail("Güvenlik ihlali tespit edildi. Lütfen tekrar giriş yapın.");
         }
 
@@ -68,6 +70,8 @@ internal sealed class RefreshTokenCommandHandler(
             user.Id,
             user.Email,
             currentTenant.Id.Value,
+            existing.FamilyId,
+            user.SecurityStamp,
             roleNames,
             permissionNames
         );
@@ -80,6 +84,7 @@ internal sealed class RefreshTokenCommandHandler(
         );
 
         await refreshTokens.AddAsync(refreshEntity, cancellationToken);
+        await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
 
         return AuthAttemptResult.Ok(new AuthResponse(access.AccessToken, refreshPlaintext, access.ExpiresAt));
     }

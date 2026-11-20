@@ -9,7 +9,8 @@ namespace AtaGreenTech.UserService.Application.Features.Sessions.Commands.Revoke
 
 internal sealed class RevokeSessionCommandHandler(
     IRepository<RefreshToken> refreshTokens,
-    ICurrentUser currentUser
+    ICurrentUser currentUser,
+    AccessTokenLifecycle accessTokenLifecycle
 ) : ICommandHandler<RevokeSessionCommand, MessageResult>
 {
     public async Task<MessageResult> Handle(RevokeSessionCommand request, CancellationToken cancellationToken)
@@ -21,7 +22,14 @@ internal sealed class RevokeSessionCommandHandler(
             cancellationToken
         ) ?? throw new NotFoundException(nameof(RefreshToken), request.SessionId);
 
-        session.Revoke();
+        var family = await refreshTokens.GetAllByFilterAsync(
+            rt => rt.FamilyId == session.FamilyId && !rt.IsRevoked,
+            cancellationToken
+        );
+        foreach (var token in family)
+            token.Revoke();
+
+        await accessTokenLifecycle.RevokeSessionAsync(session.FamilyId, cancellationToken);
         return MessageResult.Ok("Oturum sonlandırıldı.");
     }
 

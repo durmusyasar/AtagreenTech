@@ -8,7 +8,8 @@ namespace AtaGreenTech.UserService.Application.Features.Sessions.Commands.Revoke
 
 internal sealed class RevokeOtherSessionsCommandHandler(
     IRepository<RefreshToken> refreshTokens,
-    ICurrentUser currentUser
+    ICurrentUser currentUser,
+    AccessTokenLifecycle accessTokenLifecycle
 ) : ICommandHandler<RevokeOtherSessionsCommand, MessageResult>
 {
     public async Task<MessageResult> Handle(
@@ -24,8 +25,14 @@ internal sealed class RevokeOtherSessionsCommandHandler(
             cancellationToken
         );
 
+        var families = new HashSet<Guid>();
         foreach (var session in others)
+        {
+            families.Add(session.FamilyId);
             session.Revoke();
+        }
+
+        await accessTokenLifecycle.RevokeFamiliesAsync(families, cancellationToken);
 
         return MessageResult.Ok("Diğer tüm aktif oturumlarınız sonlandırıldı.");
     }

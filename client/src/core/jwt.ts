@@ -5,6 +5,8 @@ export interface TokenClaims {
   /** JWT `permission` claim değerleri (granüler RBAC). */
   permissions: string[]
   tenantId: string | null
+  /** Refresh ailesi / oturum kimliği (`sid`, #70). */
+  sessionId: string | null
   /** Bitiş zamanı (Unix saniye); token'da yoksa `null`. */
   expiresAt: number | null
 }
@@ -31,6 +33,7 @@ export function readTokenClaims(token: string): TokenClaims | null {
       roles: ROLE_CLAIMS.flatMap((name) => asStringList(claims[name])),
       permissions: PERMISSION_CLAIMS.flatMap((name) => asStringList(claims[name])),
       tenantId: asString(claims.tenant_id),
+      sessionId: asString(claims.sid),
       expiresAt: typeof claims.exp === 'number' ? claims.exp : null,
     }
   } catch {

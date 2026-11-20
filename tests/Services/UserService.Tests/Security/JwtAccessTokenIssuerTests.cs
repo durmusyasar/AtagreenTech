@@ -24,10 +24,14 @@ public sealed class JwtAccessTokenIssuerTests
 
         var userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var tenantId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        var sessionId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+        const string securityStamp = "AABBCCDDEEFF00112233445566778899";
         var result = issuer.Create(
             userId,
             "admin@omnisync.com",
             tenantId,
+            sessionId,
+            securityStamp,
             [RoleNameAdmin],
             [Permissions.Users.Read, Permissions.Stock.Write]
         );
@@ -39,6 +43,8 @@ public sealed class JwtAccessTokenIssuerTests
         Assert.Equal(userId.ToString(), jwt.Subject);
         Assert.Equal("admin@omnisync.com", jwt.Claims.First(c => c.Type == JwtContract.Claims.Email).Value);
         Assert.Equal(tenantId.ToString(), jwt.Claims.First(c => c.Type == JwtContract.Claims.TenantId).Value);
+        Assert.Equal(sessionId.ToString(), jwt.Claims.First(c => c.Type == JwtContract.Claims.SessionId).Value);
+        Assert.Equal(securityStamp, jwt.Claims.First(c => c.Type == JwtContract.Claims.SecurityStamp).Value);
         Assert.Equal(RoleNameAdmin, jwt.Claims.First(c => c.Type == JwtContract.Claims.Role).Value);
         Assert.Contains(
             Permissions.Users.Read,

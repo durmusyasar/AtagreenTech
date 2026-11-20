@@ -9,6 +9,8 @@ public interface IAccessTokenIssuer
         Guid userId,
         string email,
         Guid tenantId,
+        Guid sessionId,
+        string securityStamp,
         IReadOnlyCollection<string> roles,
         IReadOnlyCollection<string> permissions
     );

@@ -6,7 +6,17 @@ namespace AtaGreenTech.UserService.Application.Features.Auth;
 /// <summary>Kullanıcının tüm aktif refresh oturumlarını iptal eder (şifre değişimi / sıfırlama).</summary>
 internal static class SessionRevocation
 {
-    public static async Task RevokeAllRefreshTokensAsync(
+    public static Task RevokeAllRefreshTokensAsync(
+        IRepository<RefreshToken> refreshTokens,
+        Guid userId,
+        CancellationToken cancellationToken,
+        AccessTokenLifecycle? lifecycle = null
+    ) =>
+        lifecycle is null
+            ? RevokeRefreshOnlyAsync(refreshTokens, userId, cancellationToken)
+            : lifecycle.RevokeAllSessionsAsync(refreshTokens, userId, cancellationToken);
+
+    private static async Task RevokeRefreshOnlyAsync(
         IRepository<RefreshToken> refreshTokens,
         Guid userId,
         CancellationToken cancellationToken

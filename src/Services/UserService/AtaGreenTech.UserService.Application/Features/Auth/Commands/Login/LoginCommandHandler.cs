@@ -19,7 +19,8 @@ internal sealed class LoginCommandHandler(
     IIdentityAuditLogger auditLogger,
     ICurrentTenant currentTenant,
     ITenantIdentitySeeder identitySeeder,
-    IOptions<AuthOptions> authOptions
+    IOptions<AuthOptions> authOptions,
+    AccessTokenLifecycle accessTokenLifecycle
 ) : ICommandHandler<LoginCommand, AuthAttemptResult>
 {
     public async Task<AuthAttemptResult> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -148,22 +149,26 @@ internal sealed class LoginCommandHandler(
 
         var permissionNames = await UserPermissionResolver.ResolveAsync(db, user.Id, cancellationToken);
 
+        var sessionId = Guid.NewGuid();
         var access = accessTokenIssuer.Create(
             user.Id,
             user.Email,
             currentTenant.Id.Value,
+            sessionId,
+            user.SecurityStamp,
             roleNames,
             permissionNames
         );
         var (refreshPlaintext, refreshEntity) = RefreshTokenFactory.Create(
             user.Id,
-            Guid.NewGuid(),
+            sessionId,
             options.RefreshTokenDays,
             request.ClientIp,
             request.DeviceInfo
         );
 
         await refreshTokens.AddAsync(refreshEntity, cancellationToken);
+        await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
         await auditLogger.LogAsync(
             AuditLog.Actions.LoginSuccess,
             user.Email,

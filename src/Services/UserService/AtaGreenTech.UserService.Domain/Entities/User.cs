@@ -128,6 +128,11 @@ public class User : BaseEntity
         ClearPasswordResetChallenge();
     }
 
+    /// <summary>
+    /// Rol/izin veya hesap durumu değişince access token'ları geçersiz kılar (#70).
+    /// </summary>
+    public void InvalidateCredentialStamp() => RotateSecurityStamp();
+
     /// <summary>Yeni şifre sıfırlama challenge'ı atar (önceki token geçersizleşir).</summary>
     public void SetPasswordResetChallenge(string tokenHash, DateTime expiresAtUtc)
     {
