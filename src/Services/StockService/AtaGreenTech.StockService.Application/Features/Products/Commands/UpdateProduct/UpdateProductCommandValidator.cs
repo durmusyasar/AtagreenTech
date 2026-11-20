@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.StockService.Application.Common;
 using FluentValidation;
 
@@ -5,25 +6,18 @@ namespace AtaGreenTech.StockService.Application.Features.Products.Commands.Updat
 
 internal sealed class UpdateProductCommandValidator : AbstractValidator<UpdateProductCommand>
 {
-    public UpdateProductCommandValidator()
+    public UpdateProductCommandValidator(IErrorLocalizer localizer)
     {
-        RuleFor(x => x.Id)
-            .NotEmpty().WithMessage("Ürün kimliği boş olamaz.");
-
-        RuleFor(x => x.Sku).ValidSku();
-        RuleFor(x => x.Barcode).ValidBarcode();
-        RuleFor(x => x.UnitPrice).ValidUnitCost();
-        RuleFor(x => x.Currency).ValidCurrency();
-
-        RuleFor(x => x.CategoryId)
-            .NotEmpty().WithMessage("Kategori seçilmelidir.");
-
-        RuleFor(x => x.UnitOfMeasureId)
-            .NotEmpty().WithMessage("Ölçü birimi seçilmelidir.");
-
-        RuleFor(x => x.Translations).ValidTranslations();
+        RuleFor(x => x.Id).NotEmpty().WithRequiredMessage(localizer, ErrorCodes.Fields.ProductId);
+        RuleFor(x => x.Sku).ValidSku(localizer);
+        RuleFor(x => x.Barcode).ValidBarcode(localizer);
+        RuleFor(x => x.UnitPrice).ValidUnitCost(localizer);
+        RuleFor(x => x.Currency).ValidCurrency(localizer);
+        RuleFor(x => x.CategoryId).NotEmpty().WithRequiredMessage(localizer, ErrorCodes.Fields.Category);
+        RuleFor(x => x.UnitOfMeasureId).NotEmpty().WithRequiredMessage(localizer, ErrorCodes.Fields.Unit);
+        RuleFor(x => x.Translations).ValidTranslations(localizer);
         RuleForEach(x => x.Translations)
-            .NotNull().WithMessage("Çeviri bilgisi boş olamaz.")
-            .SetValidator(new ProductTranslationDtoValidator());
+            .NotNull().WithRequiredMessage(localizer, ErrorCodes.Fields.Translations)
+            .SetValidator(new ProductTranslationDtoValidator(localizer));
     }
 }

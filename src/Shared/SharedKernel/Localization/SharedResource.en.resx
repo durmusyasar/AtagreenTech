@@ -15,10 +15,95 @@
   <data name="SSO_NOT_IMPLEMENTED" xml:space="preserve"><value>This SSO provider is not supported yet.</value></data>
   <data name="TOKEN_REVOKED" xml:space="preserve"><value>Your session has been ended. Please sign in again.</value></data>
   <data name="SESSION_EXPIRED" xml:space="preserve"><value>Your session has expired. Please sign in again.</value></data>
+  <data name="SESSION_REUSE_DETECTED" xml:space="preserve"><value>A security violation was detected. Please sign in again.</value></data>
   <data name="FORBIDDEN" xml:space="preserve"><value>You are not allowed to perform this action.</value></data>
   <data name="PERMISSION_DENIED" xml:space="preserve"><value>You do not have permission to perform this action.</value></data>
   <data name="MODULE_NOT_SUBSCRIBED" xml:space="preserve"><value>This module is not included in your active plan.</value></data>
   <data name="VALIDATION_FAILED" xml:space="preserve"><value>Please check the information you entered.</value></data>
   <data name="RECORD_NOT_FOUND" xml:space="preserve"><value>The record was not found.</value></data>
   <data name="UNEXPECTED_ERROR" xml:space="preserve"><value>An unexpected server error occurred.</value></data>
+  <data name="AUTH_BAD_REQUEST" xml:space="preserve"><value>The request is invalid.</value></data>
+  <data name="AUTH_RESET_TOKEN_INVALID" xml:space="preserve"><value>Invalid or expired password reset link.</value></data>
+  <data name="AUTH_INVITE_TOKEN_INVALID" xml:space="preserve"><value>Invalid or expired invitation link.</value></data>
+  <data name="AUTH_VERIFY_TOKEN_INVALID" xml:space="preserve"><value>Invalid or expired verification link.</value></data>
+  <data name="AUTH_PASSWORD_MISMATCH" xml:space="preserve"><value>Your current password is incorrect.</value></data>
+  <data name="AUTH_PASSWORD_SAME_AS_CURRENT" xml:space="preserve"><value>The new password cannot be the same as the current password.</value></data>
+  <data name="AUTH_MFA_ALREADY_ENABLED" xml:space="preserve"><value>MFA is already enabled.</value></data>
+  <data name="AUTH_MFA_ALREADY_DISABLED" xml:space="preserve"><value>MFA is already disabled.</value></data>
+  <data name="AUTH_MFA_SETUP_REQUIRED" xml:space="preserve"><value>Start MFA setup first.</value></data>
+  <data name="USER_CANNOT_MODIFY_SELF" xml:space="preserve"><value>You cannot perform this action on your own account.</value></data>
+  <data name="USER_LAST_ADMIN" xml:space="preserve"><value>This action cannot be performed on the last active Admin account.</value></data>
+  <data name="USER_EMAIL_EXISTS" xml:space="preserve"><value>A user with this email address already exists.</value></data>
+  <data name="USER_USERNAME_EXISTS" xml:space="preserve"><value>This username is already taken.</value></data>
+  <data name="USER_ROLE_NOT_FOUND" xml:space="preserve"><value>The specified role was not found.</value></data>
+  <data name="USER_ROLE_REQUIRED" xml:space="preserve"><value>Select at least one valid role.</value></data>
+  <data name="USER_ROLES_INVALID" xml:space="preserve"><value>Invalid roles: {0}.</value></data>
+  <data name="VALIDATION_REQUIRED" xml:space="preserve"><value>{0} is required.</value></data>
+  <data name="VALIDATION_MAX_LENGTH" xml:space="preserve"><value>{0} must be at most {1} characters.</value></data>
+  <data name="VALIDATION_GREATER_THAN_ZERO" xml:space="preserve"><value>{0} must be greater than 0.</value></data>
+  <data name="VALIDATION_GREATER_OR_EQUAL_ZERO" xml:space="preserve"><value>{0} cannot be less than 0.</value></data>
+  <data name="VALIDATION_INVALID" xml:space="preserve"><value>{0} is invalid.</value></data>
+  <data name="VALIDATION_MUST_DIFFER" xml:space="preserve"><value>{0} and {1} must be different.</value></data>
+  <data name="VALIDATION_PRECISION" xml:space="preserve"><value>{0} can have at most {1} decimal places.</value></data>
+  <data name="VALIDATION_DISTINCT_LANGUAGES" xml:space="preserve"><value>A language can only have one translation.</value></data>
+  <data name="VALIDATION_LANGUAGE_CODE" xml:space="preserve"><value>Language code must look like 'tr', 'en', or 'en-US'.</value></data>
+  <data name="VALIDATION_CURRENCY" xml:space="preserve"><value>Currency must be one of: {0}.</value></data>
+  <data name="VALIDATION_SKU_PATTERN" xml:space="preserve"><value>SKU may only contain letters, digits, dots, hyphens, and underscores.</value></data>
+  <data name="VALIDATION_CODE_PATTERN" xml:space="preserve"><value>{0} may only contain letters, digits, dots, hyphens, and underscores.</value></data>
+  <data name="VALIDATION_GTIN" xml:space="preserve"><value>Barcode must be a valid 8, 12, 13, or 14-digit GS1 barcode (EAN/UPC).</value></data>
+  <data name="VALIDATION_DATE_RANGE" xml:space="preserve"><value>End date must be after the start date.</value></data>
+  <data name="FIELD_SKU" xml:space="preserve"><value>SKU</value></data>
+  <data name="FIELD_BARCODE" xml:space="preserve"><value>Barcode</value></data>
+  <data name="FIELD_UNIT_COST" xml:space="preserve"><value>Unit cost</value></data>
+  <data name="FIELD_CURRENCY" xml:space="preserve"><value>Currency</value></data>
+  <data name="FIELD_LANGUAGE" xml:space="preserve"><value>Language code</value></data>
+  <data name="FIELD_NAME" xml:space="preserve"><value>Name</value></data>
+  <data name="FIELD_DESCRIPTION" xml:space="preserve"><value>Description</value></data>
+  <data name="FIELD_PRODUCT" xml:space="preserve"><value>Product</value></data>
+  <data name="FIELD_CATEGORY" xml:space="preserve"><value>Category</value></data>
+  <data name="FIELD_UNIT" xml:space="preserve"><value>Unit of measure</value></data>
+  <data name="FIELD_WAREHOUSE" xml:space="preserve"><value>Warehouse</value></data>
+  <data name="FIELD_SOURCE_WAREHOUSE" xml:space="preserve"><value>Source warehouse</value></data>
+  <data name="FIELD_TARGET_WAREHOUSE" xml:space="preserve"><value>Target warehouse</value></data>
+  <data name="FIELD_CODE" xml:space="preserve"><value>Code</value></data>
+  <data name="FIELD_SYMBOL" xml:space="preserve"><value>Symbol</value></data>
+  <data name="FIELD_ADDRESS" xml:space="preserve"><value>Address</value></data>
+  <data name="FIELD_QUANTITY" xml:space="preserve"><value>Quantity</value></data>
+  <data name="FIELD_UNIT_PRICE" xml:space="preserve"><value>Unit price</value></data>
+  <data name="FIELD_DOCUMENT" xml:space="preserve"><value>Document number</value></data>
+  <data name="FIELD_MOVEMENT_TYPE" xml:space="preserve"><value>Movement type</value></data>
+  <data name="FIELD_TRANSLATIONS" xml:space="preserve"><value>Translations</value></data>
+  <data name="FIELD_PARENT_CATEGORY" xml:space="preserve"><value>Parent category</value></data>
+  <data name="FIELD_PRODUCT_ID" xml:space="preserve"><value>Product id</value></data>
+  <data name="FIELD_CATEGORY_ID" xml:space="preserve"><value>Category id</value></data>
+  <data name="FIELD_UNIT_ID" xml:space="preserve"><value>Unit id</value></data>
+  <data name="FIELD_WAREHOUSE_ID" xml:space="preserve"><value>Warehouse id</value></data>
+  <data name="FIELD_ROLES" xml:space="preserve"><value>Roles</value></data>
+  <data name="Catalog.CategoryCannotBeItsOwnParent" xml:space="preserve"><value>A category cannot be its own parent.</value></data>
+  <data name="Catalog.CategoryHierarchyCycle" xml:space="preserve"><value>This parent would create a cycle in the hierarchy.</value></data>
+  <data name="Catalog.CategoryNotFound" xml:space="preserve"><value>Category not found.</value></data>
+  <data name="Catalog.CategoryCodeAlreadyExists" xml:space="preserve"><value>A category with code {0} already exists.</value></data>
+  <data name="Catalog.ParentCategoryNotFound" xml:space="preserve"><value>The selected parent category was not found.</value></data>
+  <data name="Catalog.UnitOfMeasureNotFound" xml:space="preserve"><value>Unit of measure not found.</value></data>
+  <data name="Catalog.SkuAlreadyExists" xml:space="preserve"><value>A product with SKU {0} already exists.</value></data>
+  <data name="Catalog.BarcodeAlreadyExists" xml:space="preserve"><value>A product with barcode {0} already exists.</value></data>
+  <data name="Catalog.ProductHasStockHistory" xml:space="preserve"><value>Product {0} has stock movements and cannot be deleted; deactivate it instead.</value></data>
+  <data name="Catalog.ProductCurrencyLocked" xml:space="preserve"><value>The product has stock movements, so its currency cannot be changed (current currency: {0}).</value></data>
+  <data name="Catalog.UnitOfMeasureCodeAlreadyExists" xml:space="preserve"><value>A unit of measure with code {0} already exists.</value></data>
+  <data name="Inventory.InsufficientStock" xml:space="preserve"><value>Insufficient stock: available {2}, requested {3}.</value></data>
+  <data name="Inventory.TransferWarehousesMustDiffer" xml:space="preserve"><value>Source and target warehouses must differ for a transfer.</value></data>
+  <data name="Inventory.WarehouseCodeAlreadyExists" xml:space="preserve"><value>A warehouse with code {0} already exists.</value></data>
+  <data name="Inventory.WarehouseNotFound" xml:space="preserve"><value>Warehouse not found.</value></data>
+  <data name="Inventory.WarehouseInactive" xml:space="preserve"><value>The warehouse is inactive, so no stock movement can be made.</value></data>
+  <data name="Inventory.ProductNotFound" xml:space="preserve"><value>Product not found.</value></data>
+  <data name="Inventory.ProductInactive" xml:space="preserve"><value>The product is inactive, so no stock movement can be made.</value></data>
+  <data name="Localization.DuplicateLanguage" xml:space="preserve"><value>A language can only have one translation.</value></data>
+  <data name="Localization.TranslationsBelowMinimum" xml:space="preserve"><value>Translations in at least {0} different languages are required.</value></data>
+  <data name="Localization.DefaultLanguageMissing" xml:space="preserve"><value>Translations must include the system default language ({0}).</value></data>
+  <data name="VALIDATION_PASSWORD_MIN_LENGTH" xml:space="preserve"><value>Password must be at least {0} characters.</value></data>
+  <data name="VALIDATION_PASSWORD_MAX_LENGTH" xml:space="preserve"><value>Password must be at most {0} characters.</value></data>
+  <data name="VALIDATION_PASSWORD_UPPER" xml:space="preserve"><value>Password must contain at least one uppercase letter.</value></data>
+  <data name="VALIDATION_PASSWORD_LOWER" xml:space="preserve"><value>Password must contain at least one lowercase letter.</value></data>
+  <data name="VALIDATION_PASSWORD_DIGIT" xml:space="preserve"><value>Password must contain at least one digit.</value></data>
+  <data name="VALIDATION_PASSWORD_SPECIAL" xml:space="preserve"><value>Password must contain at least one special character.</value></data>
 </root>

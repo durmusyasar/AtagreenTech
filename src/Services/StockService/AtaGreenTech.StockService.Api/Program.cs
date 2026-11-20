@@ -1,5 +1,6 @@
 using AtaGreenTech.StockService.Api.Hosting;
 using System.Text.Json.Serialization;
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Api.Services;
 using AtaGreenTech.StockService.Application.Interfaces;
@@ -19,6 +20,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Enum'lar (ör. hareket tipi) yanıtlarda adıyla yazılır; isteklerde hem ad hem sayı kabul edilir.
 builder.Services.ConfigureHttpJsonOptions(json => json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddScoped<IRequestOriginProvider, HttpRequestOriginProvider>();
+
+// #71: Business-rule 422 handler OmniSync GlobalExceptionHandler'dan önce kaydedilmeli.
+builder.Services.AddAtaGreenLocalization();
+builder.Services.AddExceptionHandler<LocalizedBusinessRuleExceptionHandler>();
 
 builder.AddOmniSyncCore(options =>
 {

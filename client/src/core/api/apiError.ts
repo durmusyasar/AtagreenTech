@@ -80,10 +80,12 @@ function describe(status: number, problem: ProblemDetails, language: Language): 
     case 404:
       return translate(language, 'error.notFound')
     case 422: {
+      // #71: BE LocalizedBusinessRuleExceptionHandler `detail` üretir; yoksa FE resourceKey fallback.
+      if (problem.detail) return problem.detail
       const key = `error.${problem.resourceKey ?? ''}`
       return hasMessage(key)
         ? translate(language, key as MessageKey, formatParameters(problem, language))
-        : (problem.detail ?? translate(language, 'error.businessRule'))
+        : translate(language, 'error.businessRule')
     }
     case 429:
       return translate(language, 'error.rateLimited')

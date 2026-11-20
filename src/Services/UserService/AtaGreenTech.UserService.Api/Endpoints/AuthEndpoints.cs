@@ -130,11 +130,12 @@ public sealed class AuthEndpoints : IEndpointModule
     private static async Task<IResult> VerifyEmailAsync(
         VerifyEmailRequest request,
         ISender sender,
+        IErrorLocalizer localizer,
         CancellationToken cancellationToken
     )
     {
         var result = await sender.Send(new VerifyEmailCommand(request.Token), cancellationToken);
-        return ToMessageResult(result);
+        return ToMessageResult(result, localizer);
     }
 
     private static async Task<IResult> ResendVerificationAsync(
@@ -156,15 +157,7 @@ public sealed class AuthEndpoints : IEndpointModule
     {
         var result = await sender.Send(new ForgotPasswordCommand(request.Email), cancellationToken);
         if (!result.Succeeded)
-        {
-            return Results.Json(
-                new ErrorResponse(
-                    AuthErrorCodes.EmailNotFound,
-                    localizer.Localize(AuthErrorCodes.EmailNotFound, result.Message)
-                ),
-                statusCode: StatusCodes.Status400BadRequest
-            );
-        }
+            return ToMessageResult(result, localizer);
 
         return TypedResults.Ok(new { message = result.Message });
     }
@@ -172,6 +165,7 @@ public sealed class AuthEndpoints : IEndpointModule
     private static async Task<IResult> ResetPasswordAsync(
         ResetPasswordRequest request,
         ISender sender,
+        IErrorLocalizer localizer,
         HttpContext httpContext,
         CancellationToken cancellationToken
     )
@@ -184,7 +178,7 @@ public sealed class AuthEndpoints : IEndpointModule
             ),
             cancellationToken
         );
-        return ToMessageResult(result);
+        return ToMessageResult(result, localizer);
     }
 
     private static async Task<IResult> ChangePasswordAsync(
@@ -200,7 +194,7 @@ public sealed class AuthEndpoints : IEndpointModule
                 new ChangePasswordCommand(request.CurrentPassword, request.NewPassword),
                 cancellationToken
             );
-            return ToMessageResult(result);
+            return ToMessageResult(result, localizer);
         }
         catch (UnauthorizedAccessException)
         {
@@ -211,6 +205,7 @@ public sealed class AuthEndpoints : IEndpointModule
     private static async Task<IResult> AcceptInviteAsync(
         AcceptInviteRequest request,
         ISender sender,
+        IErrorLocalizer localizer,
         CancellationToken cancellationToken
     )
     {
@@ -218,7 +213,7 @@ public sealed class AuthEndpoints : IEndpointModule
             new AcceptInviteCommand(request.Token, request.Password, request.FirstName, request.LastName),
             cancellationToken
         );
-        return ToMessageResult(result);
+        return ToMessageResult(result, localizer);
     }
 
     private static async Task<IResult> SetupMfaAsync(
@@ -253,7 +248,7 @@ public sealed class AuthEndpoints : IEndpointModule
         try
         {
             var result = await sender.Send(new VerifyMfaCommand(request.Code), cancellationToken);
-            return ToMessageResult(result);
+            return ToMessageResult(result, localizer);
         }
         catch (UnauthorizedAccessException)
         {
@@ -271,7 +266,7 @@ public sealed class AuthEndpoints : IEndpointModule
         try
         {
             var result = await sender.Send(new DisableMfaCommand(request.Password), cancellationToken);
-            return ToMessageResult(result);
+            return ToMessageResult(result, localizer);
         }
         catch (UnauthorizedAccessException)
         {
@@ -330,13 +325,19 @@ public sealed class AuthEndpoints : IEndpointModule
             statusCode: StatusCodes.Status501NotImplemented
         );
 
-    private static IResult ToMessageResult(Application.Features.Auth.MessageResult result) =>
-        result.Succeeded
-            ? TypedResults.Ok(new { message = result.Message })
-            : Results.Json(
-                new ErrorResponse("AUTH_BAD_REQUEST", result.Message),
-                statusCode: StatusCodes.Status400BadRequest
-            );
+    private static IResult ToMessageResult(Application.Features.Auth.MessageResult result, IErrorLocalizer localizer)
+    {
+        if (result.Succeeded)
+            return TypedResults.Ok(new { message = result.Message });
+
+        var code = result.ErrorCode ?? ErrorCodes.AuthBadRequest;
+        var args = result.ErrorArgs?.ToArray() ?? [];
+        var message = localizer.Localize(code, result.Message, args);
+        return Results.Json(
+            new ErrorResponse(code, message),
+            statusCode: StatusCodes.Status400BadRequest
+        );
+    }
 
     private static IResult AuthError(AuthAttemptResult result, IErrorLocalizer localizer)
     {

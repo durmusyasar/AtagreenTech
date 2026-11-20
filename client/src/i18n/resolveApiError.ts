@@ -27,28 +27,35 @@ function authError(locale: Language | undefined, code: string): string {
 }
 
 /**
- * Backend / ApiError kodunu `enum:errors.<CODE>` üzerinden kullanıcı mesajına çevirir.
+ * Backend / ApiError mesajını tercih eder; yoksa `enum:errors.<CODE>` fallback (#71).
  */
 export function resolveApiError(error: unknown, locale?: Language): string {
   if (error instanceof ApiError) {
     if (error.code === 'network_error' || error.status === null) return authError(locale, 'NETWORK_ERROR')
+    if (error.message?.trim()) return error.message
     if (isKnownAuthErrorCode(error.code)) return authError(locale, error.code)
     return authError(locale, 'UNKNOWN_ERROR')
   }
 
   if (typeof error === 'object' && error !== null && 'response' in error) {
-    const response = (error as { response?: { data?: { code?: string; message?: string; errorCode?: string } } })
-      .response
+    const response = (error as {
+      response?: { data?: { code?: string; message?: string; errorCode?: string; detail?: string } }
+    }).response
     if (!response) return authError(locale, 'NETWORK_ERROR')
 
+    const backendMessage = response.data?.detail || response.data?.message || ''
+    if (backendMessage.trim()) return backendMessage
+
     const rawCode = response.data?.code || response.data?.errorCode || ''
-    const rawMessage = response.data?.message || ''
-    const extractedCode = rawCode || rawMessage.split(':')[0]?.trim() || ''
+    const extractedCode = rawCode || ''
 
     if (extractedCode && isKnownAuthErrorCode(extractedCode)) return authError(locale, extractedCode)
   }
 
-  if (typeof error === 'string' && isKnownAuthErrorCode(error)) return authError(locale, error)
+  if (typeof error === 'string') {
+    if (isKnownAuthErrorCode(error)) return authError(locale, error)
+    if (error.trim()) return error
+  }
 
   return authError(locale, 'UNKNOWN_ERROR')
 }

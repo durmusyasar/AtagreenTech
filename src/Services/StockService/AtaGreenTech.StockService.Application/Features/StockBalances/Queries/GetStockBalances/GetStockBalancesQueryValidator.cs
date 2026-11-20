@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.StockService.Application.Common;
 using FluentValidation;
 
@@ -5,8 +6,8 @@ namespace AtaGreenTech.StockService.Application.Features.StockBalances.Queries.G
 
 internal sealed class GetStockBalancesQueryValidator : AbstractValidator<GetStockBalancesQuery>
 {
-    public GetStockBalancesQueryValidator()
+    public GetStockBalancesQueryValidator(IErrorLocalizer localizer)
     {
-        RuleFor(x => x.Language).ValidLanguageCode().When(x => x.Language is not null);
+        RuleFor(x => x.Language).ValidLanguageCode(localizer).When(x => x.Language is not null);
     }
 }

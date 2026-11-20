@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.DTOs;
 using AtaGreenTech.UserService.Application.Features.Users;
 using AtaGreenTech.UserService.Application.Interfaces;
@@ -18,15 +19,15 @@ internal sealed class CreateUserCommandHandler(
     {
         var email = User.NormalizeEmail(request.Email);
         if (await users.ExistsAsync(u => u.Email == email, cancellationToken))
-            return UserWriteResult.Fail("Bu e-posta adresi zaten kullanımda.");
+            return UserWriteResult.Fail(ErrorCodes.UserEmailExists);
 
         var username = UserManagementHelpers.ResolveUsername(email);
         if (await users.ExistsAsync(u => u.Username == username, cancellationToken))
-            return UserWriteResult.Fail("Bu kullanıcı adı zaten kullanılıyor.");
+            return UserWriteResult.Fail(ErrorCodes.UserUsernameExists);
 
         var roles = await UserManagementHelpers.ResolveRolesAsync(db.Roles, request.Roles, cancellationToken);
         if (roles.Count == 0)
-            return UserWriteResult.Fail("En az bir geçerli rol seçilmelidir.");
+            return UserWriteResult.Fail(ErrorCodes.UserRoleRequired);
 
         var user = new User(
             email,

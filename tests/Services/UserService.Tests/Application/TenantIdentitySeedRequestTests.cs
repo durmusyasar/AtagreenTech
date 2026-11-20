@@ -7,8 +7,8 @@ public sealed class TenantIdentitySeedRequestTests
     [Fact]
     public void PasswordRules_accept_default_bootstrap_password()
     {
-        var (ok, message) = PasswordRules.Validate("Admin123!");
-        Assert.True(ok, message);
+        var (ok, errorCode, _) = PasswordRules.Validate("Admin123!");
+        Assert.True(ok, errorCode);
     }
 
     [Fact]

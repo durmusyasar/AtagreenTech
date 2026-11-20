@@ -12,7 +12,7 @@ public class UnitOfMeasureValidatorTests
     [Fact]
     public void Valid_command_passes()
     {
-        Assert.True(new CreateUnitOfMeasureCommandValidator().Validate(ValidCommand()).IsValid);
+        Assert.True(new CreateUnitOfMeasureCommandValidator(TestLocalizers.Passthrough).Validate(ValidCommand()).IsValid);
     }
 
     [Fact]
@@ -20,7 +20,7 @@ public class UnitOfMeasureValidatorTests
     {
         var command = ValidCommand() with { Translations = [new("en", "Kilogram", "kg")] };
 
-        Assert.True(new CreateUnitOfMeasureCommandValidator().Validate(command).IsValid);
+        Assert.True(new CreateUnitOfMeasureCommandValidator(TestLocalizers.Passthrough).Validate(command).IsValid);
     }
 
     [Fact]
@@ -28,7 +28,7 @@ public class UnitOfMeasureValidatorTests
     {
         var command = ValidCommand() with { Translations = [] };
 
-        var result = new CreateUnitOfMeasureCommandValidator().Validate(command);
+        var result = new CreateUnitOfMeasureCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateUnitOfMeasureCommand.Translations));
     }
@@ -38,7 +38,7 @@ public class UnitOfMeasureValidatorTests
     {
         var command = ValidCommand() with { Translations = [new("tr", "Kilogram", "kg"), new(" TR ", "Kilo", "kg")] };
 
-        var result = new CreateUnitOfMeasureCommandValidator().Validate(command);
+        var result = new CreateUnitOfMeasureCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateUnitOfMeasureCommand.Translations));
     }
@@ -53,7 +53,7 @@ public class UnitOfMeasureValidatorTests
     {
         var command = ValidCommand() with { Translations = [new("tr", "Kilogram", "kg"), new(language, name, symbol)] };
 
-        var result = new CreateUnitOfMeasureCommandValidator().Validate(command);
+        var result = new CreateUnitOfMeasureCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == $"Translations[1].{property}");
     }
@@ -66,7 +66,7 @@ public class UnitOfMeasureValidatorTests
             Translations = [new("tr", "Kilogram", "kg"), new UnitOfMeasureTranslationDto("en", "Kilogram", new string('k', 21))],
         };
 
-        Assert.False(new CreateUnitOfMeasureCommandValidator().Validate(command).IsValid);
+        Assert.False(new CreateUnitOfMeasureCommandValidator(TestLocalizers.Passthrough).Validate(command).IsValid);
     }
 
     [Theory]
@@ -75,6 +75,6 @@ public class UnitOfMeasureValidatorTests
     [InlineData("english", false)]
     public void Query_language_is_validated(string language, bool isValid)
     {
-        Assert.Equal(isValid, new GetUnitsOfMeasureQueryValidator().Validate(new GetUnitsOfMeasureQuery(language)).IsValid);
+        Assert.Equal(isValid, new GetUnitsOfMeasureQueryValidator(TestLocalizers.Passthrough).Validate(new GetUnitsOfMeasureQuery(language)).IsValid);
     }
 }

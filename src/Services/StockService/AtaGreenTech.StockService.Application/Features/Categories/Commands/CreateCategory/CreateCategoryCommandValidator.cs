@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.StockService.Application.Common;
 using FluentValidation;
 
@@ -5,13 +6,13 @@ namespace AtaGreenTech.StockService.Application.Features.Categories.Commands.Cre
 
 internal sealed class CreateCategoryCommandValidator : AbstractValidator<CreateCategoryCommand>
 {
-    public CreateCategoryCommandValidator()
+    public CreateCategoryCommandValidator(IErrorLocalizer localizer)
     {
-        RuleFor(x => x.Code).ValidCategoryCode();
-        RuleFor(x => x.Translations).ValidTranslations();
+        RuleFor(x => x.Code).ValidCategoryCode(localizer);
+        RuleFor(x => x.Translations).ValidTranslations(localizer);
         RuleForEach(x => x.Translations)
-            .NotNull().WithMessage("Çeviri bilgisi boş olamaz.")
-            .SetValidator(new CategoryTranslationDtoValidator());
-        RuleFor(x => x.ParentCategoryId).ValidParentCategoryId();
+            .NotNull().WithRequiredMessage(localizer, ErrorCodes.Fields.Translations)
+            .SetValidator(new CategoryTranslationDtoValidator(localizer));
+        RuleFor(x => x.ParentCategoryId).ValidParentCategoryId(localizer);
     }
 }

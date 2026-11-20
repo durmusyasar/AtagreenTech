@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using FluentValidation;
 
@@ -5,12 +6,12 @@ namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.ChangePass
 
 internal sealed class ChangePasswordCommandValidator : AbstractValidator<ChangePasswordCommand>
 {
-    public ChangePasswordCommandValidator()
+    public ChangePasswordCommandValidator(IErrorLocalizer localizer)
     {
         RuleFor(x => x.CurrentPassword).NotEmpty().MaximumLength(PasswordRules.MaxLength);
-        RuleFor(x => x.NewPassword).ApplyStrongPassword();
+        RuleFor(x => x.NewPassword).ApplyStrongPassword(localizer);
         RuleFor(x => x.NewPassword)
             .NotEqual(x => x.CurrentPassword)
-            .WithMessage("Yeni şifre mevcut şifre ile aynı olamaz.");
+            .WithLocalizedMessage(localizer, ErrorCodes.AuthPasswordSameAsCurrent);
     }
 }

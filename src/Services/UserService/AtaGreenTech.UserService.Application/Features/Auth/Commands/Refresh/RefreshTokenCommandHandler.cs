@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
@@ -28,20 +29,20 @@ internal sealed class RefreshTokenCommandHandler(
         var existing = await refreshTokens.GetAsync(rt => rt.TokenHash == tokenHash, cancellationToken);
 
         if (existing is null)
-            return AuthAttemptResult.Fail("Geçersiz oturum belirteci.");
+            return AuthAttemptResult.Fail(ErrorCodes.SessionExpired, "Geçersiz oturum belirteci.");
 
         // Reuse detection: kullanılmış/iptal token tekrar sunuldu → tüm aile iptal (transaction commit edilmeli).
         if (existing.IsRevoked)
         {
             await RevokeFamilyAsync(existing.FamilyId, cancellationToken);
             await accessTokenLifecycle.RevokeSessionAsync(existing.FamilyId, cancellationToken);
-            return AuthAttemptResult.Fail("Güvenlik ihlali tespit edildi. Lütfen tekrar giriş yapın.");
+            return AuthAttemptResult.Fail(ErrorCodes.SessionReuseDetected, "Güvenlik ihlali tespit edildi. Lütfen tekrar giriş yapın.");
         }
 
         if (existing.IsExpired(DateTime.UtcNow))
         {
             existing.Revoke();
-            return AuthAttemptResult.Fail("Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
+            return AuthAttemptResult.Fail(ErrorCodes.SessionExpired, "Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
         }
 
         var user = await db.Users
@@ -52,7 +53,7 @@ internal sealed class RefreshTokenCommandHandler(
         if (user is null || !user.IsActive)
         {
             await RevokeFamilyAsync(existing.FamilyId, cancellationToken);
-            return AuthAttemptResult.Fail("Hesabınız devre dışı bırakılmıştır.");
+            return AuthAttemptResult.Fail(ErrorCodes.AuthAccountInactive, "Hesabınız devre dışı bırakılmıştır.", statusCode: 403);
         }
 
         // Rotation: mevcut token tek kullanımlık; aynı FamilyId ile yenisi üretilir.

@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using System.Security.Cryptography;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
@@ -27,7 +28,7 @@ internal sealed class InviteUserCommandHandler(
     {
         var email = User.NormalizeEmail(request.Email);
         if (await users.ExistsAsync(u => u.Email == email, cancellationToken))
-            return MessageResult.Fail("Bu e-posta adresiyle kayıtlı bir kullanıcı zaten mevcut.");
+            return MessageResult.Fail(ErrorCodes.UserEmailExists);
 
         var roleName = Role.NormalizeName(request.Role);
         var knownRoles = await roles.GetAllByFilterAsync(
@@ -36,11 +37,11 @@ internal sealed class InviteUserCommandHandler(
         );
         var role = knownRoles.FirstOrDefault(r => r.Name.Equals(roleName, StringComparison.OrdinalIgnoreCase));
         if (role is null)
-            return MessageResult.Fail("Belirtilen rol sistemde bulunamadı.");
+            return MessageResult.Fail(ErrorCodes.UserRoleNotFound);
 
         var username = ResolveUsername(email);
         if (await users.ExistsAsync(u => u.Username == username, cancellationToken))
-            return MessageResult.Fail("Bu kullanıcı adı zaten kullanılıyor.");
+            return MessageResult.Fail(ErrorCodes.UserUsernameExists);
 
         var days = Math.Max(1, authOptions.Value.InvitationDays);
         var (plaintext, hash) = EmailVerificationTokenFactory.Create();

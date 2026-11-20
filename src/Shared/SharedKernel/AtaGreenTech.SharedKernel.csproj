@@ -8,8 +8,10 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="FluentValidation" Version="12.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.14" />
     <PackageReference Include="OmniSync.Core.Application" Version="3.0.0" />
+    <PackageReference Include="OmniSync.Core.Domain" Version="3.0.0" />
   </ItemGroup>
 
 </Project>

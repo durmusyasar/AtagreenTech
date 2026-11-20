@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Domain.Entities;
 using FluentValidation;
 
@@ -12,7 +13,7 @@ internal sealed class InviteUserCommandValidator : AbstractValidator<InviteUserC
         Role.Names.Viewer,
     ];
 
-    public InviteUserCommandValidator()
+    public InviteUserCommandValidator(IErrorLocalizer localizer)
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(User.EmailMaxLength);
         RuleFor(x => x.FirstName).NotEmpty().MaximumLength(User.NameMaxLength);
@@ -20,6 +21,10 @@ internal sealed class InviteUserCommandValidator : AbstractValidator<InviteUserC
         RuleFor(x => x.Role)
             .NotEmpty()
             .Must(r => AllowedRoles.Contains(Role.NormalizeName(r), StringComparer.OrdinalIgnoreCase))
-            .WithMessage($"Role must be one of: {string.Join(", ", AllowedRoles)}.");
+            .WithLocalizedMessage(
+                localizer,
+                ErrorCodes.UserRolesInvalid,
+                string.Join(", ", AllowedRoles)
+            );
     }
 }

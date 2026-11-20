@@ -1,26 +1,31 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.StockService.Domain.Localization;
 using FluentValidation;
 
 namespace AtaGreenTech.StockService.Application.Common;
 
 /// <summary>
-/// Çok dilli komutların biçim kuralları (400). Çeviri setinin içerik kuralları (en az iki dil, varsayılan dilin
-/// bulunması) domain'de iş kuralı olarak (422) uygulanır.
+/// Çok dilli komutların biçim kuralları (400). Çeviri setinin içerik kuralları domain'de (422).
 /// </summary>
 internal static class LocalizationValidationRules
 {
     public static IRuleBuilderOptions<T, IReadOnlyList<TTranslation>> ValidTranslations<T, TTranslation>(
-        this IRuleBuilder<T, IReadOnlyList<TTranslation>> rule
+        this IRuleBuilder<T, IReadOnlyList<TTranslation>> rule,
+        IErrorLocalizer localizer
     )
         where TTranslation : ITranslation =>
-        rule.NotEmpty().WithMessage("Çeviri bilgisi boş olamaz.")
-            .Must(HaveDistinctLanguages).WithMessage("Aynı dil için birden fazla çeviri girilemez.");
+        rule.NotEmpty().WithRequiredMessage(localizer, ErrorCodes.Fields.Translations)
+            .Must(HaveDistinctLanguages)
+            .WithLocalizedMessage(localizer, ErrorCodes.ValidationDistinctLanguages);
 
-    public static IRuleBuilderOptions<T, string?> ValidLanguageCode<T>(this IRuleBuilder<T, string?> rule) =>
+    public static IRuleBuilderOptions<T, string?> ValidLanguageCode<T>(
+        this IRuleBuilder<T, string?> rule,
+        IErrorLocalizer localizer
+    ) =>
         rule.MaximumLength(LanguageCode.MaxLength)
-            .WithMessage($"Dil kodu en fazla {LanguageCode.MaxLength} karakter olabilir.")
+            .WithMaxLengthMessage(localizer, ErrorCodes.Fields.Language, LanguageCode.MaxLength)
             .Matches(LanguageCode.Pattern)
-            .WithMessage("Dil kodu 'tr', 'en' veya 'en-US' biçiminde olmalıdır.");
+            .WithLocalizedMessage(localizer, ErrorCodes.ValidationLanguageCode);
 
     private static bool HaveDistinctLanguages<TTranslation>(IReadOnlyList<TTranslation> translations)
         where TTranslation : ITranslation

@@ -21,7 +21,7 @@ public class ProductValidatorTests
     [Fact]
     public void Valid_create_command_passes()
     {
-        Assert.True(new CreateProductCommandValidator().Validate(ValidCommand()).IsValid);
+        Assert.True(new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(ValidCommand()).IsValid);
     }
 
     [Theory]
@@ -32,7 +32,7 @@ public class ProductValidatorTests
     {
         var command = ValidCommand() with { Barcode = barcode };
 
-        Assert.True(new CreateProductCommandValidator().Validate(command).IsValid);
+        Assert.True(new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(command).IsValid);
     }
 
     [Theory]
@@ -40,7 +40,7 @@ public class ProductValidatorTests
     [InlineData("DSB 16")]
     public void Invalid_sku_fails(string sku)
     {
-        var result = new CreateProductCommandValidator().Validate(ValidCommand() with { Sku = sku });
+        var result = new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(ValidCommand() with { Sku = sku });
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateProductCommand.Sku));
     }
@@ -51,7 +51,7 @@ public class ProductValidatorTests
     [InlineData("ABC-123")]
     public void Invalid_barcode_fails(string barcode)
     {
-        var result = new CreateProductCommandValidator().Validate(ValidCommand() with { Barcode = barcode });
+        var result = new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(ValidCommand() with { Barcode = barcode });
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateProductCommand.Barcode));
     }
@@ -62,7 +62,7 @@ public class ProductValidatorTests
     [InlineData("GBP")]
     public void Unsupported_currency_fails(string currency)
     {
-        var result = new CreateProductCommandValidator().Validate(ValidCommand() with { Currency = currency });
+        var result = new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(ValidCommand() with { Currency = currency });
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateProductCommand.Currency));
     }
@@ -70,7 +70,7 @@ public class ProductValidatorTests
     [Fact]
     public void Currency_is_case_insensitive()
     {
-        Assert.True(new CreateProductCommandValidator().Validate(ValidCommand() with { Currency = "usd" }).IsValid);
+        Assert.True(new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(ValidCommand() with { Currency = "usd" }).IsValid);
     }
 
     [Theory]
@@ -78,7 +78,7 @@ public class ProductValidatorTests
     [InlineData(1.005)]
     public void Non_positive_or_over_precise_unit_cost_fails(decimal unitPrice)
     {
-        var result = new CreateProductCommandValidator().Validate(ValidCommand() with { UnitPrice = unitPrice });
+        var result = new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(ValidCommand() with { UnitPrice = unitPrice });
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateProductCommand.UnitPrice));
     }
@@ -88,7 +88,7 @@ public class ProductValidatorTests
     {
         var command = ValidCommand() with { CategoryId = Guid.Empty, UnitOfMeasureId = Guid.Empty };
 
-        var failedProperties = new CreateProductCommandValidator().Validate(command).Errors.Select(e => e.PropertyName);
+        var failedProperties = new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(command).Errors.Select(e => e.PropertyName);
 
         Assert.Equivalent(
             new[] { nameof(CreateProductCommand.CategoryId), nameof(CreateProductCommand.UnitOfMeasureId) },
@@ -104,7 +104,7 @@ public class ProductValidatorTests
             Translations = [new("tr", new string('a', ProductTranslation.NameMaxLength + 1), null), new("en", "Pipe", null)],
         };
 
-        var result = new CreateProductCommandValidator().Validate(command);
+        var result = new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(command);
 
         Assert.Contains(result.Errors, e => e.PropertyName == "Translations[0].Name");
     }
@@ -112,8 +112,8 @@ public class ProductValidatorTests
     [Fact]
     public void Empty_and_duplicate_translations_fail()
     {
-        var empty = new CreateProductCommandValidator().Validate(ValidCommand() with { Translations = [] });
-        var duplicate = new CreateProductCommandValidator().Validate(
+        var empty = new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(ValidCommand() with { Translations = [] });
+        var duplicate = new CreateProductCommandValidator(TestLocalizers.Passthrough).Validate(
             ValidCommand() with { Translations = [new("tr", "Boru", null), new(" TR ", "Hortum", null)] }
         );
 
@@ -136,7 +136,7 @@ public class ProductValidatorTests
             IsActive: true
         );
 
-        var failedProperties = new UpdateProductCommandValidator().Validate(command).Errors.Select(e => e.PropertyName);
+        var failedProperties = new UpdateProductCommandValidator(TestLocalizers.Passthrough).Validate(command).Errors.Select(e => e.PropertyName);
 
         Assert.Equivalent(
             new[] { nameof(UpdateProductCommand.Id), nameof(UpdateProductCommand.Barcode) },
@@ -147,7 +147,7 @@ public class ProductValidatorTests
     [Fact]
     public void List_query_rejects_invalid_language()
     {
-        var result = new GetProductsQueryValidator().Validate(new GetProductsQuery(Language: "english"));
+        var result = new GetProductsQueryValidator(TestLocalizers.Passthrough).Validate(new GetProductsQuery(Language: "english"));
 
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(GetProductsQuery.Language));
     }

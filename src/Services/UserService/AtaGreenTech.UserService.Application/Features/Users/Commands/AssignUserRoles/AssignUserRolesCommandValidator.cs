@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Domain.Entities;
 using FluentValidation;
 
@@ -12,13 +13,17 @@ internal sealed class AssignUserRolesCommandValidator : AbstractValidator<Assign
         Role.Names.Viewer,
     ];
 
-    public AssignUserRolesCommandValidator()
+    public AssignUserRolesCommandValidator(IErrorLocalizer localizer)
     {
         RuleFor(x => x.UserId).NotEmpty();
         RuleFor(x => x.Roles)
             .NotEmpty()
             .Must(roles => roles.All(r =>
                 AllowedRoles.Contains(Role.NormalizeName(r), StringComparer.OrdinalIgnoreCase)))
-            .WithMessage($"Roles must be one of: {string.Join(", ", AllowedRoles)}.");
+            .WithLocalizedMessage(
+                localizer,
+                ErrorCodes.UserRolesInvalid,
+                string.Join(", ", AllowedRoles)
+            );
     }
 }
