@@ -26,6 +26,7 @@ namespace AtaGreenTech.UserService.Infrastructure.Security
             CancellationToken cancellationToken = default
         )
         {
+            ArgumentNullException.ThrowIfNull(request);
             throw SsoNotImplemented();
         }
 
