@@ -11,6 +11,7 @@ public static class AuthorizationPolicies
     public const string AuditRead = "perm:audit.read";
     public const string SystemRead = "perm:system.read";
     public const string SystemManage = "perm:system.manage";
+    public const string SystemTenantsManage = "perm:system.tenants.manage";
     public const string StockRead = "perm:stock.read";
     public const string StockWrite = "perm:stock.write";
     public const string StockDelete = "perm:stock.delete";
@@ -24,6 +25,7 @@ public static class AuthorizationPolicies
         (AuditRead, Permissions.Audit.Read),
         (SystemRead, Permissions.System.Read),
         (SystemManage, Permissions.System.Manage),
+        (SystemTenantsManage, Permissions.System.TenantsManage),
         (StockRead, Permissions.Stock.Read),
         (StockWrite, Permissions.Stock.Write),
         (StockDelete, Permissions.Stock.Delete),

@@ -4,7 +4,9 @@ import type { FlatNavigationItem, NavigationMenuGroup, NavigationMenuItem } from
 interface NavigationState {
   groups: NavigationMenuGroup[]
   flatItems: FlatNavigationItem[]
-  setMenus: (groups: NavigationMenuGroup[]) => void
+  /** Tenant abone modül kodları (#66 / #67). */
+  subscribedModuleCodes: string[]
+  setMenus: (groups: NavigationMenuGroup[], subscribedModuleCodes?: string[]) => void
   clear: () => void
 }
 
@@ -52,6 +54,8 @@ function flattenGroups(groups: NavigationMenuGroup[]): FlatNavigationItem[] {
 export const useNavigationStore = create<NavigationState>((set) => ({
   groups: [],
   flatItems: [],
-  setMenus: (groups) => set({ groups, flatItems: flattenGroups(groups) }),
-  clear: () => set({ groups: [], flatItems: [] }),
+  subscribedModuleCodes: [],
+  setMenus: (groups, subscribedModuleCodes = []) =>
+    set({ groups, flatItems: flattenGroups(groups), subscribedModuleCodes }),
+  clear: () => set({ groups: [], flatItems: [], subscribedModuleCodes: [] }),
 }))

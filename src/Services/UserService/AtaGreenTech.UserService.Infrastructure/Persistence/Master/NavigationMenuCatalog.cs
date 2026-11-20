@@ -17,21 +17,19 @@ internal sealed class NavigationMenuCatalog(MasterDbContext master) : INavigatio
         CancellationToken cancellationToken = default
     )
     {
-        // Tenant'ta abonelik yoksa varsayılanları ekle (yeni tenant / migrate sırası).
+        // Eksik abonelik satırlarını doldur (yeni tenant / migrate sırası).
         await master.Database.ExecuteSqlInterpolatedAsync(
             $"""
-            INSERT INTO "TenantServiceSubscriptions" ("Id", "TenantId", "ServiceName", "IsEnabled", "SubscribedAtUtc")
-            SELECT gen_random_uuid(), {tenantId}, s."ServiceName", s."IsEnabled", now()
-            FROM (VALUES
-                ('General', TRUE),
-                ('UserService', TRUE),
-                ('StockService', TRUE),
-                ('System', TRUE)
-            ) AS s("ServiceName", "IsEnabled")
-            WHERE NOT EXISTS (
-                SELECT 1 FROM "TenantServiceSubscriptions" x
-                WHERE x."TenantId" = {tenantId} AND x."ServiceName" = s."ServiceName"
-            );
+            INSERT INTO "TenantModuleSubscriptions" (
+                "Id", "TenantId", "ModuleId", "IsEnabled", "ExpiresAtUtc", "UpdatedAtUtc", "UpdatedByUserId"
+            )
+            SELECT gen_random_uuid(), {tenantId}, mod."Id", TRUE, NULL, now(), NULL
+            FROM "Modules" mod
+            WHERE mod."IsActive" = TRUE
+              AND NOT EXISTS (
+                  SELECT 1 FROM "TenantModuleSubscriptions" x
+                  WHERE x."TenantId" = {tenantId} AND x."ModuleId" = mod."Id"
+              );
             """,
             cancellationToken
         );
@@ -49,7 +47,7 @@ internal sealed class NavigationMenuCatalog(MasterDbContext master) : INavigatio
             .Select(r => r.Code)
             .FirstOrDefaultAsync(cancellationToken);
 
-        // Önce DTO'yu materialize et; JSON parse EF çevirisine girmez.
+        // IsCore → her zaman; diğerleri enabled + süresi dolmamış abonelik.
         var dtoRows = await master.Database
             .SqlQueryRaw<NavigationMenuRowDto>(
                 """
@@ -77,11 +75,17 @@ internal sealed class NavigationMenuCatalog(MasterDbContext master) : INavigatio
                        ), '{}'::jsonb)::text AS "TranslationsJson"
                 FROM "MenuDefinitions" m
                 INNER JOIN "Modules" mod ON mod."Id" = m."ModuleId" AND mod."IsActive" = TRUE
-                INNER JOIN "TenantServiceSubscriptions" s
-                    ON s."ServiceName" = mod."ServiceName"
+                LEFT JOIN "TenantModuleSubscriptions" s
+                    ON s."ModuleId" = mod."Id"
                    AND s."TenantId" = {0}
-                   AND s."IsEnabled" = TRUE
                 WHERE m."IsActive" = TRUE
+                  AND (
+                      mod."IsCore" = TRUE
+                      OR (
+                          s."IsEnabled" = TRUE
+                          AND (s."ExpiresAtUtc" IS NULL OR s."ExpiresAtUtc" > now())
+                      )
+                  )
                 ORDER BY mod."DisplayOrder", m."DisplayOrder", m."Code"
                 """,
                 tenantId

@@ -65,5 +65,15 @@ describe('navigationStore', () => {
     useNavigationStore.getState().clear()
     expect(useNavigationStore.getState().groups).toEqual([])
     expect(useNavigationStore.getState().flatItems).toEqual([])
+    expect(useNavigationStore.getState().subscribedModuleCodes).toEqual([])
+  })
+
+  it('stores subscribedModuleCodes for ModuleGuard prep', () => {
+    useNavigationStore.getState().setMenus([], ['GENERAL', 'STOCK', 'SYSTEM'])
+    expect(useNavigationStore.getState().subscribedModuleCodes).toEqual([
+      'GENERAL',
+      'STOCK',
+      'SYSTEM',
+    ])
   })
 })

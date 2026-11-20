@@ -33,6 +33,8 @@ public sealed class NavigationMenuTreeBuilderTests
         var result = NavigationMenuTreeBuilder.Build(rows, [Permissions.Users.Read], "tr", "tr");
 
         Assert.Empty(result.Groups);
+        // Yetki filtresi menüyü boşaltır; abone modül kodları satırlardan gelir.
+        Assert.Equal(["STOCK"], result.SubscribedModuleCodes);
     }
 
     [Fact]

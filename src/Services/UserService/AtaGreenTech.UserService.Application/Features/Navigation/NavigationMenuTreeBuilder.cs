@@ -53,7 +53,14 @@ public static class NavigationMenuTreeBuilder
             .Where(g => g.Items.Count > 0)
             .ToArray();
 
-        return new NavigationMenusResponse(groups);
+        // Yetki filtresinden bağımsız: tenant'ta abone (görünür) modül kodları — #67 ModuleGuard.
+        var subscribedModuleCodes = rows
+            .Select(r => r.ModuleCode)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(c => c, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return new NavigationMenusResponse(groups, subscribedModuleCodes);
     }
 
     private static NavigationMenuItemDto ToItem(

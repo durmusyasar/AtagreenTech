@@ -14,6 +14,8 @@ export const queryKeys = {
   systemDiagnostics: ['system', 'diagnostics'],
   /** Master menü / dil kataloğu (`/system/menus`). */
   systemMenus: ['system', 'menus'],
+  /** Platform tenant listesi / modül abonelikleri (`/tenants`). */
+  tenants: ['tenants'],
   /** Genel bakış analitik özeti. */
   dashboard: ['dashboard'],
   users: ['users'],

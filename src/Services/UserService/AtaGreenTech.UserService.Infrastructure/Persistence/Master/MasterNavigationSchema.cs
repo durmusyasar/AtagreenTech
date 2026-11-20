@@ -25,6 +25,7 @@ public static class MasterNavigationSchema
         await SeedModulesAsync(master, cancellationToken);
         await SeedMenusAsync(master, cancellationToken);
         await SeedTranslationsAsync(master, cancellationToken);
+        await MigrateTenantSubscriptionsAsync(master, cancellationToken);
         await SeedTenantSubscriptionsAsync(master, cancellationToken);
         await DropLegacyColumnsAsync(master, cancellationToken);
     }
@@ -89,15 +90,17 @@ public static class MasterNavigationSchema
             CREATE UNIQUE INDEX IF NOT EXISTS "IX_MenuLanguages_Menu_Language"
                 ON "MenuLanguages" ("MenuId", "LanguageId");
 
-            CREATE TABLE IF NOT EXISTS "TenantServiceSubscriptions" (
+            CREATE TABLE IF NOT EXISTS "TenantModuleSubscriptions" (
                 "Id" uuid PRIMARY KEY,
                 "TenantId" uuid NOT NULL REFERENCES "Tenants" ("Id") ON DELETE CASCADE,
-                "ServiceName" character varying(64) NOT NULL,
-                "IsEnabled" boolean NOT NULL,
-                "SubscribedAtUtc" timestamp with time zone NOT NULL
+                "ModuleId" uuid NOT NULL REFERENCES "Modules" ("Id") ON DELETE RESTRICT,
+                "IsEnabled" boolean NOT NULL DEFAULT TRUE,
+                "ExpiresAtUtc" timestamp with time zone NULL,
+                "UpdatedAtUtc" timestamp with time zone NOT NULL DEFAULT now(),
+                "UpdatedByUserId" uuid NULL
             );
-            CREATE UNIQUE INDEX IF NOT EXISTS "IX_TenantServiceSubscriptions_Tenant_Service"
-                ON "TenantServiceSubscriptions" ("TenantId", "ServiceName");
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_TenantModuleSubscriptions_Tenant_Module"
+                ON "TenantModuleSubscriptions" ("TenantId", "ModuleId");
             """,
             cancellationToken
         );
@@ -267,23 +270,66 @@ public static class MasterNavigationSchema
         );
     }
 
-    private static async Task SeedTenantSubscriptionsAsync(MasterDbContext master, CancellationToken cancellationToken)
+    /// <summary>
+    /// Eski <c>TenantServiceSubscriptions(ServiceName)</c> → <c>TenantModuleSubscriptions(ModuleId)</c>.
+    /// </summary>
+    private static async Task MigrateTenantSubscriptionsAsync(MasterDbContext master, CancellationToken cancellationToken)
     {
         await master.Database.ExecuteSqlRawAsync(
             """
-            INSERT INTO "TenantServiceSubscriptions" ("Id", "TenantId", "ServiceName", "IsEnabled", "SubscribedAtUtc")
-            SELECT gen_random_uuid(), t."Id", s."ServiceName", s."IsEnabled", now()
+            CREATE TABLE IF NOT EXISTS "TenantModuleSubscriptions" (
+                "Id" uuid PRIMARY KEY,
+                "TenantId" uuid NOT NULL REFERENCES "Tenants" ("Id") ON DELETE CASCADE,
+                "ModuleId" uuid NOT NULL REFERENCES "Modules" ("Id") ON DELETE RESTRICT,
+                "IsEnabled" boolean NOT NULL DEFAULT TRUE,
+                "ExpiresAtUtc" timestamp with time zone NULL,
+                "UpdatedAtUtc" timestamp with time zone NOT NULL DEFAULT now(),
+                "UpdatedByUserId" uuid NULL
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_TenantModuleSubscriptions_Tenant_Module"
+                ON "TenantModuleSubscriptions" ("TenantId", "ModuleId");
+
+            DO $$
+            BEGIN
+              IF EXISTS (
+                  SELECT 1 FROM information_schema.tables
+                  WHERE table_name = 'TenantServiceSubscriptions'
+              ) THEN
+                  INSERT INTO "TenantModuleSubscriptions" (
+                      "Id", "TenantId", "ModuleId", "IsEnabled", "ExpiresAtUtc", "UpdatedAtUtc", "UpdatedByUserId"
+                  )
+                  SELECT gen_random_uuid(), s."TenantId", mod."Id", s."IsEnabled", NULL, COALESCE(s."SubscribedAtUtc", now()), NULL
+                  FROM "TenantServiceSubscriptions" s
+                  INNER JOIN "Modules" mod ON mod."ServiceName" = s."ServiceName"
+                  WHERE NOT EXISTS (
+                      SELECT 1 FROM "TenantModuleSubscriptions" x
+                      WHERE x."TenantId" = s."TenantId" AND x."ModuleId" = mod."Id"
+                  );
+
+                  DROP TABLE "TenantServiceSubscriptions";
+              END IF;
+            END $$;
+            """,
+            cancellationToken
+        );
+    }
+
+    private static async Task SeedTenantSubscriptionsAsync(MasterDbContext master, CancellationToken cancellationToken)
+    {
+        // Tüm aktif modüller için satır yoksa oluştur (geriye dönük: hepsi açık).
+        await master.Database.ExecuteSqlRawAsync(
+            """
+            INSERT INTO "TenantModuleSubscriptions" (
+                "Id", "TenantId", "ModuleId", "IsEnabled", "ExpiresAtUtc", "UpdatedAtUtc", "UpdatedByUserId"
+            )
+            SELECT gen_random_uuid(), t."Id", mod."Id", TRUE, NULL, now(), NULL
             FROM "Tenants" t
-            CROSS JOIN (VALUES
-                ('General', TRUE),
-                ('UserService', TRUE),
-                ('StockService', TRUE),
-                ('System', TRUE)
-            ) AS s("ServiceName", "IsEnabled")
+            CROSS JOIN "Modules" mod
             WHERE NOT t."IsDeleted"
+              AND mod."IsActive" = TRUE
               AND NOT EXISTS (
-                  SELECT 1 FROM "TenantServiceSubscriptions" x
-                  WHERE x."TenantId" = t."Id" AND x."ServiceName" = s."ServiceName"
+                  SELECT 1 FROM "TenantModuleSubscriptions" x
+                  WHERE x."TenantId" = t."Id" AND x."ModuleId" = mod."Id"
               );
             """,
             cancellationToken
@@ -364,6 +410,7 @@ public static class MasterNavigationSchema
         new(Guid.Parse("11111111-1111-1111-1111-111111110203"), "iam.roles", ModuleCodes.Iam, "/admin/roles", "roles", "users.read", 30),
         new(Guid.Parse("11111111-1111-1111-1111-111111110301"), "system.overview", ModuleCodes.System, "/admin/system", "system", "system.read", 10),
         new(Guid.Parse("11111111-1111-1111-1111-111111110302"), "system.menus", ModuleCodes.System, "/system/menus", "menus", "system.manage", 20),
+        new(Guid.Parse("11111111-1111-1111-1111-111111110303"), "system.tenants", ModuleCodes.System, "/system/tenants", "tenants", "system.tenants.manage", 30),
     ];
 
     private static IReadOnlyList<(string MenuCode, string Tr, string En)> MenuNames { get; } =
@@ -380,6 +427,7 @@ public static class MasterNavigationSchema
         ("iam.roles", "Roller & İzinler", "Roles & Permissions"),
         ("system.overview", "Sistem", "System"),
         ("system.menus", "Menü Yönetimi", "Menu Management"),
+        ("system.tenants", "Tenant Yönetimi", "Tenant Management"),
     ];
 
     internal sealed record ModuleSeed(
