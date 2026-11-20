@@ -6,6 +6,8 @@ export interface PaletteCommand {
   /** Önceden çözülmüş başlık (API menü veya `t(key)`). */
   title: string
   categoryKey: MessageKey
+  /** Varsa `categoryKey` çevirisi yerine kullanılır (modül adı, #65/#69). */
+  categoryLabelOverride?: string
   keywords: string
   icon: ReactNode
   run: () => void

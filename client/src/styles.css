@@ -94,6 +94,30 @@
   outline-offset: 1px;
 }
 
+/* Tema uyumlu ince scrollbar (#69) — Firefox + Chromium/Safari */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--border-strong) / 0.6) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--border-strong) / 0.5);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--border-strong) / 0.85);
+}
+
 /* Public auth atmosfer / giriş hareketleri */
 @keyframes auth-orb-drift {
   0%,

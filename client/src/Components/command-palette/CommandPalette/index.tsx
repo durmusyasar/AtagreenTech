@@ -1,5 +1,5 @@
 import { BgColorsOutlined, GlobalOutlined, LogoutOutlined, PlusOutlined } from '@ant-design/icons'
-import { Empty, Flex, Input, Modal, Typography, theme, type InputRef } from 'antd'
+import { Empty, Input, Modal, type InputRef } from 'antd'
 import {
   useCallback,
   useEffect,
@@ -37,8 +37,8 @@ const NAV_KEYWORDS: Record<string, string> = {
 }
 
 /**
- * Ctrl/Cmd+K ile açılan komuta paleti: sayfa gezinmesi, hızlı oluşturma ve dil değiştirme.
- * Menü rotaları rol/izin filtresiyle navigation config'ten türetilir.
+ * Ctrl/Cmd+K komut paleti (#69): brand kontrast, custom scrollbar, scrollIntoView.
+ * Sayfalar `flatItems` (abonelik + izin filtreli menü) üzerinden gelir.
  */
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate()
@@ -48,10 +48,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const access = usePermissions()
   useNavigationMenus()
   const flatItems = useNavigationStore((s) => s.flatItems)
-  const { token } = theme.useToken()
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<InputRef>(null)
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   const setOpen = useCallback(
     (next: boolean) => {
@@ -74,16 +74,18 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   const commands = useMemo<PaletteCommand[]>(() => {
     // Backend zaten tenant aboneliği + izin filtreledi; ⌘K yalnızca yetkili ekranları listeler.
-    const pageCommands = flatItems.map(
-      (item): PaletteCommand => ({
+    const pageCommands = flatItems.map((item): PaletteCommand => {
+      const moduleLabel = resolveNavTitle(item.moduleTranslations, item.moduleTitle, language)
+      return {
         id: item.code,
         title: resolveNavTitle(item.translations, item.title, language),
         categoryKey: 'command.category.pages',
-        keywords: `${NAV_KEYWORDS[item.route] ?? ''} ${item.serviceName}`,
+        categoryLabelOverride: moduleLabel,
+        keywords: `${NAV_KEYWORDS[item.route] ?? ''} ${item.serviceName} ${moduleLabel}`,
         icon: resolveMenuIcon(item.icon),
         run: () => go(item.route),
-      }),
-    )
+      }
+    })
 
     const actionCommands: PaletteCommand[] = []
     if (access.can('stock.write')) {
@@ -138,11 +140,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   const searchable = useMemo(
     () =>
-      commands.map((command) => ({
-        ...command,
-        categoryLabel: t(command.categoryKey),
-        searchText: `${command.title} ${t(command.categoryKey)} ${command.keywords}`,
-      })),
+      commands.map((command) => {
+        const categoryLabel = command.categoryLabelOverride ?? t(command.categoryKey)
+        return {
+          ...command,
+          categoryLabel,
+          searchText: `${command.title} ${categoryLabel} ${command.keywords}`,
+        }
+      }),
     [commands, t],
   )
 
@@ -164,6 +169,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     const timer = window.setTimeout(() => inputRef.current?.focus(), 0)
     return () => window.clearTimeout(timer)
   }, [open])
+
+  useEffect(() => {
+    itemRefs.current[safeIndex]?.scrollIntoView({ block: 'nearest' })
+  }, [safeIndex, filtered.length])
 
   const onInputKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown') {
@@ -194,7 +203,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       styles={{ body: { padding: 0 } }}
       style={{ top: 80 }}
     >
-      <div style={{ padding: '12px 16px', borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
+      <div className="border-b border-subtle px-4 py-3">
         <Input
           ref={inputRef}
           size="large"
@@ -207,13 +216,23 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           }}
           onKeyDown={onInputKeyDown}
           aria-label={t('command.placeholder')}
-          aria-activedescendant={filtered[safeIndex] ? `command-item-${filtered[safeIndex].id}` : undefined}
+          aria-activedescendant={
+            filtered[safeIndex] ? `command-item-${filtered[safeIndex].id}` : undefined
+          }
         />
       </div>
 
-      <div style={{ maxHeight: 360, overflow: 'auto', padding: 8 }} role="listbox" aria-label={t('command.title')}>
+      <div
+        className="custom-scrollbar max-h-80 space-y-1 overflow-y-auto p-2"
+        role="listbox"
+        aria-label={t('command.title')}
+      >
         {filtered.length === 0 ? (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('command.empty')} style={{ padding: 24 }} />
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t('command.empty')}
+            className="py-8"
+          />
         ) : (
           filtered.map((item, index) => {
             const active = index === safeIndex
@@ -221,42 +240,56 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               <button
                 key={item.id}
                 id={`command-item-${item.id}`}
+                ref={(el) => {
+                  itemRefs.current[index] = el
+                }}
                 type="button"
                 role="option"
                 aria-selected={active}
-                className="command-palette-item"
+                className={[
+                  'command-palette-item flex w-full appearance-none items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors',
+                  'outline-none',
+                  active
+                    ? 'border-brand/30 bg-brand/15 text-primary'
+                    : 'border-transparent text-primary hover:bg-elevated',
+                ].join(' ')}
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={item.run}
-                style={{
-                  display: 'flex',
-                  width: '100%',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '10px 12px',
-                  border: 'none',
-                  borderRadius: token.borderRadius,
-                  background: active ? token.colorPrimaryBg : 'transparent',
-                  color: 'inherit',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
               >
-                <span style={{ fontSize: 18, color: token.colorPrimary, lineHeight: 1 }}>{item.icon}</span>
-                <Flex vertical style={{ flex: 1, minWidth: 0 }}>
-                  <Typography.Text strong ellipsis>
-                    {item.title}
-                  </Typography.Text>
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    {item.categoryLabel}
-                  </Typography.Text>
-                </Flex>
-                <Typography.Text type="secondary" style={{ fontSize: 11, flexShrink: 0 }}>
+                <div className="flex min-w-0 items-center gap-3">
+                  <span
+                    className={[
+                      'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base leading-none',
+                      active ? 'bg-brand/20 text-brand' : 'bg-elevated text-secondary',
+                    ].join(' ')}
+                  >
+                    {item.icon}
+                  </span>
+                  <div className="min-w-0 truncate">
+                    <div className="truncate text-sm font-medium text-primary">{item.title}</div>
+                    <div className="truncate text-xs text-secondary">{item.categoryLabel}</div>
+                  </div>
+                </div>
+                <span
+                  className={[
+                    'ml-3 shrink-0 text-xs font-medium',
+                    active ? 'text-brand' : 'text-muted',
+                  ].join(' ')}
+                >
                   {t('command.go')}
-                </Typography.Text>
+                </span>
               </button>
             )
           })
         )}
+      </div>
+
+      <div className="flex items-center justify-between border-t border-subtle bg-elevated/60 px-4 py-2.5 text-[11px] text-muted">
+        <div className="flex items-center gap-3">
+          <span>↑↓</span>
+          <span>↵ {t('command.go')}</span>
+        </div>
+        <span>⌘K / Ctrl+K</span>
       </div>
     </Modal>
   )
