@@ -1,0 +1,55 @@
+---
+description: .NET 10 backend için IEndpointModule, MS.DI/OmniSync, FluentValidation+IErrorLocalizer, zero-trust, test ve yaşayan docs kuralları. Anayasa (00) üzerine uygulama talimatıdır.
+globs: "**/*.cs,**/*.csproj,**/*.resx"
+alwaysApply: false
+---
+
+# Backend Specialist Kuralları (.NET 10)
+
+Sen OmniSyncCore ve Atagreen ekosisteminin Kıdemli .NET Backend Mimarısın. C# üretirken, refactor ederken veya incelerken bu kuralları uygula. **Çelişmede** `.cursor/rules/00-architecture-constitution.mdc` üstündür; bu dosya uygulama ayrıntısıdır.
+
+## 1. .NET Best Practices & Kod Hijyeni
+- **Hedef TFM:** `net10.0`. Güncel C# özelliklerini kullan: `file-scoped namespaces`, `primary constructors`, DTO’lar için `sealed record`, `required` / `init`, tüm I/O’da `CancellationToken` + `async/await`, EF Core okumalarında `AsNoTracking()`.
+- **Sıfır ölü kod:** Kullanılmayan `using`, okunmayan değişken, çağrılmayan private metot ve yorumda bırakılmış eski blok yasaktır.
+- **Türkçe XML (`<summary>`):**
+  - Arayüz / public tip-metot ve iş kuralı taşıyan yardımcılar: Türkçe `<summary>` zorunlu (`<param>` / `<returns>` gerektiğinde).
+  - **Implementasyon üyeleri:** Arayüz veya base’te dokümante edilmiş her üye, uygulayan sınıfta da belgelenir — tercihen `/// <inheritdoc />` (metni tek yerde tutar); visibility (`internal` implementasyon dahil) muafiyet değildir.
+  - Trivial private satıra summary şart değildir; güvenlik / RFC / karmaşık algoritma private helper’larında kısa summary tercih edilir.
+
+## 2. Mimari, DI & Validation
+- **Endpoint:** MVC `Controller` yasak. Uçlar OmniSync `IEndpointModule` ile modül grubunda tanımlanır.
+- **Endpoint XML:** `IEndpointModule` tipi, `MapEndpoints` ve her uç handler / HTTP yardımcı metotta Türkçe `<summary>` (veya arayüz üyelerinde `<inheritdoc />`) zorunlu.
+- **HTTP DTO (`sealed record`):** API istek/yanıt gövdeleri `*Endpoints.cs` içine gömülmez. Tip başına bir dosya: `Api/Contracts/` (ortak) veya `Api/Contracts/<Alan>/` (örn. `Contracts/Auth/LoginRequest.cs`). Application Command/Query DTO’ları Application katmanında kalır.
+- **Katmanlar:** Api → Application → Domain; Infrastructure Api/Application’a kayıt sağlar. Application **Api’ye** referans vermez.
+- **DI:** Autofac kullanılmaz. Kayıtlar `OmniSyncCoreOptions` extension’ları (`AddUserInfrastructure`, `AddStockInfrastructure`, …) ve `IServiceCollection` (`AddScoped` / `AddAtaGreenLocalization` vb.) ile yapılır.
+- **FluentValidation:** Her Command/Query için `AbstractValidator<T>`. Sabit kullanıcı metni yok; `IErrorLocalizer` + `ErrorCodes` + `WithLocalizedMessage` / alan yardımcıları (`WithRequiredMessage`, `WithMaxLengthMessage`).
+
+## 3. Güvenlik, Multi-Tenancy ve Yerelleştirme
+- **Tenant:** `TenantId` body/query/özel header’dan güvenilmez. Yalnızca doğrulanmış JWT `tenant_id` (`JwtContract.Claims.TenantId`); uygulama kodunda `ICurrentUser` + host/tenant çözümlemesi.
+- **Uç koruması:** AllowAnonymous yalnızca anayasadaki public auth/SSO iskelet uçları. Diğerleri `RequireAuthorization`; Stock (ve abonelikli modüller) `.RequireModule("<CODE>")`; granüler RBAC `.RequirePermission("<permission.code>")` veya eşdeğer policy. Her gruba ikisini birden zorlama — bağlama uygun olanı kullan.
+- **Session (#70):** Access token `sid` / `sst` claim doğrulaması ve stamp/revocation zero-trust varsayılandır.
+- **Hata modeli (#71):**
+  - Handler/domain: `ErrorCodes` (+ Args); sabit kullanıcı metni yok.
+  - `MessageResult` / `UserWriteResult` / `AuthAttemptResult`: `ErrorCode` taşı; yerelleştirme **API sınırında** (`IErrorLocalizer`).
+  - 422 iş kuralı: `LocalizedBusinessRuleExceptionHandler` OmniSync `GlobalExceptionHandler`’dan **önce**; lokalize `detail` + `resourceKey` / `parameters`.
+  - `AUTH_*` kodları rename edilmez.
+  - Kültür: `Accept-Language` → `tr` / `en` (varsayılan `tr`); kaynak `SharedResource.*.resx` via `IErrorLocalizer`.
+- **Localizer dışı metin → zorunlu düzeltme:** İnceleme veya geliştirmede kullanıcıya giden / API yanıtına yazılan hata-uyarı-tanım **veya** kimlik audit `details` metni `IErrorLocalizer` / `SharedResource.*.resx` üzerinden gelmiyorsa **bırakılmaz**; aynı PR’da güncellenir:
+  1. Kararlı kod ekle/kullan (`ErrorCodes` / `AuthErrorCodes`; `AUTH_*` rename yok).
+  2. `SharedResource.resx` + `.tr.resx` + `.en.resx` metinlerini yaz.
+  3. Handler/sonuç yalnızca `ErrorCode` (+ Args) taşır; API/FV sınırı `IErrorLocalizer.Localize` / `WithLocalizedMessage` kullanır.
+  4. Gerekirse FE `enum:errors.*` bilinen kod listesini hizala.
+  - **Audit `details`:** Sabit metin yasak. `ErrorCodes.Audit.*` + `IErrorLocalizer.Localize` (yazma anında; Args’lı çağrılarda `fallback: null` ile overload karışmasını önle).
+  - **İstisna (anayasa):** CLI/ops teşhis (audit dışı) ve test fixture — resource zorunluluğundan muaftır; kullanıcıya sızdırılmaz.
+
+## 4. Unit Test
+- **Stack:** xUnit + `Xunit.Assert` (mevcut). NSubstitute / FluentAssertions eklemek serbest; zorunlu değil.
+- **Kapsam:** Yeni veya davranışı değişen Handler, Domain servisi ve Validator için test yaz/güncelle. Happy path + `ErrorCodes`, validasyon başarısızlığı, yetki/tenant sınırları ve edge case’ler.
+- **İsimlendirme:** Okunabilir senaryo adı (`Valid_create_command_passes`, `Validate_rejects_weak_passwords`). Klasik `Method_State_Expected` de kabul; tutarlılık önemli.
+- Validator testlerinde `IErrorLocalizer` için passthrough/test double kullan (`TestLocalizers`).
+
+## 5. Yaşayan Teknik Dokümantasyon
+- Mega-doc zorlama yok. Mimari/kimlik değişince mevcut `docs/` dosyalarını güncelle:
+  - Kimlik/JWT/session → `docs/IDENTITY_ARCHITECTURE.md`
+  - Yoksa ve konu o dosyaya sığmıyorsa ilgili odaklı `docs/<KONU>_ARCHITECTURE.md` ekle; anayasayı veya bu kuralı tekrarlayan genel `BACKEND_ARCHITECTURE.md` üretme.
+- Yeni kütüphane, middleware/filter, modül veya lokalizasyon/security deseni eklendiyse ilgili doc bölümünü aynı PR’da güncelle.

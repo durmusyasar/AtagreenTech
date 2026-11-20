@@ -72,4 +72,15 @@ public static class Permissions
             ["Manager"] = [Users.Read, Stock.Read, Stock.Write],
             ["Viewer"] = [Users.Read, Stock.Read],
         };
+
+    /// <summary>
+    /// Seed sırasında rol kaydına yazılan açıklamalar (katalog metadata; API hata metni değildir).
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> DefaultRoleDescriptions { get; } =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Admin"] = "System Administrator",
+            ["Manager"] = "Tenant manager",
+            ["Viewer"] = "Read-only viewer",
+        };
 }

@@ -5,13 +5,22 @@ using FluentValidation;
 namespace AtaGreenTech.UserService.Application.Features.Auth;
 
 /// <summary>
-/// Güçlü şifre kuralları: min 8 karakter, büyük/küçük harf, rakam ve özel karakter.
+/// Güçlü şifre kuralları (FE <c>passwordPolicy.ts</c> ile hizalı): min 8 / max 128,
+/// ASCII büyük/küçük harf, rakam ve özel karakter. Başarısızlıktan <see cref="ErrorCodes"/> döner.
 /// </summary>
 public static partial class PasswordRules
 {
     public const int MinLength = 8;
     public const int MaxLength = 128;
 
+    /// <summary>
+    /// Şifreyi politika kurallarına göre doğrular; kullanıcı metni üretmez.
+    /// </summary>
+    /// <param name="password">Doğrulanacak şifre; null/boş min-length hatasıdır.</param>
+    /// <returns>
+    /// <c>IsValid</c>; başarısızsa <c>ErrorCode</c> (<see cref="ErrorCodes"/>) ve format <c>Args</c>.
+    /// Başarıda <c>ErrorCode</c> boş string, <c>Args</c> boş dizidir.
+    /// </returns>
     public static (bool IsValid, string ErrorCode, object[] Args) Validate(string? password)
     {
         if (string.IsNullOrWhiteSpace(password) || password.Length < MinLength)
@@ -20,13 +29,14 @@ public static partial class PasswordRules
         if (password.Length > MaxLength)
             return (false, ErrorCodes.ValidationPasswordMaxLength, [MaxLength]);
 
-        if (!password.Any(char.IsUpper))
+        // ASCII: FE checkPasswordStrength ile aynı sözleşme (Unicode harf/rakam kabul edilmez).
+        if (!UpperRegex().IsMatch(password))
             return (false, ErrorCodes.ValidationPasswordUpper, []);
 
-        if (!password.Any(char.IsLower))
+        if (!LowerRegex().IsMatch(password))
             return (false, ErrorCodes.ValidationPasswordLower, []);
 
-        if (!password.Any(char.IsDigit))
+        if (!DigitRegex().IsMatch(password))
             return (false, ErrorCodes.ValidationPasswordDigit, []);
 
         if (!SpecialCharRegex().IsMatch(password))
@@ -35,6 +45,9 @@ public static partial class PasswordRules
         return (true, string.Empty, []);
     }
 
+    /// <summary>
+    /// FluentValidation kuralı: <see cref="Validate"/> sonucunu <see cref="IErrorLocalizer"/> ile alan hatasına yazar.
+    /// </summary>
     public static IRuleBuilderOptionsConditions<T, string> ApplyStrongPassword<T>(
         this IRuleBuilder<T, string> rule,
         IErrorLocalizer localizer
@@ -47,6 +60,15 @@ public static partial class PasswordRules
                     context.AddFailure(localizer.Localize(errorCode, args));
             }
         );
+
+    [GeneratedRegex(@"[A-Z]")]
+    private static partial Regex UpperRegex();
+
+    [GeneratedRegex(@"[a-z]")]
+    private static partial Regex LowerRegex();
+
+    [GeneratedRegex(@"\d")]
+    private static partial Regex DigitRegex();
 
     [GeneratedRegex(@"[^A-Za-z0-9]")]
     private static partial Regex SpecialCharRegex();

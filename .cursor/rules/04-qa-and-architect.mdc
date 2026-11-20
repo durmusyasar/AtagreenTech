@@ -1,0 +1,34 @@
+---
+description: Issue/özellik için Architect sözleşme+faz planı ve QA negatif/lokalizasyon/session kabul testleri. Anayasa (00) üstündür; Architect uygulama kodu yazmaz.
+globs: "**/tests/**,**/*.Tests/**,**/*.spec.ts,**/*.test.ts,**/*.test.tsx"
+alwaysApply: false
+---
+
+# QA & Architect Planner Kuralları
+
+Bu kural orkestranın iki ucunu yönetir:
+1. Geliştirme **öncesi** — teknik sözleşme ve faz planı (**Architect**).
+2. Geliştirme **sonrası** — güvenlik, tenant, lokalizasyon ve kabul doğrulama (**QA**).
+
+Çelişmede `.cursor/rules/00-architecture-constitution.mdc` üstündür. Uygulama ayrıntısı için `01` / `02`; denetim için `03`.
+
+## 1. Architect (Sözleşme & Faz) — kod yok
+- **Uygulama kodu yasak:** C# / TypeScript / resx içeriği yazma. Yalnızca model, uçlar, DTO, `ErrorCodes`, permission/modül, i18n anahtarları, fazlar ve kabul kriterleri.
+- **Sözleşme kilidi olmadan** BE/FE uygulamasına geçilmez. Her özellikte şu başlıklar netleşir:
+
+  1. **Backend sözleşmesi:** Yol + HTTP metodu; AllowAnonymous mi; uygulanacak koruma (`.RequireModule` ve/veya `.RequirePermission` / policy — bağlama uygun olan); Request/Response alanları (mevcut DTO’dan; uydurma yok); `ErrorCodes` (+ Args); yeni kod varsa `SharedResource` tr/en anahtar planı. `AUTH_*` rename yok. 422 beklentisi: lokalize `detail` + `resourceKey`/`parameters`.
+  2. **Frontend sözleşmesi:** Modül (`auth` / `dashboard` / `system` veya yeni domain), rota, `zod` kuralları, `i18n` (`main` / `common` / `enum`) anahtarları, guard’lar (`RequireAuth` / `ModuleGuard` / `PermissionGuard`). Hata yolu: genel UI → `toApiError`; auth/login → `resolveApiError`.
+  3. **Güvenlik & tenant:** JWT `tenant_id` izolasyonu; rol/permission; pasif modül; session etkisi (`sid`/`sst`, revoke, lockout `423`) gerektiğinde.
+  4. **Teslimat & kabul:** Tek PR veya `PR-A/B/C` gerekçeli kırılım; doğrulanabilir `[ ]` kabul kriterleri; etkilenecek `docs/*` (mega-doc zorlama yok).
+
+## 2. QA (Kabul & Test) — negatif öncelikli
+Happy path zorunlu kalır; plan ve otomasyon **öncelikle** şu kırılma noktalarını kapsar:
+
+1. **Kimlik (`401` / session):** Tokensiz; süresi dolmuş; logout/revoke sonrası access; stamp (`sst`) değişince eski token (#70).
+2. **Yetki & modül (`403`):** `MODULE_NOT_SUBSCRIBED` (URL + API); `PERMISSION_DENIED` / eksik permission.
+3. **Tenant manipülasyonu:** Body/query/header ile yabancı `TenantId` enjekte — veri sızmamalı.
+4. **Lokalizasyon (#71):** `Accept-Language: tr|en` ile FV ve iş kuralı mesajları; 422’de lokalize `detail` ve `resourceKey` varlığı.
+5. **FE hata katmanı regresyonu:** Login → enum/`resolveApiError`; Stock/genel → `toApiError` detail-first (karıştırma).
+6. **Sınır durumları:** `400`/`422` validasyon; mükerrer (`409` varsa); `404`; lockout `423`; makul eşzamanlılık.
+
+**Test hijyeni:** xUnit / Vitest (ve IntegrationTests gerektiğinde). Okunabilir senaryo adları; tekrarlayan setup → factory/builder. Her metoda Türkçe summary şart değil; stratejik/karmaşık senaryoda açıklama yeterli. Unit vs Integration hangisinin zorunlu olduğu kabul kriterinde yazılır.

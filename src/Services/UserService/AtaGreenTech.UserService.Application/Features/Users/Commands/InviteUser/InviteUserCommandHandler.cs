@@ -21,7 +21,8 @@ internal sealed class InviteUserCommandHandler(
     IIdentityAuditLogger auditLogger,
     ICurrentUser currentUser,
     ICurrentTenant currentTenant,
-    IOptions<AuthOptions> authOptions
+    IOptions<AuthOptions> authOptions,
+    IErrorLocalizer localizer
 ) : ICommandHandler<InviteUserCommand, MessageResult>
 {
     public async Task<MessageResult> Handle(InviteUserCommand request, CancellationToken cancellationToken)
@@ -70,12 +71,15 @@ internal sealed class InviteUserCommandHandler(
         await invitationSender.SendAsync(user.Email, inviteUrl, cancellationToken);
 
         var actor = string.IsNullOrWhiteSpace(currentUser.Email) ? currentUser.UserId : currentUser.Email;
+        var actorLabel = string.IsNullOrWhiteSpace(actor)
+            ? localizer.Localize(ErrorCodes.Audit.ActorUnknown)
+            : actor;
         await auditLogger.LogAsync(
             AuditLog.Actions.UserInvited,
             user.Email,
             user.Id,
             request.ClientIp,
-            $"Yeni kullanıcı davet e-postası gönderildi. Rol: {role.Name}. Davet eden: {actor ?? "unknown"}.",
+            localizer.Localize(ErrorCodes.Audit.UserInvited, fallback: null, role.Name, actorLabel),
             cancellationToken
         );
 

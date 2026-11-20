@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.DTOs;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
@@ -19,7 +20,8 @@ internal sealed class UpdateRolePermissionsCommandHandler(
     ICurrentUser currentUser,
     ICurrentTenant currentTenant,
     INavigationMenuCache navigationMenuCache,
-    AccessTokenLifecycle accessTokenLifecycle
+    AccessTokenLifecycle accessTokenLifecycle,
+    IErrorLocalizer localizer
 ) : ICommandHandler<UpdateRolePermissionsCommand, RoleWriteResult>
 {
     public async Task<RoleWriteResult> Handle(
@@ -85,7 +87,11 @@ internal sealed class UpdateRolePermissionsCommandHandler(
             actorEmail,
             actorId,
             request.ClientIp,
-            $"{role.Name} rolünün izinleri güncellendi: {string.Join(", ", permissionNames)}.",
+            localizer.Localize(
+                ErrorCodes.Audit.RolePermissionsUpdated,
+                fallback: null,
+                role.Name,
+                string.Join(", ", permissionNames)),
             cancellationToken
         );
 

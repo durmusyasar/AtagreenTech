@@ -128,6 +128,36 @@ public static class MasterNavigationSchema
                   ALTER TABLE "MenuDefinitions" ADD COLUMN IF NOT EXISTS "TranslationKey" character varying(128) NULL;
                   ALTER TABLE "MenuDefinitions" ADD COLUMN IF NOT EXISTS "ServiceDisplayOrder" integer NULL;
               END IF;
+
+              -- Eski kurulumlarda legacy kolonlar NOT NULL kalmış olabilir; seed ModuleId ile yazar.
+              IF EXISTS (
+                  SELECT 1 FROM information_schema.columns
+                  WHERE table_schema = 'public' AND table_name = 'MenuDefinitions'
+                    AND column_name = 'ServiceName' AND is_nullable = 'NO'
+              ) THEN
+                  ALTER TABLE "MenuDefinitions" ALTER COLUMN "ServiceName" DROP NOT NULL;
+              END IF;
+              IF EXISTS (
+                  SELECT 1 FROM information_schema.columns
+                  WHERE table_schema = 'public' AND table_name = 'MenuDefinitions'
+                    AND column_name = 'ServiceTranslationKey' AND is_nullable = 'NO'
+              ) THEN
+                  ALTER TABLE "MenuDefinitions" ALTER COLUMN "ServiceTranslationKey" DROP NOT NULL;
+              END IF;
+              IF EXISTS (
+                  SELECT 1 FROM information_schema.columns
+                  WHERE table_schema = 'public' AND table_name = 'MenuDefinitions'
+                    AND column_name = 'TranslationKey' AND is_nullable = 'NO'
+              ) THEN
+                  ALTER TABLE "MenuDefinitions" ALTER COLUMN "TranslationKey" DROP NOT NULL;
+              END IF;
+              IF EXISTS (
+                  SELECT 1 FROM information_schema.columns
+                  WHERE table_schema = 'public' AND table_name = 'MenuDefinitions'
+                    AND column_name = 'ServiceDisplayOrder' AND is_nullable = 'NO'
+              ) THEN
+                  ALTER TABLE "MenuDefinitions" ALTER COLUMN "ServiceDisplayOrder" DROP NOT NULL;
+              END IF;
             END $$;
             """,
             cancellationToken
@@ -197,15 +227,24 @@ public static class MasterNavigationSchema
             );
         }
 
-        // Eski satırlarda ModuleId boşsa ServiceName üzerinden doldur (geçiş).
+        // Eski satırlarda ModuleId boşsa ServiceName üzerinden doldur (yalnızca legacy kolon varsa).
         await master.Database.ExecuteSqlRawAsync(
             """
-            UPDATE "MenuDefinitions" m
-            SET "ModuleId" = mod."Id"
-            FROM "Modules" mod
-            WHERE m."ModuleId" IS NULL
-              AND m."ServiceName" IS NOT NULL
-              AND m."ServiceName" = mod."ServiceName";
+            DO $$
+            BEGIN
+              IF EXISTS (
+                  SELECT 1 FROM information_schema.columns
+                  WHERE table_schema = 'public' AND table_name = 'MenuDefinitions'
+                    AND column_name = 'ServiceName'
+              ) THEN
+                  UPDATE "MenuDefinitions" m
+                  SET "ModuleId" = mod."Id"
+                  FROM "Modules" mod
+                  WHERE m."ModuleId" IS NULL
+                    AND m."ServiceName" IS NOT NULL
+                    AND m."ServiceName" = mod."ServiceName";
+              END IF;
+            END $$;
             """,
             cancellationToken
         );

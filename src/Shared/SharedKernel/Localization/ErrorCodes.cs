@@ -23,7 +23,58 @@ public static class ErrorCodes
     public const string AuthMfaAlreadyEnabled = "AUTH_MFA_ALREADY_ENABLED";
     public const string AuthMfaAlreadyDisabled = "AUTH_MFA_ALREADY_DISABLED";
     public const string AuthMfaSetupRequired = "AUTH_MFA_SETUP_REQUIRED";
+    /// <summary>Host/tenant çözülemedi (login öncesi).</summary>
+    public const string AuthTenantUnresolved = "AUTH_TENANT_UNRESOLVED";
+    /// <summary>Logout tamamlandı (başarı mesajı; hata değil).</summary>
+    public const string AuthLogoutSuccess = "AUTH_LOGOUT_SUCCESS";
+    /// <summary>E-posta doğrulama tamamlandı (başarı mesajı; hata değil).</summary>
+    public const string AuthVerifyEmailSuccess = "AUTH_VERIFY_EMAIL_SUCCESS";
+    /// <summary>
+    /// Doğrulama e-postası yeniden gönderildi (veya hesap uygun değilse aynı mesaj — enumeration önleme).
+    /// </summary>
+    public const string AuthResendVerificationSuccess = "AUTH_RESEND_VERIFICATION_SUCCESS";
+    /// <summary>
+    /// Şifre sıfırlama e-postası gönderildi (veya hesap uygun değilse aynı mesaj — enumeration önleme).
+    /// </summary>
+    public const string AuthForgotPasswordSuccess = "AUTH_FORGOT_PASSWORD_SUCCESS";
+    /// <summary>Şifre sıfırlama tamamlandı; oturumlar sonlandırıldı (başarı mesajı; hata değil).</summary>
+    public const string AuthResetPasswordSuccess = "AUTH_RESET_PASSWORD_SUCCESS";
+    /// <summary>Şifre değiştirildi; yeniden giriş gerekir (başarı mesajı; hata değil).</summary>
+    public const string AuthChangePasswordSuccess = "AUTH_CHANGE_PASSWORD_SUCCESS";
+    /// <summary>Davet kabul edildi; hesap hazır (başarı mesajı; hata değil).</summary>
+    public const string AuthAcceptInviteSuccess = "AUTH_ACCEPT_INVITE_SUCCESS";
+    /// <summary>Kurulum TOTP doğrulandı; MFA etkin (başarı mesajı; hata değil).</summary>
+    public const string AuthVerifyMfaSuccess = "AUTH_VERIFY_MFA_SUCCESS";
+    /// <summary>MFA kapatıldı; secret/kurtarma kodları temizlendi (başarı mesajı; hata değil).</summary>
+    public const string AuthDisableMfaSuccess = "AUTH_DISABLE_MFA_SUCCESS";
     public const string SsoNotImplemented = "SSO_NOT_IMPLEMENTED";
+
+    /// <summary>Kimlik audit <c>details</c> metinleri (<see cref="IErrorLocalizer"/> / SharedResource).</summary>
+    public static class Audit
+    {
+        public const string LoginSuccess = "AUDIT_LOGIN_SUCCESS";
+        public const string LoginFailure = "AUDIT_LOGIN_FAILURE";
+        public const string LoginFailureLocked = "AUDIT_LOGIN_FAILURE_LOCKED";
+        public const string LoginFailureBadPassword = "AUDIT_LOGIN_FAILURE_BAD_PASSWORD";
+        public const string LoginFailureInactive = "AUDIT_LOGIN_FAILURE_INACTIVE";
+        public const string LoginFailureEmailUnverified = "AUDIT_LOGIN_FAILURE_EMAIL_UNVERIFIED";
+        public const string LoginFailureMfaInvalid = "AUDIT_LOGIN_FAILURE_MFA_INVALID";
+        public const string PasswordReset = "AUDIT_PASSWORD_RESET";
+        public const string MfaEnabled = "AUDIT_MFA_ENABLED";
+        public const string MfaDisabled = "AUDIT_MFA_DISABLED";
+        public const string UserInvited = "AUDIT_USER_INVITED";
+        public const string UserRolesUpdated = "AUDIT_USER_ROLES_UPDATED";
+        public const string RolePermissionsUpdated = "AUDIT_ROLE_PERMISSIONS_UPDATED";
+        public const string TenantIdentitySeeded = "AUDIT_TENANT_IDENTITY_SEEDED";
+        public const string ActorUnknown = "AUDIT_ACTOR_UNKNOWN";
+    }
+
+
+
+
+
+
+
 
     public const string TokenRevoked = "TOKEN_REVOKED";
     public const string SessionExpired = "SESSION_EXPIRED";
@@ -95,5 +146,19 @@ public static class ErrorCodes
         public const string UnitId = "FIELD_UNIT_ID";
         public const string WarehouseId = "FIELD_WAREHOUSE_ID";
         public const string Roles = "FIELD_ROLES";
+        public const string UserId = "FIELD_USER_ID";
+        public const string SessionId = "FIELD_SESSION_ID";
+        public const string SecurityStamp = "FIELD_SECURITY_STAMP";
+        public const string Email = "FIELD_EMAIL";
+        public const string Password = "FIELD_PASSWORD";
+        public const string CurrentPassword = "FIELD_CURRENT_PASSWORD";
+        public const string NewPassword = "FIELD_NEW_PASSWORD";
+        public const string RefreshToken = "FIELD_REFRESH_TOKEN";
+        public const string Token = "FIELD_TOKEN";
+        public const string FirstName = "FIELD_FIRST_NAME";
+        public const string LastName = "FIELD_LAST_NAME";
     }
 }
+
+
+

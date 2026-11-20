@@ -1,5 +1,4 @@
 using AtaGreenTech.SharedKernel.Localization;
-using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -8,35 +7,42 @@ using OmniSync.Core.Application.Messaging;
 using OmniSync.Core.Domain.Repositories;
 using OmniSync.Core.Domain.Tenants;
 
-namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.ForgotPassword;
-
-internal sealed class ForgotPasswordCommandHandler(
-    IRepository<User> users,
-    IPasswordResetSender passwordResetSender,
-    ICurrentTenant currentTenant,
-    IOptions<AuthOptions> authOptions
-) : ICommandHandler<ForgotPasswordCommand, MessageResult>
+namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.ForgotPassword
 {
-    public async Task<MessageResult> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
+    /// <summary>
+    /// Uygun hesaplarda şifre sıfırlama challenge’ı üretir ve e-posta gönderir.
+    /// Enumeration önlemek için uygun olmayan durumlarda da <see cref="ErrorCodes.AuthForgotPasswordSuccess"/> döner.
+    /// Yerelleştirme API sınırında (#71).
+    /// </summary>
+    internal sealed class ForgotPasswordCommandHandler(
+        IRepository<User> users,
+        IPasswordResetSender passwordResetSender,
+        ICurrentTenant currentTenant,
+        IOptions<AuthOptions> authOptions
+    ) : ICommandHandler<ForgotPasswordCommand, MessageResult>
     {
-        var email = User.NormalizeEmail(request.Email);
-        var user = await users.GetAsync(u => u.Email == email, cancellationToken);
+        public async Task<MessageResult> Handle(
+            ForgotPasswordCommand request,
+            CancellationToken cancellationToken
+        )
+        {
+            if (!currentTenant.IsAvailable || currentTenant.Id is null)
+                return MessageResult.Fail(ErrorCodes.AuthTenantUnresolved);
 
-        if (user is null || !user.IsActive)
-            return MessageResult.Fail(ErrorCodes.AuthEmailNotFound);
+            var email = User.NormalizeEmail(request.Email);
+            var user = await users.GetAsync(u => u.Email == email, cancellationToken);
 
-        var hours = Math.Max(1, authOptions.Value.PasswordResetHours);
-        var (plaintext, hash) = EmailVerificationTokenFactory.Create();
-        user.SetPasswordResetChallenge(hash, DateTime.UtcNow.AddHours(hours));
+            if (user is null || !user.IsActive)
+                return MessageResult.OkCode(ErrorCodes.AuthForgotPasswordSuccess);
 
-        var resetUrl = AuthPublicLinks.Build(
-            authOptions.Value,
-            currentTenant,
-            "/reset-password",
-            plaintext
-        );
-        await passwordResetSender.SendAsync(user.Email, resetUrl, cancellationToken);
+            var hours = Math.Max(1, authOptions.Value.PasswordResetHours);
+            var (plaintext, hash) = EmailVerificationTokenFactory.Create();
+            user.SetPasswordResetChallenge(hash, DateTime.UtcNow.AddHours(hours));
 
-        return MessageResult.Ok("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.");
+            var resetUrl = AuthPublicLinks.Build(authOptions.Value, currentTenant, "/reset-password", plaintext);
+            await passwordResetSender.SendAsync(user.Email, resetUrl, cancellationToken);
+
+            return MessageResult.OkCode(ErrorCodes.AuthForgotPasswordSuccess);
+        }
     }
 }

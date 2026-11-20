@@ -1,46 +1,56 @@
 using AtaGreenTech.SharedKernel.Localization;
-using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
 using OmniSync.Core.Application.Messaging;
 using OmniSync.Core.Domain.Repositories;
+using OmniSync.Core.Domain.Tenants;
 
-namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.ResetPassword;
-
-internal sealed class ResetPasswordCommandHandler(
-    IRepository<User> users,
-    IRepository<RefreshToken> refreshTokens,
-    IPasswordHasher passwordHasher,
-    IIdentityAuditLogger auditLogger,
-    AccessTokenLifecycle accessTokenLifecycle
-) : ICommandHandler<ResetPasswordCommand, MessageResult>
+namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.ResetPassword
 {
-    public async Task<MessageResult> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
+    /// <summary>
+    /// Reset jetonunu doğrular, parolayı değiştirir, refresh/access oturumlarını iptal eder ve stamp yayınlar.
+    /// Hata/başarı ve audit <c>details</c> <see cref="ErrorCodes"/> + <see cref="IErrorLocalizer"/> (#71).
+    /// </summary>
+    internal sealed class ResetPasswordCommandHandler(
+        IRepository<User> users,
+        IRepository<RefreshToken> refreshTokens,
+        IPasswordHasher passwordHasher,
+        IIdentityAuditLogger auditLogger,
+        AccessTokenLifecycle accessTokenLifecycle,
+        ICurrentTenant currentTenant,
+        IErrorLocalizer localizer
+    ) : ICommandHandler<ResetPasswordCommand, MessageResult>
     {
-        var tokenHash = EmailVerificationTokenFactory.Hash(request.Token);
-        var user = await users.GetAsync(u => u.PasswordResetTokenHash == tokenHash, cancellationToken);
+        public async Task<MessageResult> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
+        {
+            if (!currentTenant.IsAvailable || currentTenant.Id is null)
+                return MessageResult.Fail(ErrorCodes.AuthTenantUnresolved);
 
-        if (user is null || !user.IsPasswordResetChallengeValid(tokenHash, DateTime.UtcNow))
-            return MessageResult.Fail(ErrorCodes.AuthResetTokenInvalid);
+            var tokenHash = EmailVerificationTokenFactory.Hash(request.Token);
+            var user = await users.GetAsync(u => u.PasswordResetTokenHash == tokenHash, cancellationToken);
 
-        user.ChangePassword(passwordHasher.Hash(request.NewPassword));
-        await SessionRevocation.RevokeAllRefreshTokensAsync(
-            refreshTokens,
-            user.Id,
-            cancellationToken,
-            accessTokenLifecycle
-        );
-        await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
+            if (user is null || !user.IsPasswordResetChallengeValid(tokenHash, DateTime.UtcNow))
+                return MessageResult.Fail(ErrorCodes.AuthResetTokenInvalid);
 
-        await auditLogger.LogAsync(
-            AuditLog.Actions.PasswordReset,
-            user.Email,
-            user.Id,
-            request.ClientIp,
-            "Şifre sıfırlama işlemi gerçekleştirildi.",
-            cancellationToken
-        );
+            user.ChangePassword(passwordHasher.Hash(request.NewPassword));
+            await SessionRevocation.RevokeAllRefreshTokensAsync(
+                refreshTokens,
+                user.Id,
+                cancellationToken,
+                accessTokenLifecycle
+            );
+            await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
 
-        return MessageResult.Ok("Şifreniz başarıyla sıfırlandı. Tüm aktif oturumlarınız sonlandırıldı.");
+            await auditLogger.LogAsync(
+                AuditLog.Actions.PasswordReset,
+                user.Email,
+                user.Id,
+                request.ClientIp,
+                details: localizer.Localize(ErrorCodes.Audit.PasswordReset),
+                cancellationToken
+            );
+
+            return MessageResult.OkCode(ErrorCodes.AuthResetPasswordSuccess);
+        }
     }
 }

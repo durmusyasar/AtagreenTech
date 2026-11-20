@@ -17,7 +17,8 @@ internal sealed class AssignUserRolesCommandHandler(
     IUserDbContext db,
     IIdentityAuditLogger auditLogger,
     ICurrentUser currentUser,
-    AccessTokenLifecycle accessTokenLifecycle
+    AccessTokenLifecycle accessTokenLifecycle,
+    IErrorLocalizer localizer
 ) : ICommandHandler<AssignUserRolesCommand, UserWriteResult>
 {
     public async Task<UserWriteResult> Handle(
@@ -60,7 +61,11 @@ internal sealed class AssignUserRolesCommandHandler(
                 actorEmail,
                 actorId,
                 request.ClientIp,
-                $"{user.Email} kullanıcısının rolleri güncellendi: {string.Join(", ", roleNames)}.",
+                localizer.Localize(
+                    ErrorCodes.Audit.UserRolesUpdated,
+                    fallback: null,
+                    user.Email,
+                    string.Join(", ", roleNames)),
                 cancellationToken
             );
         }

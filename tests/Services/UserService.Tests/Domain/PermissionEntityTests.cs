@@ -1,4 +1,5 @@
 using AtaGreenTech.SharedKernel.Security;
+using AtaGreenTech.UserService.Domain;
 using AtaGreenTech.UserService.Domain.Entities;
 
 namespace AtaGreenTech.UserService.Tests.Domain;
@@ -15,10 +16,35 @@ public sealed class PermissionEntityTests
     }
 
     [Fact]
-    public void RolePermission_requires_ids()
+    public void Permission_requires_name()
     {
-        Assert.Throws<ArgumentException>(() => new RolePermission(Guid.Empty, Guid.NewGuid()));
-        Assert.Throws<ArgumentException>(() => new RolePermission(Guid.NewGuid(), Guid.Empty));
+        var ex = Assert.Throws<ArgumentException>(() => new Permission("  "));
+        Assert.StartsWith(DomainErrorCodes.ValidationRequired, ex.Message, StringComparison.Ordinal);
+        Assert.Equal("name", ex.ParamName);
+    }
+
+    [Fact]
+    public void Permission_rejects_name_over_max_length()
+    {
+        var tooLong = new string('a', Permission.NameMaxLength + 1);
+        var ex = Assert.Throws<ArgumentException>(() => new Permission(tooLong));
+        Assert.StartsWith(DomainErrorCodes.ValidationMaxLength, ex.Message, StringComparison.Ordinal);
+        Assert.Equal("name", ex.ParamName);
+    }
+
+    [Fact]
+    public void RolePermission_requires_ids()
+
+    {
+        var emptyRole = Assert.Throws<ArgumentException>(() =>
+            new RolePermission(Guid.Empty, Guid.NewGuid()));
+        Assert.StartsWith(DomainErrorCodes.ValidationRequired, emptyRole.Message, StringComparison.Ordinal);
+        Assert.Equal("roleId", emptyRole.ParamName);
+
+        var emptyPermission = Assert.Throws<ArgumentException>(() =>
+            new RolePermission(Guid.NewGuid(), Guid.Empty));
+        Assert.StartsWith(DomainErrorCodes.ValidationRequired, emptyPermission.Message, StringComparison.Ordinal);
+        Assert.Equal("permissionId", emptyPermission.ParamName);
 
         var roleId = Guid.NewGuid();
         var permissionId = Guid.NewGuid();

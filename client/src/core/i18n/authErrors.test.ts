@@ -64,4 +64,14 @@ describe('isKnownAuthErrorCode', () => {
       ),
     ).toContain('kayıtlı değil')
   })
+
+  it('recognizes AUTH_TENANT_UNRESOLVED', () => {
+    expect(isKnownAuthErrorCode('AUTH_TENANT_UNRESOLVED')).toBe(true)
+    expect(
+      resolveAuthErrorMessage(
+        new ApiError({ message: 'x', status: 400, code: 'AUTH_TENANT_UNRESOLVED' }),
+        'en',
+      ),
+    ).toContain('Tenant could not be resolved')
+  })
 })

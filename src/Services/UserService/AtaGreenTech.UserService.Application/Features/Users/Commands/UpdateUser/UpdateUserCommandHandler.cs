@@ -1,5 +1,6 @@
 using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Application.DTOs;
+using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Features.Users;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -11,14 +12,21 @@ using OmniSync.Core.Domain.Users;
 
 namespace AtaGreenTech.UserService.Application.Features.Users.Commands.UpdateUser;
 
+/// <summary>
+/// Profil günceller; isteğe bağlı roller. Rol değişince stamp invalidate + yayın (#70).
+/// Audit <c>details</c> <see cref="ErrorCodes.Audit"/> + <see cref="IErrorLocalizer"/> (#71).
+/// </summary>
 internal sealed class UpdateUserCommandHandler(
     IRepository<User> users,
     IRepository<UserRole> userRoles,
     IUserDbContext db,
     IIdentityAuditLogger auditLogger,
-    ICurrentUser currentUser
+    ICurrentUser currentUser,
+    AccessTokenLifecycle accessTokenLifecycle,
+    IErrorLocalizer localizer
 ) : ICommandHandler<UpdateUserCommand, UserWriteResult>
 {
+    /// <inheritdoc />
     public async Task<UserWriteResult> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         var user = await users.GetByIdAsync(request.Id, cancellationToken)
@@ -54,7 +62,8 @@ internal sealed class UpdateUserCommandHandler(
         else
         {
             roleNames = await db.UserRoles
-                .Where(ur => ur.UserId == user.Id)
+                .AsNoTracking()
+                .Where(ur => ur.UserId == user.Id && !ur.IsDeleted && ur.Role != null && !ur.Role.IsDeleted)
                 .Select(ur => ur.Role.Name)
                 .Distinct()
                 .OrderBy(n => n)
@@ -63,18 +72,24 @@ internal sealed class UpdateUserCommandHandler(
 
         if (rolesChanged)
         {
+            user.InvalidateCredentialStamp();
+            await accessTokenLifecycle.PublishStampAsync(user.Id, user.SecurityStamp, cancellationToken);
+
             Guid? actorId = Guid.TryParse(currentUser.UserId, out var id) ? id : null;
             var actorEmail = string.IsNullOrWhiteSpace(currentUser.Email)
-                ? "unknown"
+                ? localizer.Localize(ErrorCodes.Audit.ActorUnknown)
                 : currentUser.Email;
             await auditLogger.LogAsync(
                 AuditLog.Actions.RoleChanged,
                 actorEmail,
                 actorId,
                 request.ClientIp,
-                $"{user.Email} kullanıcısının rolleri güncellendi: {string.Join(", ", roleNames)}.",
-                cancellationToken
-            );
+                localizer.Localize(
+                    ErrorCodes.Audit.UserRolesUpdated,
+                    fallback: null,
+                    user.Email,
+                    string.Join(", ", roleNames)),
+                cancellationToken);
         }
 
         return UserWriteResult.Ok(
@@ -87,8 +102,6 @@ internal sealed class UpdateUserCommandHandler(
                 user.IsActive,
                 user.IsEmailVerified,
                 user.CreatedAt,
-                roleNames
-            )
-        );
+                roleNames));
     }
 }

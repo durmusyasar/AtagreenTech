@@ -1,0 +1,56 @@
+---
+description: OmniSyncCore ve Atagreen için multi-tenant, modüler, zero-trust, lokalizasyon ve temiz kod mimari anayasası.
+globs: 
+alwaysApply: true
+---
+
+# OmniSyncCore & Atagreen — Mimari Anayasa
+
+Bu çalışma alanı; çok kiracılı (Multi-Tenant), modüler domain odaklı (.NET 10 Backend + React/Vite/Tailwind Frontend) kurumsal SaaS ekosistemidir. Üretilen her kod ve inceleme aşağıdaki kurallara kesin olarak uymak zorundadır.
+
+## 1. Temiz Kod ve Okunabilirlik
+- **SOLID / DRY / KISS / SRP:** Spagetti ve derin iç içe `if/else` yerine erken dönüş ve küçük, tek amaçlı birimler.
+- **Anlamlı isimler:** `data`, `item`, `temp`, `handle` yasaktır; niyeti taşıyan adlar kullanılır (`subscribedModuleCodes`, `resolveLocalizedMenuTitle`).
+- **Yorum politikası:** “Satır ne yapıyor” yorumu yok. İş kuralı gerekçesi, güvenlik kısıtı, karmaşık algoritma ve public API sözleşmesi için öz açıklama zorunlu (C# `<summary>`, TS JSDoc).
+  - **C# XML kapsamı:** Arayüz / public üye ve iş kuralı taşıyan yardımcılarda Türkçe `<summary>` zorunlu. Aynı üyeyi uygulayan tiplerde (visibility fark etmeksizin: `public` / `internal`) her üye için `<inheritdoc />` veya kendi Türkçe summary zorunlu — sözleşme metni arayüzde kalır, implementasyon sessiz bırakılmaz.
+  - **Endpoint handler’lar:** `IEndpointModule` uç metotları (private static olsa bile) ve HTTP yanıt yardımcıları Türkçe `<summary>` ister.
+  - Trivial private satır/helper’a summary şart değildir; güvenlik veya RFC/algoritma private helper’larında kısa summary tercih edilir.
+- **Tip güvenliği:** TypeScript’te `any`; C#’ta gereksiz `dynamic` / kör `object` cast yasaktır.
+
+## 2. Genel Mühendislik
+- **Sıfır hardcoded kullanıcı metni:** API yanıtı, UI etiketi, validasyon, kullanıcıya gösterilen hata/uyarı ve kimlik **audit `details`** kod içine sabit string olarak yazılamaz; `ErrorCodes` (+ Args) + `SharedResource` / `IErrorLocalizer` (veya FE i18n) zorunlu.
+  - Kapsam dışı (bilinçli istisna): CLI/ops teşhis mesajları (audit dışı), test fixture metinleri.
+- **Sıfır güven varsayılanı:** Yeni endpoint, ekran ve veri sorgusu kapalıdır; açık yetki/modül politikası olmadan erişilemez.
+- **Sözleşme önceliği:** Backend DTO, `ErrorCodes`, JWT claim ve `Permission` anahtarları netleşmeden UI’da uydurma alan/kod üretilemez.
+- **Rol sınırı:** Kullanıcı açıkça kod istemedikçe (yalnızca mimari analiz, issue planlama veya denetim) kod üretme; analiz ve kabul kriteri sun.
+- **OmniSync sınırı:** Çatı davranışları OmniSync’te kalır. App-owned ihtiyaçlar (lokalizasyon, permission filter, session stamp) `SharedKernel` / servis Api katmanında çözülür; OmniSync patch beklenmez.
+
+## 3. Backend (.NET 10)
+- **Endpoint mimarisi:** MVC `Controller` yasaktır. Tüm API uçları Minimal API + OmniSync `IEndpointModule` ile modül gruplarında tanımlanır. HTTP istek/yanıt `sealed record` DTO’ları endpoint dosyasına gömülmez; `Api/Contracts/` (tip başına dosya; alan klasörü örn. `Contracts/Auth/`).
+- **Tenant izolasyonu (kritik):** `TenantId` request body, query string veya özel HTTP header’dan **güvenilerek alınamaz**. Yalnızca doğrulanmış JWT claim’inden okunur (`JwtContract.Claims.TenantId` / `tenant_id`; uygulama kodunda `ICurrentUser` + host/tenant çözümlemesi).
+- **Yetki ve modül koruması:**
+  - Kimlik doğrulaması **zorunlu** olmayan uçlar (AllowAnonymous): `login`, `refresh`, `logout`, `verify-email`, `resend-verification`, `forgot-password`, `reset-password`, `accept-invite`, SSO iskelet uçları. Diğer tüm uçlar `RequireAuthorization` (+ gerektiğinde permission/modül) ister.
+  - Modül grupları `.RequireModule("<MODULE_CODE>")`; granüler RBAC `.RequirePermission("<permission.code>")` ile korunur.
+  - Access token oturum doğrulaması (#70): `sid` / `sst` claim’leri ve stamp/revocation ile zero-trust session.
+- **Çok dilli hata ve validasyon (#71):**
+  - Domain/Application sabit kullanıcı metni fırlatmaz; `ErrorCodes` (+ format `Args`) taşır.
+  - Çözümleme `IErrorLocalizer` → `IStringLocalizer<SharedResource>` (`SharedResource.tr.resx` / `.en.resx`); kültür `Accept-Language` (desteklenen: `tr`, `en`; varsayılan `tr`).
+  - FluentValidation mesajları `WithLocalizedMessage` / alan yardımcıları ile `IErrorLocalizer` üzerinden üretilir.
+  - `MessageResult` / `UserWriteResult` / `AuthAttemptResult` hatalarında `ErrorCode` (+ Args) taşınır; **yerelleştirme API sınırında** yapılır.
+  - Stock (ve benzeri) iş kuralı 422: `LocalizedBusinessRuleExceptionHandler` OmniSync `GlobalExceptionHandler`’dan **önce** kaydedilir; yanıtta lokalize `detail` + `resourceKey` / `parameters` korunur.
+  - Auth hata kodları kararlı sözleşmedir (`AUTH_*` rename edilmez).
+
+## 4. Frontend (React / TypeScript / Tailwind)
+- **Modül sınırları:**
+  - `src/core/` → `src/modules/*` import edemez (`app/moduleRegistry` manifest kayıtları hariç).
+  - Modüller birbirinin iç bileşenlerine doğrudan import atamaz; yalnızca `src/core/` altyapısını tüketir.
+  - Her modül `moduleManifest.ts` + `routes.tsx` dosyasını `React.lazy` ile dışa aktarır (mevcut: `auth`, `dashboard`, `system`; yeni domain modülleri aynı sözleşmeyi izler).
+- **Klasör yapısı:** Modül içinde `pages/`, `components/`, `hooks/`, `types/` (`type.d.ts`).
+- **Form & validasyon:** `zod` (+ gerekirse `refine`) ve standart `FloatingInput`.
+- **Çok dillilik (`react-i18next`):**
+  - Statik UI: `main`, `common`, `enum` namespace’leri → `tr` / `en` JSON.
+  - Dinamik menü/modül adları: `Languages` / `MenuLanguages` / `ModuleLanguages` ilişkilerinden aktif dile göre.
+- **API hata gösterimi (#71):**
+  - Genel ProblemDetails: `toApiError` — 422’de backend `detail` öncelikli; yoksa FE `resourceKey` / `error.*` fallback.
+  - Auth/login yolu: `resolveApiError` / `resolveAuthErrorMessage` — bilinen `AUTH_*` (ve alias) kodları `enum:errors.*` ile çevrilir; bilinmeyen kod → `UNKNOWN_ERROR`.
+- **Tema token’ları:** Ham renk sınıfları (`bg-white`, `bg-slate-900`, sabit hex) yasak; yalnızca semantik token’lar (`bg-canvas`, `bg-surface`, `bg-elevated`, `border-subtle`, `text-primary`, `text-secondary`).

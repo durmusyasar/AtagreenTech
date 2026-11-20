@@ -1,11 +1,20 @@
+using AtaGreenTech.SharedKernel.Localization;
 using FluentValidation;
 
-namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.DisableMfa;
-
-internal sealed class DisableMfaCommandValidator : AbstractValidator<DisableMfaCommand>
+namespace AtaGreenTech.UserService.Application.Features.Auth.Commands.DisableMfa
 {
-    public DisableMfaCommandValidator()
+    /// <summary>
+    /// MFA kapatma isteği alan doğrulaması. Mesajlar <see cref="IErrorLocalizer"/> / <see cref="ErrorCodes"/> (#71).
+    /// </summary>
+    internal sealed class DisableMfaCommandValidator : AbstractValidator<DisableMfaCommand>
     {
-        RuleFor(x => x.Password).NotEmpty().MaximumLength(128);
+        public DisableMfaCommandValidator(IErrorLocalizer localizer)
+        {
+            RuleFor(x => x.Password)
+                .NotEmpty()
+                .WithRequiredMessage(localizer, ErrorCodes.Fields.Password)
+                .MaximumLength(PasswordRules.MaxLength)
+                .WithMaxLengthMessage(localizer, ErrorCodes.Fields.Password, PasswordRules.MaxLength);
+        }
     }
 }

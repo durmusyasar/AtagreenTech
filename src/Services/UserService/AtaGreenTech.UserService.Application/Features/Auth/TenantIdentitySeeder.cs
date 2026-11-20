@@ -1,3 +1,5 @@
+using AtaGreenTech.SharedKernel.Localization;
+using AtaGreenTech.UserService.Application.Common;
 using AtaGreenTech.UserService.Application.Interfaces;
 using AtaGreenTech.UserService.Application.Options;
 using AtaGreenTech.UserService.Domain.Entities;
@@ -20,9 +22,23 @@ public sealed class TenantIdentitySeeder(
     IPasswordHasher passwordHasher,
     IIdentityAuditLogger auditLogger,
     ICurrentTenant currentTenant,
-    IOptions<AuthOptions> authOptions
+    IOptions<AuthOptions> authOptions,
+    IErrorLocalizer localizer
 ) : ITenantIdentitySeeder
 {
+    /// <summary>
+    /// Mevcut tenant kapsamında RBAC kataloğunu sağlar; gerekirse varsayılan Admin kullanıcısını oluşturur
+    /// veya mevcut Admin'e rol atar. Login bootstrap ile add-tenant CLI/API ortak giriş noktasıdır.
+    /// </summary>
+    /// <param name="request">İstek özelinde Admin kimlik bilgileri; null ise <c>Auth:Bootstrap</c> kullanılır.</param>
+    /// <param name="mode">
+    /// <see cref="TenantIdentitySeedMode.UpsertAdmin"/> her zaman Admin'i sağlar;
+    /// <see cref="TenantIdentitySeedMode.BootstrapIfEmpty"/> yalnızca tenant boşken oluşturur.
+    /// </param>
+    /// <param name="cancellationToken">İptal jetonu.</param>
+    /// <returns>Oluşturulan veya eşleşen Admin özeti (<see cref="TenantIdentitySeedResult.AdminCreated"/> ile).</returns>
+    /// <exception cref="InvalidOperationException">Tenant çözülemezse, Admin rolü yoksa veya bootstrap parolası eksikse.</exception>
+    /// <exception cref="ArgumentException">Çözülen başlangıç parolası <see cref="PasswordRules"/> ile uyumsuzsa.</exception>
     public async Task<TenantIdentitySeedResult> EnsureAsync(
         TenantIdentitySeedRequest? request = null,
         TenantIdentitySeedMode mode = TenantIdentitySeedMode.UpsertAdmin,
@@ -66,7 +82,10 @@ public sealed class TenantIdentitySeeder(
 
         var (passwordOk, passwordErrorCode, _) = PasswordRules.Validate(resolved.Password);
         if (!passwordOk)
-            throw new ArgumentException($"Geçersiz başlangıç şifresi: {passwordErrorCode}", nameof(request));
+        {
+            // CLI/ops teşhis: kullanıcıya giden lokalize metin değil; kararlı ErrorCode taşır.
+            throw new ArgumentException(passwordErrorCode, nameof(request));
+        }
 
         var admin = new User(
             email,
@@ -85,7 +104,7 @@ public sealed class TenantIdentitySeeder(
             AuditLog.Actions.TenantIdentitySeeded,
             admin.Email,
             admin.Id,
-            details: $"Tenant '{tenantIdentifier}' için varsayılan Admin ve RBAC kataloğu seed edildi.",
+            details: localizer.Localize(ErrorCodes.Audit.TenantIdentitySeeded, fallback: null, tenantIdentifier),
             cancellationToken: cancellationToken
         );
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -93,6 +112,9 @@ public sealed class TenantIdentitySeeder(
         return new TenantIdentitySeedResult(admin.Id, admin.Email, AdminCreated: true, tenantIdentifier);
     }
 
+    /// <summary>
+    /// Kullanıcıda Admin rolü yoksa atar; zaten varsa no-op (idempotent).
+    /// </summary>
     private async Task EnsureAdminRoleAsync(Guid userId, Guid adminRoleId, CancellationToken cancellationToken)
     {
         var hasAdmin = await userRoles.ExistsAsync(
@@ -106,25 +128,18 @@ public sealed class TenantIdentitySeeder(
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// İstek alanlarını bootstrap seçenekleriyle birleştirir; boş olmayan ilk değeri tercih eder.
+    /// E-posta zorunludur; parola boş kalabilir (<see cref="TenantIdentitySeedMode.BootstrapIfEmpty"/> erken çıkışında).
+    /// </summary>
     private static ResolvedAdmin Resolve(TenantIdentitySeedRequest? request, BootstrapAdminOptions bootstrap)
     {
-        var email = FirstNonEmpty(request?.AdminEmail, bootstrap.Email)
-            ?? throw new ArgumentException("Admin e-posta zorunludur.");
-        var password = FirstNonEmpty(request?.AdminPassword, bootstrap.Password) ?? string.Empty;
-        var username = FirstNonEmpty(request?.AdminUsername, bootstrap.Username) ?? "admin";
-        var firstName = FirstNonEmpty(request?.AdminFirstName, bootstrap.FirstName) ?? "System";
-        var lastName = FirstNonEmpty(request?.AdminLastName, bootstrap.LastName) ?? "Admin";
+        var email = StringHelpers.FirstNonEmpty(request?.AdminEmail, bootstrap.Email)
+            ?? throw new ArgumentException(ErrorCodes.ValidationRequired, nameof(request));
+        var password = StringHelpers.FirstNonEmpty(request?.AdminPassword, bootstrap.Password) ?? string.Empty;
+        var username = StringHelpers.FirstNonEmpty(request?.AdminUsername, bootstrap.Username) ?? "admin";
+        var firstName = StringHelpers.FirstNonEmpty(request?.AdminFirstName, bootstrap.FirstName) ?? "System";
+        var lastName = StringHelpers.FirstNonEmpty(request?.AdminLastName, bootstrap.LastName) ?? "Admin";
         return new ResolvedAdmin(email, password, username, firstName, lastName);
     }
-
-    private static string? FirstNonEmpty(params string?[] values) =>
-        values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v))?.Trim();
-
-    private sealed record ResolvedAdmin(
-        string Email,
-        string Password,
-        string Username,
-        string FirstName,
-        string LastName
-    );
 }
