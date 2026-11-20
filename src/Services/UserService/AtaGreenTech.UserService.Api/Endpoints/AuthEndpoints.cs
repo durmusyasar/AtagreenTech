@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Api.Contracts;
 using AtaGreenTech.UserService.Api.Hosting;
 using AtaGreenTech.UserService.Application.Features.Auth;
@@ -59,8 +60,13 @@ public sealed class AuthEndpoints : IEndpointModule
         group.MapPost("/sso/{provider}/callback", SsoCallbackAsync).AllowAnonymous();
     }
 
-    private static async Task<IResult> LoginAsync(LoginRequest request, ISender sender, HttpContext httpContext,
-        CancellationToken cancellationToken)
+    private static async Task<IResult> LoginAsync(
+        LoginRequest request,
+        ISender sender,
+        HttpContext httpContext,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken
+    )
     {
         var result = await sender.Send(
             new LoginCommand(
@@ -74,13 +80,14 @@ public sealed class AuthEndpoints : IEndpointModule
             cancellationToken
         );
 
-        return result.IsSuccess ? TypedResults.Ok(result.Response) : AuthError(result);
+        return result.IsSuccess ? TypedResults.Ok(result.Response) : AuthError(result, localizer);
     }
 
     private static async Task<IResult> RefreshAsync(
         RefreshTokenRequest request,
         ISender sender,
         HttpContext httpContext,
+        IErrorLocalizer localizer,
         CancellationToken cancellationToken
     )
     {
@@ -95,7 +102,7 @@ public sealed class AuthEndpoints : IEndpointModule
 
         return result.IsSuccess
             ? TypedResults.Ok(result.Response)
-            : AuthError(result);
+            : AuthError(result, localizer);
     }
 
     private static async Task<IResult> LogoutAsync(
@@ -108,14 +115,15 @@ public sealed class AuthEndpoints : IEndpointModule
         return TypedResults.Ok(new { message = "Başarıyla çıkış yapıldı." });
     }
 
-    private static async Task<IResult> MeAsync(ISender sender, CancellationToken cancellationToken)
+    private static async Task<IResult> MeAsync(
+        ISender sender,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken
+    )
     {
         var me = await sender.Send(new GetMeQuery(), cancellationToken);
         return me is null
-            ? AuthError(
-                AuthErrorCodes.InvalidCredentials,
-                "Geçerli bir oturum bulunamadı."
-            )
+            ? AuthError(AuthErrorCodes.InvalidCredentials, localizer)
             : TypedResults.Ok(me);
     }
 
@@ -142,6 +150,7 @@ public sealed class AuthEndpoints : IEndpointModule
     private static async Task<IResult> ForgotPasswordAsync(
         ForgotPasswordRequest request,
         ISender sender,
+        IErrorLocalizer localizer,
         CancellationToken cancellationToken
     )
     {
@@ -149,7 +158,10 @@ public sealed class AuthEndpoints : IEndpointModule
         if (!result.Succeeded)
         {
             return Results.Json(
-                new ErrorResponse(AuthErrorCodes.EmailNotFound, result.Message),
+                new ErrorResponse(
+                    AuthErrorCodes.EmailNotFound,
+                    localizer.Localize(AuthErrorCodes.EmailNotFound, result.Message)
+                ),
                 statusCode: StatusCodes.Status400BadRequest
             );
         }
@@ -178,6 +190,7 @@ public sealed class AuthEndpoints : IEndpointModule
     private static async Task<IResult> ChangePasswordAsync(
         ChangePasswordRequest request,
         ISender sender,
+        IErrorLocalizer localizer,
         CancellationToken cancellationToken
     )
     {
@@ -189,9 +202,9 @@ public sealed class AuthEndpoints : IEndpointModule
             );
             return ToMessageResult(result);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return AuthError(AuthErrorCodes.InvalidCredentials, ex.Message);
+            return AuthError(AuthErrorCodes.InvalidCredentials, localizer);
         }
     }
 
@@ -208,7 +221,11 @@ public sealed class AuthEndpoints : IEndpointModule
         return ToMessageResult(result);
     }
 
-    private static async Task<IResult> SetupMfaAsync(ISender sender, CancellationToken cancellationToken)
+    private static async Task<IResult> SetupMfaAsync(
+        ISender sender,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken
+    )
     {
         try
         {
@@ -220,15 +237,16 @@ public sealed class AuthEndpoints : IEndpointModule
                     statusCode: StatusCodes.Status400BadRequest
                 );
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return AuthError(AuthErrorCodes.InvalidCredentials, ex.Message);
+            return AuthError(AuthErrorCodes.InvalidCredentials, localizer);
         }
     }
 
     private static async Task<IResult> VerifyMfaAsync(
         VerifyMfaRequest request,
         ISender sender,
+        IErrorLocalizer localizer,
         CancellationToken cancellationToken
     )
     {
@@ -237,15 +255,16 @@ public sealed class AuthEndpoints : IEndpointModule
             var result = await sender.Send(new VerifyMfaCommand(request.Code), cancellationToken);
             return ToMessageResult(result);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return AuthError(AuthErrorCodes.InvalidCredentials, ex.Message);
+            return AuthError(AuthErrorCodes.InvalidCredentials, localizer);
         }
     }
 
     private static async Task<IResult> DisableMfaAsync(
         DisableMfaRequest request,
         ISender sender,
+        IErrorLocalizer localizer,
         CancellationToken cancellationToken
     )
     {
@@ -254,9 +273,9 @@ public sealed class AuthEndpoints : IEndpointModule
             var result = await sender.Send(new DisableMfaCommand(request.Password), cancellationToken);
             return ToMessageResult(result);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            return AuthError(AuthErrorCodes.InvalidCredentials, ex.Message);
+            return AuthError(AuthErrorCodes.InvalidCredentials, localizer);
         }
     }
 
@@ -264,6 +283,7 @@ public sealed class AuthEndpoints : IEndpointModule
         string provider,
         string? redirectUri,
         IOidcAuthService oidcService,
+        IErrorLocalizer localizer,
         CancellationToken cancellationToken
     )
     {
@@ -276,9 +296,9 @@ public sealed class AuthEndpoints : IEndpointModule
             );
             return TypedResults.Ok(result);
         }
-        catch (NotImplementedException ex)
+        catch (NotImplementedException)
         {
-            return SsoNotImplemented(ex.Message);
+            return SsoNotImplemented(localizer);
         }
     }
 
@@ -286,6 +306,7 @@ public sealed class AuthEndpoints : IEndpointModule
         string provider,
         OidcCallbackRequest request,
         IOidcAuthService oidcService,
+        IErrorLocalizer localizer,
         CancellationToken cancellationToken
     )
     {
@@ -294,15 +315,18 @@ public sealed class AuthEndpoints : IEndpointModule
             var result = await oidcService.HandleCallbackAsync(provider, request, cancellationToken);
             return TypedResults.Ok(result);
         }
-        catch (NotImplementedException ex)
+        catch (NotImplementedException)
         {
-            return SsoNotImplemented(ex.Message);
+            return SsoNotImplemented(localizer);
         }
     }
 
-    private static IResult SsoNotImplemented(string message) =>
+    private static IResult SsoNotImplemented(IErrorLocalizer localizer) =>
         Results.Json(
-            new ErrorResponse(AuthErrorCodes.SsoNotImplemented, message),
+            new ErrorResponse(
+                AuthErrorCodes.SsoNotImplemented,
+                localizer.Localize(AuthErrorCodes.SsoNotImplemented)
+            ),
             statusCode: StatusCodes.Status501NotImplemented
         );
 
@@ -314,23 +338,28 @@ public sealed class AuthEndpoints : IEndpointModule
                 statusCode: StatusCodes.Status400BadRequest
             );
 
-    private static IResult AuthError(AuthAttemptResult result) =>
-        Results.Json(
-            new ErrorResponse(
-                result.ErrorCode ?? AuthErrorCodes.InvalidCredentials,
-                result.ErrorMessage ?? "Kimlik doğrulama başarısız.",
-                result.MfaRequired
-            ),
+    private static IResult AuthError(AuthAttemptResult result, IErrorLocalizer localizer)
+    {
+        var code = result.ErrorCode ?? AuthErrorCodes.InvalidCredentials;
+        var args = result.ErrorArgs?.ToArray() ?? [];
+        var message = localizer.Localize(code, result.ErrorMessage, args);
+        return Results.Json(
+            new ErrorResponse(code, message, result.MfaRequired),
             statusCode: result.StatusCode
         );
+    }
 
     private static IResult AuthError(
         string code,
-        string message,
+        IErrorLocalizer localizer,
         int statusCode = StatusCodes.Status401Unauthorized,
-        bool mfaRequired = false
+        bool mfaRequired = false,
+        params object[] args
     ) =>
-        Results.Json(new ErrorResponse(code, message, mfaRequired), statusCode: statusCode);
+        Results.Json(
+            new ErrorResponse(code, localizer.Localize(code, fallback: null, args), mfaRequired),
+            statusCode: statusCode
+        );
 }
 
 /// <summary>Login istek gövdesi. MFA açıksa <see cref="TotpCode"/> veya <see cref="RecoveryCode"/> gerekir.</summary>

@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.UserService.Api.Contracts;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Options;
@@ -35,11 +36,12 @@ namespace AtaGreenTech.UserService.Api.Hosting
 
                 options.OnRejected = async (context, cancellationToken) =>
                 {
+                    var localizer = context.HttpContext.RequestServices.GetRequiredService<IErrorLocalizer>();
                     context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
                     await context.HttpContext.Response.WriteAsJsonAsync(
                         new ErrorResponse(
                             AuthErrorCodes.RateLimitExceeded,
-                            "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin."
+                            localizer.Localize(AuthErrorCodes.RateLimitExceeded)
                         ),
                         cancellationToken
                     );

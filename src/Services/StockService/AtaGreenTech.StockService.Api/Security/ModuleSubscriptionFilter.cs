@@ -1,3 +1,4 @@
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Application.Interfaces;
 using OmniSync.Core.Domain.Tenants;
@@ -5,7 +6,7 @@ using OmniSync.Core.Domain.Tenants;
 namespace AtaGreenTech.StockService.Api.Security;
 
 /// <summary>
-/// Endpoint grubunda tenant'ın ilgili modüle abone olduğunu doğrular (#67).
+/// Endpoint grubunda tenant'ın ilgili modüle abone olduğunu doğrular (#67 / #71).
 /// Abonelik yoksa 403 + <see cref="ModuleSubscriptionErrorCodes.NotSubscribed"/>.
 /// </summary>
 public sealed class ModuleSubscriptionFilter(string moduleCode) : IEndpointFilter
@@ -18,6 +19,7 @@ public sealed class ModuleSubscriptionFilter(string moduleCode) : IEndpointFilte
         var httpContext = context.HttpContext;
         var currentTenant = httpContext.RequestServices.GetRequiredService<ICurrentTenant>();
         var checker = httpContext.RequestServices.GetRequiredService<IModuleSubscriptionChecker>();
+        var localizer = httpContext.RequestServices.GetRequiredService<IErrorLocalizer>();
 
         if (!currentTenant.IsAvailable || currentTenant.Id is null)
             return Results.Unauthorized();
@@ -35,8 +37,7 @@ public sealed class ModuleSubscriptionFilter(string moduleCode) : IEndpointFilte
                 {
                     errorCode = ModuleSubscriptionErrorCodes.NotSubscribed,
                     moduleCode,
-                    detail =
-                        $"Tenant does not have an active subscription for module '{moduleCode}'.",
+                    detail = localizer.Localize(ErrorCodes.ModuleNotSubscribed),
                 },
                 statusCode: StatusCodes.Status403Forbidden
             );

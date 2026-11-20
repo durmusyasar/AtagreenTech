@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using AtaGreenTech.SharedKernel.Localization;
 using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.UserService.Application.Features.Auth;
 using AtaGreenTech.UserService.Application.Interfaces;
@@ -39,6 +40,7 @@ public static class DependencyInjection
                 services.AddScoped<ITenantManagementAdmin, TenantManagementAdmin>();
                 services.AddSingleton<INavigationMenuCache, MemoryNavigationMenuCache>();
                 services.AddMemoryCache();
+                services.AddAtaGreenLocalization();
                 services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
                 services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
                 services.AddSingleton<ITotpService, Rfc6238TotpService>();

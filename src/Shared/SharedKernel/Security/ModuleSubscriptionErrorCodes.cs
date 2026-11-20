@@ -1,7 +1,9 @@
+using AtaGreenTech.SharedKernel.Localization;
+
 namespace AtaGreenTech.SharedKernel.Security;
 
-/// <summary>Modül abonelik HTTP hata kodları (#67).</summary>
+/// <summary>#67 ModuleGuard: abonelik reddi hata kodu (#71 SharedResource).</summary>
 public static class ModuleSubscriptionErrorCodes
 {
-    public const string NotSubscribed = "MODULE_NOT_SUBSCRIBED";
+    public const string NotSubscribed = ErrorCodes.ModuleNotSubscribed;
 }

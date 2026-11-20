@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AUTH_INVALID_CREDENTIALS" xml:space="preserve"><value>E-posta adresi veya şifre hatalı.</value></data>
+  <data name="AUTH_ACCOUNT_LOCKED" xml:space="preserve"><value>Çok fazla başarısız deneme nedeniyle hesabınız geçici olarak kilitlendi. Lütfen {0} dakika sonra tekrar deneyin.</value></data>
+  <data name="AUTH_ACCOUNT_INACTIVE" xml:space="preserve"><value>Hesabınız pasif durumdadır. Lütfen sistem yöneticinizle iletişime geçin.</value></data>
+  <data name="AUTH_EMAIL_NOT_VERIFIED" xml:space="preserve"><value>Giriş yapabilmek için lütfen e-posta adresinizi doğrulayın.</value></data>
+  <data name="AUTH_EMAIL_NOT_FOUND" xml:space="preserve"><value>Bu e-posta adresi sistemde kayıtlı değil.</value></data>
+  <data name="AUTH_RATE_LIMIT_EXCEEDED" xml:space="preserve"><value>Çok fazla deneme yaptınız. Güvenliğiniz için lütfen 1 dakika bekleyin.</value></data>
+  <data name="AUTH_MFA_REQUIRED" xml:space="preserve"><value>İki aşamalı doğrulama kodu gereklidir.</value></data>
+  <data name="AUTH_MFA_INVALID" xml:space="preserve"><value>Girdiğiniz doğrulama veya kurtarma kodu geçersiz.</value></data>
+  <data name="SSO_NOT_IMPLEMENTED" xml:space="preserve"><value>Bu SSO sağlayıcısı henüz desteklenmiyor.</value></data>
+  <data name="TOKEN_REVOKED" xml:space="preserve"><value>Oturumunuz sonlandırıldı. Lütfen tekrar giriş yapın.</value></data>
+  <data name="SESSION_EXPIRED" xml:space="preserve"><value>Oturum süresi dolmuş. Lütfen tekrar giriş yapın.</value></data>
+  <data name="FORBIDDEN" xml:space="preserve"><value>Bu işlem için yetkiniz yok.</value></data>
+  <data name="PERMISSION_DENIED" xml:space="preserve"><value>Bu işlemi gerçekleştirmek için gerekli izne sahip değilsiniz.</value></data>
+  <data name="MODULE_NOT_SUBSCRIBED" xml:space="preserve"><value>Bu modül aktif paketinizde bulunmamaktadır.</value></data>
+  <data name="VALIDATION_FAILED" xml:space="preserve"><value>Girilen bilgileri kontrol edin.</value></data>
+  <data name="RECORD_NOT_FOUND" xml:space="preserve"><value>Kayıt bulunamadı.</value></data>
+  <data name="UNEXPECTED_ERROR" xml:space="preserve"><value>Beklenmeyen bir sunucu hatası oluştu.</value></data>
+</root>

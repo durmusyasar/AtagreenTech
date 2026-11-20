@@ -52,6 +52,9 @@ if (args is ["migrate-tenants"])
 if (args is [TenantSeedCli.Command, ..])
     return await TenantSeedCli.RunAsync(app, args);
 
+// #71: Culture, OmniSync auth/tenant/endpoint hattından önce set edilmeli (401/403 mesaj dili).
+app.UseRequestLocalization();
+
 // Routing, tenant çözümlemesi, CORS, authentication ve authorization burada sırasıyla eklenir;
 // UseCors/UseAuthentication/UseAuthorization ayrıca çağrılmamalıdır.
 app.UseOmniSyncCore();
