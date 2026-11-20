@@ -4,11 +4,12 @@
 
 @layer base {
   :root {
-    /* Light Mode — belirgin yüzey / kenarlık kontrastı */
-    --bg-canvas: 238 242 246; /* #EEF2F6 */
+    /* Light Mode — canvas ↔ surface ayrışması (#68) */
+    --bg-canvas: 233 238 245; /* #E9EEF5 */
     --bg-surface: 255 255 255; /* #FFFFFF */
-    --bg-elevated: 248 250 252; /* #F8FAFC */
+    --bg-elevated: 241 245 249; /* #F1F5F9 */
     --border-subtle: 203 213 225; /* #CBD5E1 */
+    --border-strong: 148 163 184; /* #94A3B8 */
 
     --text-primary: 15 23 42; /* #0F172A */
     --text-secondary: 51 65 85; /* #334155 */
@@ -23,10 +24,11 @@
   }
 
   .dark {
-    --bg-canvas: 7 11 20; /* #070B14 */
-    --bg-surface: 15 23 42; /* #0F172A */
-    --bg-elevated: 30 41 59; /* #1E293B */
-    --border-subtle: 51 65 85; /* #334155 */
+    --bg-canvas: 6 10 18; /* #060A12 */
+    --bg-surface: 14 21 37; /* #0E1525 */
+    --bg-elevated: 24 35 58; /* #18233A */
+    --border-subtle: 38 51 77; /* #26334D */
+    --border-strong: 56 75 112; /* #384B70 */
 
     --text-primary: 248 250 252; /* #F8FAFC */
     --text-secondary: 148 163 184; /* #94A3B8 */

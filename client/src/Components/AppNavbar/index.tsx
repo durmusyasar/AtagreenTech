@@ -17,11 +17,11 @@ import { useLanguage } from '@/core/context/useLanguage'
 import type { AppNavbarProps } from '@/Components/AppNavbar/type'
 
 const chipClass =
-  'inline-flex h-9 shrink-0 appearance-none items-center gap-2 rounded-xl border border-subtle/70 bg-transparent px-2.5 text-xs font-medium text-secondary transition-colors duration-150 hover:border-brand/25 hover:bg-elevated/60 hover:text-primary dark:border-white/10'
+  'inline-flex h-9 shrink-0 appearance-none items-center gap-2 rounded-xl border border-subtle bg-transparent px-2.5 text-xs font-medium text-secondary transition-colors duration-150 hover:border-brand/25 hover:bg-elevated/60 hover:text-primary'
 
 /**
  * Tekil üst bar: public auth ve oturum açık kabuk.
- * Authenticated modda tam genişlik; public’te marka odaklı dar kompozisyon.
+ * z-40 elevation — Sidebar + content üzerinde kesintisiz üst eşik (#68).
  */
 export function AppNavbar({
   onOpenCommandPalette,
@@ -37,8 +37,8 @@ export function AppNavbar({
   return (
     <header
       className={[
-        'sticky top-0 z-40 h-14 w-full overflow-x-clip border-b border-subtle/70 bg-surface/90 backdrop-blur-xl',
-        'dark:border-white/10',
+        'sticky top-0 z-40 h-16 w-full overflow-x-clip border-b border-subtle bg-surface',
+        'shadow-[0_1px_8px_rgba(15,23,42,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.35)]',
         className,
       ]
         .filter(Boolean)
@@ -90,7 +90,7 @@ export function AppNavbar({
                 <SearchOutlined className="shrink-0 text-sm opacity-80" />
                 <span className="hidden truncate lg:inline">{t('header.search')}</span>
               </span>
-              <kbd className="hidden shrink-0 rounded-md border border-subtle/80 bg-surface/90 px-1.5 py-0.5 font-mono text-[10px] text-muted lg:inline">
+              <kbd className="hidden shrink-0 rounded-md border border-subtle bg-elevated px-1.5 py-0.5 font-mono text-[10px] text-muted lg:inline">
                 {shortcut}
               </kbd>
             </button>

@@ -13,6 +13,7 @@ export default {
         surface: 'rgb(var(--bg-surface) / <alpha-value>)',
         elevated: 'rgb(var(--bg-elevated) / <alpha-value>)',
         subtle: 'rgb(var(--border-subtle) / <alpha-value>)',
+        strong: 'rgb(var(--border-strong) / <alpha-value>)',
         primary: 'rgb(var(--text-primary) / <alpha-value>)',
         secondary: 'rgb(var(--text-secondary) / <alpha-value>)',
         muted: 'rgb(var(--text-muted) / <alpha-value>)',

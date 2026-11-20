@@ -27,17 +27,18 @@ export function DashboardPage() {
           <p className="max-w-2xl text-sm leading-relaxed text-secondary">{t('dashboard.subtitle')}</p>
         </div>
 
-        <div className="inline-flex rounded-xl border border-subtle/80 bg-surface p-1 dark:border-white/10">
+        <div className="inline-flex items-center rounded-xl border border-subtle bg-surface p-1 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           {(['7d', '30d'] as DateRangeFilter[]).map((value) => (
             <button
               key={value}
               type="button"
               onClick={() => setRange(value)}
               className={[
-                'appearance-none rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                'appearance-none border-0 px-3.5 py-1.5 text-xs font-medium outline-none transition-all',
+                'rounded-lg',
                 range === value
-                  ? 'bg-brand/15 text-brand'
-                  : 'text-secondary hover:text-primary',
+                  ? 'bg-brand/15 text-brand ring-1 ring-brand/30'
+                  : 'bg-transparent text-secondary hover:text-primary',
               ].join(' ')}
             >
               {t(`dashboard.range.${value}`)}
