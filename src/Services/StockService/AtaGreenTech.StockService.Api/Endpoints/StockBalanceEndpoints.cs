@@ -2,6 +2,7 @@ using AtaGreenTech.SharedKernel.Security;
 using AtaGreenTech.StockService.Application.Features.StockBalances.Queries.GetStockBalances;
 using MediatR;
 using OmniSync.Core.Domain.Common;
+using AtaGreenTech.StockService.Api.Security;
 using OmniSync.Core.Infrastructure.Endpoints;
 
 namespace AtaGreenTech.StockService.Api.Endpoints;
@@ -15,6 +16,8 @@ public sealed class StockBalanceEndpoints : IEndpointModule
 
     public void MapEndpoints(RouteGroupBuilder group)
     {
+        group.RequireModule(ModuleCodes.Stock);
+
         group.MapGet("", (
             ISender sender,
             CancellationToken cancellationToken,

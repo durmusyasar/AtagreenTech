@@ -1,6 +1,6 @@
 import { Suspense, type ReactNode } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
-import { RequireAuth } from '@/Components/Guards'
+import { ModuleGuard, RequireAuth } from '@/Components/Guards'
 import { AppLayout } from '@/Components/layout/AppLayout'
 import { modulesByScope } from '@app/moduleRegistry'
 import { PageLoader } from '@core/routing/PageLoader'
@@ -35,8 +35,13 @@ function withSuspense(element: ReactNode) {
   return <Suspense fallback={<PageLoader />}>{element}</Suspense>
 }
 
+/** ModuleGuard children dışında lazy — abonesiz chunk indirilmez (#67). */
 function stockRead(element: ReactNode) {
-  return <RequireAuth permissions="stock.read">{element}</RequireAuth>
+  return (
+    <ModuleGuard moduleCode="STOCK">
+      <RequireAuth permissions="stock.read">{element}</RequireAuth>
+    </ModuleGuard>
+  )
 }
 
 /**

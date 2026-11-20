@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { ModuleCode } from '@core/modules/types'
 
 export interface RequireAuthProps {
   children: ReactNode
@@ -16,5 +17,12 @@ export interface PermissionGuardProps {
 }
 
 export interface RequireAdminProps {
+  children: ReactNode
+}
+
+export interface ModuleGuardProps {
+  moduleCode: ModuleCode
+  /** true ise abonelik kontrolü atlanır (GENERAL / IAM / SYSTEM). */
+  isCore?: boolean
   children: ReactNode
 }

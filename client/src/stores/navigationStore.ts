@@ -6,7 +6,11 @@ interface NavigationState {
   flatItems: FlatNavigationItem[]
   /** Tenant abone modül kodları (#66 / #67). */
   subscribedModuleCodes: string[]
+  /** Menü API yanıtı yazıldı mı — ModuleGuard flash önleme. */
+  isMenusLoaded: boolean
   setMenus: (groups: NavigationMenuGroup[], subscribedModuleCodes?: string[]) => void
+  /** Abonelik kodlarını anında güncelle (403 MODULE_NOT_SUBSCRIBED). */
+  revokeModule: (moduleCode: string) => void
   clear: () => void
 }
 
@@ -55,7 +59,31 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   groups: [],
   flatItems: [],
   subscribedModuleCodes: [],
+  isMenusLoaded: false,
   setMenus: (groups, subscribedModuleCodes = []) =>
-    set({ groups, flatItems: flattenGroups(groups), subscribedModuleCodes }),
-  clear: () => set({ groups: [], flatItems: [], subscribedModuleCodes: [] }),
+    set({
+      groups,
+      flatItems: flattenGroups(groups),
+      subscribedModuleCodes,
+      isMenusLoaded: true,
+    }),
+  revokeModule: (moduleCode) =>
+    set((state) => ({
+      subscribedModuleCodes: state.subscribedModuleCodes.filter(
+        (code) => code.localeCompare(moduleCode, undefined, { sensitivity: 'accent' }) !== 0,
+      ),
+      groups: state.groups.filter(
+        (g) => g.moduleCode.localeCompare(moduleCode, undefined, { sensitivity: 'accent' }) !== 0,
+      ),
+      flatItems: state.flatItems.filter(
+        (i) => i.moduleCode.localeCompare(moduleCode, undefined, { sensitivity: 'accent' }) !== 0,
+      ),
+    })),
+  clear: () =>
+    set({
+      groups: [],
+      flatItems: [],
+      subscribedModuleCodes: [],
+      isMenusLoaded: false,
+    }),
 }))

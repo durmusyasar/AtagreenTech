@@ -7,6 +7,7 @@ using AtaGreenTech.StockService.Application.Features.Products.Queries.GetProduct
 using AtaGreenTech.StockService.Application.Features.Products.Queries.GetProductsWithPagination;
 using MediatR;
 using OmniSync.Core.Domain.Common;
+using AtaGreenTech.StockService.Api.Security;
 using OmniSync.Core.Infrastructure.Endpoints;
 
 namespace AtaGreenTech.StockService.Api.Endpoints;
@@ -22,6 +23,8 @@ public sealed class ProductEndpoints : IEndpointModule
 
     public void MapEndpoints(RouteGroupBuilder group)
     {
+        group.RequireModule(ModuleCodes.Stock);
+
         group.MapGet("", (
             ISender sender,
             CancellationToken cancellationToken,
