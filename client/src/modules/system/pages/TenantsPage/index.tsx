@@ -92,9 +92,10 @@ export function TenantsPage() {
             endAdornment={
               <button
                 type="button"
+                tabIndex={-1}
                 aria-label={t('tenants.searchSubmit')}
                 onClick={() => applySearch(searchDraft)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-secondary transition-colors hover:bg-elevated hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand/40"
+                className="floating-input-clear"
               >
                 <SearchOutlined className="text-sm" aria-hidden />
               </button>
