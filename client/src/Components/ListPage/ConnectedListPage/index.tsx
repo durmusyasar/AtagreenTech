@@ -81,13 +81,12 @@ export function ConnectedListPage<
   const columnsWithSort = useMemo(
     () =>
       columns.map((column) => {
-        const field =
-          typeof column.dataIndex === 'string'
+        const dataIndex =
+          'dataIndex' in column && typeof column.dataIndex === 'string'
             ? column.dataIndex
-            : typeof column.key === 'string'
-              ? column.key
-              : undefined
-        if (!field || !column.sorter) return column
+            : undefined
+        const field = dataIndex ?? (typeof column.key === 'string' ? column.key : undefined)
+        if (!field || !('sorter' in column) || !column.sorter) return column
         return { ...column, sortOrder: sortOrderForField(meta.sorter, field) }
       }),
     [columns, meta.sorter],
