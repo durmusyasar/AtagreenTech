@@ -1,5 +1,6 @@
 import { ApartmentOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, Empty, Input, Space, Table, Tag, Typography } from 'antd'
+import { useState } from 'react'
 import { StatusTag } from '@/Components/StatusTag'
 import { TenantCreateModal } from '@modules/system/components/TenantCreateModal'
 import { TenantModuleBadgesCell } from '@modules/system/components/TenantModuleBadgesCell'
@@ -14,6 +15,7 @@ export function TenantsPage() {
     page,
     setPage,
     pageSize,
+    search,
     setSearch,
     listQuery,
     createOpen,
@@ -23,15 +25,25 @@ export function TenantsPage() {
     createMutation,
     updateModulesMutation,
   } = useTenantsManagement()
+  const [searchDraft, setSearchDraft] = useState(search)
 
   const items = listQuery.data?.items ?? []
   const isEmpty = !listQuery.isPending && items.length === 0
+  const hasActiveSearch = search.trim().length > 0
+
+  const clearSearch = () => {
+    setSearchDraft('')
+    setSearch('')
+    setPage(1)
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">Atagreen</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
+            {t('brand.name')}
+          </p>
           <h1 className="text-2xl font-semibold tracking-tight text-primary sm:text-[1.75rem]">
             {t('tenants.title')}
           </h1>
@@ -55,11 +67,16 @@ export function TenantsPage() {
         <div className="flex flex-col gap-3 border-b border-subtle px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
           <Input.Search
             allowClear
+            value={searchDraft}
             placeholder={t('tenants.search')}
+            onChange={(event) => setSearchDraft(event.target.value)}
             onSearch={(value) => {
-              setSearch(value.trim())
+              const next = value.trim()
+              setSearchDraft(next)
+              setSearch(next)
               setPage(1)
             }}
+            onClear={clearSearch}
             className="max-w-md"
           />
           <Typography.Text type="secondary" className="text-xs">
@@ -73,14 +90,24 @@ export function TenantsPage() {
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-primary">{t('tenants.emptyTitle')}</p>
-                  <p className="text-sm text-secondary">{t('tenants.emptyDescription')}</p>
+                  <p className="text-sm font-medium text-primary">
+                    {hasActiveSearch ? t('tenants.emptySearchTitle') : t('tenants.emptyTitle')}
+                  </p>
+                  <p className="text-sm text-secondary">
+                    {hasActiveSearch
+                      ? t('tenants.emptySearchDescription', search.trim())
+                      : t('tenants.emptyDescription')}
+                  </p>
                 </div>
               }
             >
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-                {t('tenants.create')}
-              </Button>
+              {hasActiveSearch ? (
+                <Button onClick={clearSearch}>{t('tenants.clearSearch')}</Button>
+              ) : (
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+                  {t('tenants.create')}
+                </Button>
+              )}
             </Empty>
           </div>
         ) : (

@@ -20,7 +20,9 @@ export function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1.5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">Atagreen</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">
+            {t('brand.name')}
+          </p>
           <h1 className="text-2xl font-semibold tracking-tight text-primary sm:text-[1.75rem]">
             {t('dashboard.title')}
           </h1>
