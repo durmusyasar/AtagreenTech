@@ -35,5 +35,6 @@ Her satırda ham `isEnabled` / `expiresAtUtc` yanında `isEffectivelyActive` —
 
 ## FE
 
-- Tenant tablosu: sayı yerine rozetler (`isExpired` → uyarı stili).
+- Tenant tablosu: `ConnectedListPage` (`docs/LIST_PAGE_ARCHITECTURE.md`) + rozetler.
+- Liste sıralama query: `sortBy` = `name` | `slug` | `isActive` | `createdAtUtc`, `sortDir` = `asc` | `desc`.
 - Çekmece: süresi dolmuş abonelikte uyarı etiketi; switch hâlâ ham `isEnabled`.

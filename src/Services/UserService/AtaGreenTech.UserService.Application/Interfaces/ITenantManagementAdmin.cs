@@ -9,6 +9,8 @@ public interface ITenantManagementAdmin
         int page,
         int pageSize,
         string? search,
+        string? sortBy = null,
+        string? sortDir = null,
         CancellationToken cancellationToken = default
     );
 

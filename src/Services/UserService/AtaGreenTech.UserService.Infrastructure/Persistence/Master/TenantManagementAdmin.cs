@@ -26,6 +26,8 @@ internal sealed class TenantManagementAdmin(MasterDbContext master) : ITenantMan
         int page,
         int pageSize,
         string? search,
+        string? sortBy = null,
+        string? sortDir = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -34,6 +36,8 @@ internal sealed class TenantManagementAdmin(MasterDbContext master) : ITenantMan
         var offset = (page - 1) * pageSize;
         // Boş aramada % → tüm satırlar; null parametre SqlQueryRaw uyarısını önler.
         var term = string.IsNullOrWhiteSpace(search) ? "%" : $"%{search.Trim()}%";
+        // Sütun adı parametreleştirilemez; yalnızca whitelist.
+        var orderClause = ResolveTenantListOrderClause(sortBy, sortDir);
 
         var total = await master.Database
             .SqlQueryRaw<CountRow>(
@@ -50,68 +54,66 @@ internal sealed class TenantManagementAdmin(MasterDbContext master) : ITenantMan
 
         // Sayım / rozet: TenantModuleSubscriptionRules ile aynı efektif aktiflik.
         // active = core ∨ (enabled ∧ (ExpiresAtUtc null ∨ > now)); expired = enabled ∧ ExpiresAtUtc ≤ now.
-        var rows = await master.Database
-            .SqlQueryRaw<TenantListRow>(
-                """
-                SELECT t."Id", t."Name", t."Subdomain" AS "Slug", t."IsActive",
-                       t."CreatedAt" AS "CreatedAtUtc",
-                       COALESCE((
-                           SELECT COUNT(*)::int
-                           FROM "Modules" mod
-                           LEFT JOIN "TenantModuleSubscriptions" s
-                               ON s."ModuleId" = mod."Id" AND s."TenantId" = t."Id"
-                           WHERE mod."IsActive" = TRUE
-                             AND (
-                               mod."IsCore" = TRUE
-                               OR (
-                                 COALESCE(s."IsEnabled", FALSE) = TRUE
-                                 AND (s."ExpiresAtUtc" IS NULL OR s."ExpiresAtUtc" > now())
-                               )
-                             )
-                       ), 0) AS "ActiveModuleCount",
-                       COALESCE((
-                           SELECT COUNT(*)::int
-                           FROM "TenantModuleSubscriptions" s
-                           INNER JOIN "Modules" mod ON mod."Id" = s."ModuleId"
-                           WHERE s."TenantId" = t."Id"
-                             AND mod."IsCore" = FALSE
-                             AND s."IsEnabled" = TRUE
+        var sql =
+            $"""
+            SELECT t."Id", t."Name", t."Subdomain" AS "Slug", t."IsActive",
+                   t."CreatedAt" AS "CreatedAtUtc",
+                   COALESCE((
+                       SELECT COUNT(*)::int
+                       FROM "Modules" mod
+                       LEFT JOIN "TenantModuleSubscriptions" s
+                           ON s."ModuleId" = mod."Id" AND s."TenantId" = t."Id"
+                       WHERE mod."IsActive" = TRUE
+                         AND (
+                           mod."IsCore" = TRUE
+                           OR (
+                             COALESCE(s."IsEnabled", FALSE) = TRUE
                              AND (s."ExpiresAtUtc" IS NULL OR s."ExpiresAtUtc" > now())
-                       ), 0) AS "OptionalActiveModuleCount",
-                       COALESCE((
-                           SELECT COUNT(*)::int
-                           FROM "TenantModuleSubscriptions" s
-                           INNER JOIN "Modules" mod ON mod."Id" = s."ModuleId"
-                           WHERE s."TenantId" = t."Id"
-                             AND mod."IsCore" = FALSE
-                             AND s."IsEnabled" = TRUE
-                             AND s."ExpiresAtUtc" IS NOT NULL
-                             AND s."ExpiresAtUtc" <= now()
-                       ), 0) AS "ExpiredModuleCount",
-                       COALESCE((
-                           SELECT jsonb_agg(
-                               jsonb_build_object(
-                                   'code', mod."Code",
-                                   'isExpired', (s."ExpiresAtUtc" IS NOT NULL AND s."ExpiresAtUtc" <= now())
-                               )
-                               ORDER BY mod."Code"
-                           )::text
-                           FROM "TenantModuleSubscriptions" s
-                           INNER JOIN "Modules" mod ON mod."Id" = s."ModuleId"
-                           WHERE s."TenantId" = t."Id"
-                             AND mod."IsCore" = FALSE
-                             AND s."IsEnabled" = TRUE
-                       ), '[]') AS "ActiveModuleBadgesJson"
-                FROM "Tenants" t
-                WHERE NOT t."IsDeleted"
-                  AND (t."Name" ILIKE {0} OR t."Subdomain" ILIKE {0})
-                ORDER BY t."Name"
-                OFFSET {1} LIMIT {2}
-                """,
-                term,
-                offset,
-                pageSize
-            )
+                           )
+                         )
+                   ), 0) AS "ActiveModuleCount",
+                   COALESCE((
+                       SELECT COUNT(*)::int
+                       FROM "TenantModuleSubscriptions" s
+                       INNER JOIN "Modules" mod ON mod."Id" = s."ModuleId"
+                       WHERE s."TenantId" = t."Id"
+                         AND mod."IsCore" = FALSE
+                         AND s."IsEnabled" = TRUE
+                         AND (s."ExpiresAtUtc" IS NULL OR s."ExpiresAtUtc" > now())
+                   ), 0) AS "OptionalActiveModuleCount",
+                   COALESCE((
+                       SELECT COUNT(*)::int
+                       FROM "TenantModuleSubscriptions" s
+                       INNER JOIN "Modules" mod ON mod."Id" = s."ModuleId"
+                       WHERE s."TenantId" = t."Id"
+                         AND mod."IsCore" = FALSE
+                         AND s."IsEnabled" = TRUE
+                         AND s."ExpiresAtUtc" IS NOT NULL
+                         AND s."ExpiresAtUtc" <= now()
+                   ), 0) AS "ExpiredModuleCount",
+                   COALESCE((
+                       SELECT jsonb_agg(
+                           jsonb_build_object(
+                               'code', mod."Code",
+                               'isExpired', (s."ExpiresAtUtc" IS NOT NULL AND s."ExpiresAtUtc" <= now())
+                           )
+                           ORDER BY mod."Code"
+                       )::text
+                       FROM "TenantModuleSubscriptions" s
+                       INNER JOIN "Modules" mod ON mod."Id" = s."ModuleId"
+                       WHERE s."TenantId" = t."Id"
+                         AND mod."IsCore" = FALSE
+                         AND s."IsEnabled" = TRUE
+                   ), '[]') AS "ActiveModuleBadgesJson"
+            FROM "Tenants" t
+            WHERE NOT t."IsDeleted"
+              AND (t."Name" ILIKE {{0}} OR t."Subdomain" ILIKE {{0}})
+            ORDER BY {orderClause}
+            OFFSET {{1}} LIMIT {{2}}
+            """;
+
+        var rows = await master.Database
+            .SqlQueryRaw<TenantListRow>(sql, term, offset, pageSize)
             .ToListAsync(cancellationToken);
 
         var items = rows
@@ -389,6 +391,23 @@ internal sealed class TenantManagementAdmin(MasterDbContext master) : ITenantMan
         return map is null
             ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             : new Dictionary<string, string>(map, StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Tenant listesi ORDER BY — yalnızca bilinen kolonlar (SQL injection yok).
+    /// FE <c>sortBy</c>: name | slug | isActive | createdAtUtc.
+    /// </summary>
+    private static string ResolveTenantListOrderClause(string? sortBy, string? sortDir)
+    {
+        var descending = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase);
+        var direction = descending ? "DESC" : "ASC";
+        return (sortBy?.Trim().ToLowerInvariant()) switch
+        {
+            "slug" => $@"t.""Subdomain"" {direction}",
+            "isactive" => $@"t.""IsActive"" {direction}",
+            "createdatutc" => $@"t.""CreatedAt"" {direction}",
+            _ => $@"t.""Name"" {direction}",
+        };
     }
 
     /// <summary>PostgreSQL jsonb_agg çıktısını rozet DTO listesine çevirir.</summary>

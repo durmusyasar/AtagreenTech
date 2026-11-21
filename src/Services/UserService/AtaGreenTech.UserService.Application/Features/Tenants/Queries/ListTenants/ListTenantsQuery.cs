@@ -6,5 +6,7 @@ namespace AtaGreenTech.UserService.Application.Features.Tenants.Queries.ListTena
 public sealed record ListTenantsQuery(
     int Page = 1,
     int PageSize = 20,
-    string? Search = null
+    string? Search = null,
+    string? SortBy = null,
+    string? SortDir = null
 ) : IQuery<TenantListResponse>;

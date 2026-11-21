@@ -35,15 +35,21 @@ public sealed class TenantEndpoints : IEndpointModule
             .WithTags("Tenants");
     }
 
+    /// <summary>Platform tenant listesi (arama + sayfalama + sıralama).</summary>
     private static async Task<IResult> ListAsync(
         ISender sender,
         CancellationToken cancellationToken,
         int page = 1,
         int pageSize = 20,
-        string? search = null
+        string? search = null,
+        string? sortBy = null,
+        string? sortDir = null
     )
     {
-        var result = await sender.Send(new ListTenantsQuery(page, pageSize, search), cancellationToken);
+        var result = await sender.Send(
+            new ListTenantsQuery(page, pageSize, search, sortBy, sortDir),
+            cancellationToken
+        );
         return TypedResults.Ok(result);
     }
 
