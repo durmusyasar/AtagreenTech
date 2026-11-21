@@ -1,10 +1,6 @@
 import { Flex, Tag, Tooltip, Typography } from 'antd'
 import { useLanguage } from '@/core/context/useLanguage'
-import type { TenantListItem } from '@modules/system/api/tenantsService'
-
-export interface TenantModuleBadgesCellProps {
-  row: TenantListItem
-}
+import type { TenantModuleBadgesCellProps } from '@modules/system/components/TenantModuleBadgesCell/type'
 
 /**
  * Tenant listesi aktif-modül sütunu: opsiyonel rozetler + sayım tooltip.
