@@ -28,19 +28,19 @@ export function Sidebar({ collapsed, mobileOpen = false, onNavigate }: SidebarPr
   return (
     <aside
       className={[
-        'z-30 flex flex-col border-r border-subtle bg-surface',
-        'shadow-[2px_0_10px_rgba(15,23,42,0.04)] dark:shadow-[2px_0_14px_rgba(0,0,0,0.3)]',
+        'z-30 flex flex-col border-r border-subtle/80 bg-surface/90 backdrop-blur-md dark:border-white/[0.06]',
+        'shadow-[2px_0_24px_-12px_rgba(15,23,42,0.18)] dark:shadow-[2px_0_28px_-10px_rgba(0,0,0,0.45)]',
         'transition-[width,transform] duration-200 ease-out',
         // Mobil: navbar altından fixed drawer
-        'fixed bottom-0 left-0 top-16 w-[232px]',
+        'fixed bottom-0 left-0 top-16 w-[248px]',
         mobileOpen ? 'translate-x-0' : '-translate-x-full',
         // Desktop: akışta rail
         'lg:relative lg:top-auto lg:translate-x-0 lg:shrink-0',
-        collapsed ? 'lg:w-[68px]' : 'lg:w-[232px]',
+        collapsed ? 'lg:w-[72px]' : 'lg:w-[248px]',
       ].join(' ')}
     >
       <nav
-        className="flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-2 py-3"
+        className="custom-scrollbar flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-2.5 py-4"
         aria-label={t('app.title')}
       >
         {isPending && groups.length === 0 ? (
@@ -60,7 +60,7 @@ export function Sidebar({ collapsed, mobileOpen = false, onNavigate }: SidebarPr
           return (
             <div key={group.serviceName} className="space-y-0.5">
               {showLabels ? (
-                <p className="px-2.5 pb-1 pt-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-muted/80">
+                <p className="px-3 pb-1.5 pt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                   {groupTitle}
                 </p>
               ) : (
@@ -81,28 +81,24 @@ export function Sidebar({ collapsed, mobileOpen = false, onNavigate }: SidebarPr
                     onClick={() => go(item.route)}
                     title={!showLabels ? itemTitle : undefined}
                     className={[
-                      'group relative flex w-full appearance-none items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 py-2 text-left text-[13px] outline-none transition-colors duration-150',
+                      'group relative flex w-full appearance-none items-center gap-2.5 rounded-xl border-0 px-2.5 py-2 text-left text-[13px] outline-none transition-all duration-150',
                       showLabels ? '' : 'justify-center px-2',
                       active
-                        ? 'bg-brand/[0.1] font-medium text-brand'
-                        : 'text-secondary hover:bg-elevated/50 hover:text-primary',
+                        ? 'bg-brand/[0.12] font-semibold text-brand shadow-[inset_0_0_0_1px_rgb(var(--brand-primary)/0.22)]'
+                        : 'bg-transparent text-secondary hover:bg-elevated/70 hover:text-primary',
                     ].join(' ')}
                   >
-                    {active ? (
-                      <span
-                        className="absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-brand"
-                        aria-hidden
-                      />
-                    ) : null}
                     <span
                       className={[
-                        'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[15px] leading-none transition-colors',
-                        active ? 'text-brand' : 'text-muted group-hover:text-secondary',
+                        'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[15px] leading-none transition-colors',
+                        active
+                          ? 'bg-brand/15 text-brand'
+                          : 'bg-elevated/60 text-muted group-hover:bg-elevated group-hover:text-secondary',
                       ].join(' ')}
                     >
                       {resolveMenuIcon(item.icon)}
                     </span>
-                    {showLabels ? <span className="truncate">{itemTitle}</span> : null}
+                    {showLabels ? <span className="truncate tracking-tight">{itemTitle}</span> : null}
                   </button>
                 )
               })}

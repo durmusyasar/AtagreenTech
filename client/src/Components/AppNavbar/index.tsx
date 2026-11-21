@@ -17,7 +17,7 @@ import { useLanguage } from '@/core/context/useLanguage'
 import type { AppNavbarProps } from '@/Components/AppNavbar/type'
 
 const chipClass =
-  'inline-flex h-9 shrink-0 appearance-none items-center gap-2 rounded-xl border border-subtle bg-transparent px-2.5 text-xs font-medium text-secondary transition-colors duration-150 hover:border-brand/25 hover:bg-elevated/60 hover:text-primary'
+  'inline-flex h-9 shrink-0 appearance-none items-center gap-2 rounded-xl border-0 bg-elevated/70 px-2.5 text-xs font-medium text-secondary shadow-[inset_0_0_0_1px_rgb(var(--border-subtle)/0.55)] transition-all duration-150 hover:bg-elevated hover:text-primary hover:shadow-[inset_0_0_0_1px_rgb(var(--brand-primary)/0.28)]'
 
 /**
  * Tekil üst bar: public auth ve oturum açık kabuk.
@@ -37,8 +37,8 @@ export function AppNavbar({
   return (
     <header
       className={[
-        'sticky top-0 z-40 h-16 w-full overflow-x-clip border-b border-subtle bg-surface',
-        'shadow-[0_1px_8px_rgba(15,23,42,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.35)]',
+        'sticky top-0 z-40 h-16 w-full overflow-x-clip border-b border-subtle/70 bg-surface/80 backdrop-blur-xl dark:border-white/[0.06] dark:bg-surface/75',
+        'shadow-[0_8px_30px_-18px_rgba(15,23,42,0.35)] dark:shadow-[0_12px_40px_-20px_rgba(0,0,0,0.65)]',
         className,
       ]
         .filter(Boolean)

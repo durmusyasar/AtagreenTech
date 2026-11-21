@@ -31,7 +31,6 @@ export function useTenantsManagement() {
     page: 1,
     pageSize: 20,
   })
-  const [createOpen, setCreateOpen] = useState(false)
   const [modulesTenant, setModulesTenant] = useState<TenantListItem | null>(null)
 
   const listQuery = useQuery({
@@ -53,7 +52,6 @@ export function useTenantsManagement() {
     mutationFn: (body: CreateTenantRequest) => tenantsService.create(body),
     onSuccess: async (result) => {
       message.success(result.message || t('tenants.created'))
-      setCreateOpen(false)
       await invalidate(queryClient, queryKeys.tenants)
     },
   })
@@ -79,8 +77,6 @@ export function useTenantsManagement() {
     listQueryParams,
     onNeedData,
     listQuery,
-    createOpen,
-    setCreateOpen,
     modulesTenant,
     setModulesTenant,
     createMutation,

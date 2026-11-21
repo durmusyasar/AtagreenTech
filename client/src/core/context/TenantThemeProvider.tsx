@@ -68,6 +68,31 @@ export function TenantThemeProvider({ children }: { children: ReactNode }) {
             colorPrimary: config.primaryColor,
             colorPrimaryBg: surfaces.colorPrimaryBg,
             colorPrimaryBgHover: surfaces.colorPrimaryBgHover,
+            fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+            borderRadius: 12,
+            borderRadiusLG: 16,
+            borderRadiusSM: 10,
+            controlHeight: 36,
+            wireframe: false,
+          },
+          components: {
+            Table: {
+              headerBorderRadius: 0,
+              cellPaddingBlock: 12,
+              cellPaddingInline: 16,
+            },
+            Drawer: {
+              paddingLG: 0,
+            },
+            Button: {
+              borderRadius: 12,
+              controlHeight: 36,
+              fontWeight: 600,
+            },
+            Dropdown: {
+              borderRadiusLG: 14,
+              paddingBlock: 6,
+            },
           },
         }}
       >
