@@ -54,8 +54,8 @@ internal sealed class TenantManagementAdmin(MasterDbContext master) : ITenantMan
 
         // Sayım / rozet: TenantModuleSubscriptionRules ile aynı efektif aktiflik.
         // active = core ∨ (enabled ∧ (ExpiresAtUtc null ∨ > now)); expired = enabled ∧ ExpiresAtUtc ≤ now.
-        var sql =
-            $"""
+        // ORDER BY whitelist ile enjekte edilir; EF parametre yer tutucuları {0}/{1}/{2}.
+        var sql = """
             SELECT t."Id", t."Name", t."Subdomain" AS "Slug", t."IsActive",
                    t."CreatedAt" AS "CreatedAtUtc",
                    COALESCE((
@@ -107,10 +107,10 @@ internal sealed class TenantManagementAdmin(MasterDbContext master) : ITenantMan
                    ), '[]') AS "ActiveModuleBadgesJson"
             FROM "Tenants" t
             WHERE NOT t."IsDeleted"
-              AND (t."Name" ILIKE {{0}} OR t."Subdomain" ILIKE {{0}})
-            ORDER BY {orderClause}
-            OFFSET {{1}} LIMIT {{2}}
-            """;
+              AND (t."Name" ILIKE {0} OR t."Subdomain" ILIKE {0})
+            ORDER BY __ORDER_BY__
+            OFFSET {1} LIMIT {2}
+            """.Replace("__ORDER_BY__", orderClause, StringComparison.Ordinal);
 
         var rows = await master.Database
             .SqlQueryRaw<TenantListRow>(sql, term, offset, pageSize)
