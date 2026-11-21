@@ -1,6 +1,7 @@
-import { ApartmentOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { Button, Empty, Input, Space, Table, Tag, Typography } from 'antd'
+import { ApartmentOutlined, PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
+import { Button, Empty, Space, Table, Tag, Typography } from 'antd'
 import { useState } from 'react'
+import { FloatingInput } from '@/Components/FloatingInput'
 import { StatusTag } from '@/Components/StatusTag'
 import { TenantCreateModal } from '@modules/system/components/TenantCreateModal'
 import { TenantModuleBadgesCell } from '@modules/system/components/TenantModuleBadgesCell'
@@ -37,6 +38,13 @@ export function TenantsPage() {
     setPage(1)
   }
 
+  const applySearch = (raw: string) => {
+    const next = raw.trim()
+    setSearchDraft(next)
+    setSearch(next)
+    setPage(1)
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -65,19 +73,32 @@ export function TenantsPage() {
 
       <section className="overflow-hidden rounded-2xl border border-subtle bg-surface dark:border-white/10">
         <div className="flex flex-col gap-3 border-b border-subtle px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
-          <Input.Search
-            allowClear
-            value={searchDraft}
-            placeholder={t('tenants.search')}
-            onChange={(event) => setSearchDraft(event.target.value)}
-            onSearch={(value) => {
-              const next = value.trim()
-              setSearchDraft(next)
-              setSearch(next)
-              setPage(1)
-            }}
-            onClear={clearSearch}
+          <FloatingInput
             className="max-w-md"
+            label={t('tenants.search')}
+            value={searchDraft}
+            autoClear
+            clearLabel={t('common.clear')}
+            onChange={(event) => {
+              const next = event.target.value
+              setSearchDraft(next)
+              if (next === '' && search !== '') clearSearch()
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return
+              event.preventDefault()
+              applySearch(searchDraft)
+            }}
+            endAdornment={
+              <button
+                type="button"
+                aria-label={t('tenants.searchSubmit')}
+                onClick={() => applySearch(searchDraft)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-secondary transition-colors hover:bg-elevated hover:text-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand/40"
+              >
+                <SearchOutlined className="text-sm" aria-hidden />
+              </button>
+            }
           />
           <Typography.Text type="secondary" className="text-xs">
             {t('tenants.listCount', String(listQuery.data?.totalCount ?? 0))}
