@@ -1,5 +1,5 @@
 import { ApartmentOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { Button, Flex, Input, Space, Table, Tag, Typography } from 'antd'
+import { Button, Empty, Input, Space, Table, Tag, Typography } from 'antd'
 import { StatusTag } from '@/Components/StatusTag'
 import { TenantCreateModal } from '@modules/system/components/TenantCreateModal'
 import { TenantModuleBadgesCell } from '@modules/system/components/TenantModuleBadgesCell'
@@ -7,6 +7,7 @@ import { TenantModulesDrawer } from '@modules/system/components/TenantModulesDra
 import { useTenantsManagement } from '@modules/system/hooks/useTenantsManagement'
 import type { TenantListItem } from '@modules/system/api/tenantsService'
 
+/** Platform tenant listesi — kart kabuğu, rozet özeti ve abonelik çekmecesi. */
 export function TenantsPage() {
   const {
     t,
@@ -23,16 +24,18 @@ export function TenantsPage() {
     updateModulesMutation,
   } = useTenantsManagement()
 
+  const items = listQuery.data?.items ?? []
+  const isEmpty = !listQuery.isPending && items.length === 0
+
   return (
-    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
-      <Flex justify="space-between" align="center" wrap gap={16}>
-        <div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1.5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">Atagreen</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-primary sm:text-[1.75rem]">
             {t('tenants.title')}
-          </Typography.Title>
-          <Typography.Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            {t('tenants.subtitle')}
-          </Typography.Paragraph>
+          </h1>
+          <p className="max-w-2xl text-sm leading-relaxed text-secondary">{t('tenants.subtitle')}</p>
         </div>
         <Space wrap>
           <Button
@@ -46,68 +49,99 @@ export function TenantsPage() {
             {t('tenants.create')}
           </Button>
         </Space>
-      </Flex>
+      </div>
 
-      <Input.Search
-        allowClear
-        placeholder={t('tenants.search')}
-        onSearch={(value) => {
-          setSearch(value.trim())
-          setPage(1)
-        }}
-        style={{ maxWidth: 360 }}
-      />
+      <section className="overflow-hidden rounded-2xl border border-subtle bg-surface dark:border-white/10">
+        <div className="flex flex-col gap-3 border-b border-subtle px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
+          <Input.Search
+            allowClear
+            placeholder={t('tenants.search')}
+            onSearch={(value) => {
+              setSearch(value.trim())
+              setPage(1)
+            }}
+            className="max-w-md"
+          />
+          <Typography.Text type="secondary" className="text-xs">
+            {t('tenants.listCount', String(listQuery.data?.totalCount ?? 0))}
+          </Typography.Text>
+        </div>
 
-      <Table<TenantListItem>
-        rowKey="id"
-        loading={listQuery.isPending}
-        dataSource={listQuery.data?.items}
-        pagination={{
-          current: page,
-          pageSize,
-          total: listQuery.data?.totalCount ?? 0,
-          onChange: setPage,
-          showSizeChanger: false,
-        }}
-        columns={[
-          {
-            title: t('tenants.form.name'),
-            dataIndex: 'name',
-          },
-          {
-            title: t('tenants.form.slug'),
-            dataIndex: 'slug',
-            width: 160,
-            render: (slug: string) => <Tag>{slug}</Tag>,
-          },
-          {
-            title: t('list.status'),
-            dataIndex: 'isActive',
-            width: 120,
-            render: (isActive: boolean) => <StatusTag isActive={isActive} />,
-          },
-          {
-            title: t('tenants.activeModules'),
-            key: 'activeModules',
-            width: 220,
-            render: (_, row) => <TenantModuleBadgesCell row={row} />,
-          },
-          {
-            title: t('tenants.modules'),
-            key: 'actions',
-            width: 160,
-            render: (_, row) => (
-              <Button
-                type="link"
-                icon={<ApartmentOutlined />}
-                onClick={() => setModulesTenant(row)}
-              >
-                {t('tenants.modules')}
+        {isEmpty ? (
+          <div className="px-4 py-14">
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-primary">{t('tenants.emptyTitle')}</p>
+                  <p className="text-sm text-secondary">{t('tenants.emptyDescription')}</p>
+                </div>
+              }
+            >
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+                {t('tenants.create')}
               </Button>
-            ),
-          },
-        ]}
-      />
+            </Empty>
+          </div>
+        ) : (
+          <Table<TenantListItem>
+            rowKey="id"
+            loading={listQuery.isPending}
+            dataSource={items}
+            pagination={{
+              current: page,
+              pageSize,
+              total: listQuery.data?.totalCount ?? 0,
+              onChange: setPage,
+              showSizeChanger: false,
+              className: 'px-4',
+            }}
+            columns={[
+              {
+                title: t('tenants.form.name'),
+                dataIndex: 'name',
+                render: (name: string) => (
+                  <span className="font-medium text-primary">{name}</span>
+                ),
+              },
+              {
+                title: t('tenants.form.slug'),
+                dataIndex: 'slug',
+                width: 160,
+                render: (slug: string) => (
+                  <Tag className="m-0 border-subtle bg-elevated text-secondary">{slug}</Tag>
+                ),
+              },
+              {
+                title: t('list.status'),
+                dataIndex: 'isActive',
+                width: 120,
+                render: (isActive: boolean) => <StatusTag isActive={isActive} />,
+              },
+              {
+                title: t('tenants.activeModules'),
+                key: 'activeModules',
+                width: 280,
+                render: (_, row) => <TenantModuleBadgesCell row={row} />,
+              },
+              {
+                title: t('tenants.subscriptions'),
+                key: 'actions',
+                width: 150,
+                render: (_, row) => (
+                  <Button
+                    size="small"
+                    icon={<ApartmentOutlined />}
+                    onClick={() => setModulesTenant(row)}
+                  >
+                    {t('tenants.subscriptions')}
+                  </Button>
+                ),
+              },
+            ]}
+          />
+        )}
+      </section>
 
       <TenantCreateModal
         open={createOpen}
@@ -125,6 +159,6 @@ export function TenantsPage() {
           updateModulesMutation.mutate({ tenantId: modulesTenant.id, modules })
         }}
       />
-    </Space>
+    </div>
   )
 }

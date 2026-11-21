@@ -3,8 +3,8 @@ import { useLanguage } from '@/core/context/useLanguage'
 import type { TenantModuleBadgesCellProps } from '@modules/system/components/TenantModuleBadgesCell/type'
 
 /**
- * Tenant listesi aktif-modül sütunu: opsiyonel rozetler + sayım tooltip.
- * Süresi dolmuş abonelikler uyarı rengi (`warning`) ile işaretlenir.
+ * Tenant listesi aktif-modül sütunu: opsiyonel rozetler + sayım chip’leri.
+ * Süresi dolmuş abonelikler uyarı rengi ile işaretlenir.
  */
 export function TenantModuleBadgesCell({ row }: TenantModuleBadgesCellProps) {
   const { t } = useLanguage()
@@ -17,23 +17,41 @@ export function TenantModuleBadgesCell({ row }: TenantModuleBadgesCellProps) {
     String(row.expiredModuleCount),
   )
 
-  if (badges.length === 0) {
-    return (
-      <Tooltip title={summary}>
-        <Typography.Text type="secondary">—</Typography.Text>
-      </Tooltip>
-    )
-  }
-
   return (
     <Tooltip title={summary}>
-      <Flex wrap gap={4}>
-        {badges.map((badge) => (
-          <Tag key={badge.code} color={badge.isExpired ? 'warning' : undefined}>
-            {badge.code}
-            {badge.isExpired ? ` · ${t('tenants.moduleExpired')}` : ''}
-          </Tag>
-        ))}
+      <Flex vertical gap={6} className="min-w-0 py-0.5">
+        <Flex wrap gap={4} align="center">
+          {badges.length === 0 ? (
+            <Typography.Text type="secondary">—</Typography.Text>
+          ) : (
+            badges.map((badge) => (
+              <Tag
+                key={badge.code}
+                className={
+                  badge.isExpired
+                    ? 'm-0 border-amber-500/40 bg-amber-500/15 text-amber-200'
+                    : 'm-0 border-brand/35 bg-brand/15 text-brand'
+                }
+              >
+                {badge.code}
+                {badge.isExpired ? ` · ${t('tenants.moduleExpired')}` : ''}
+              </Tag>
+            ))
+          )}
+        </Flex>
+        <Flex wrap gap={4}>
+          <span className="inline-flex items-center rounded-full border border-subtle bg-elevated px-2 py-0.5 text-[11px] text-secondary dark:border-white/10">
+            {t('tenants.chipOptional', String(row.optionalActiveModuleCount))}
+          </span>
+          {row.expiredModuleCount > 0 ? (
+            <span className="inline-flex items-center rounded-full border border-amber-500/35 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-200">
+              {t('tenants.chipExpired', String(row.expiredModuleCount))}
+            </span>
+          ) : null}
+          <span className="inline-flex items-center rounded-full border border-subtle bg-elevated px-2 py-0.5 text-[11px] text-muted dark:border-white/10">
+            {t('tenants.chipActiveTotal', String(row.activeModuleCount))}
+          </span>
+        </Flex>
       </Flex>
     </Tooltip>
   )
