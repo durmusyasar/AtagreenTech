@@ -2,6 +2,7 @@ import { ApartmentOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/ico
 import { Button, Flex, Input, Space, Table, Tag, Typography } from 'antd'
 import { StatusTag } from '@/Components/StatusTag'
 import { TenantCreateModal } from '@modules/system/components/TenantCreateModal'
+import { TenantModuleBadgesCell } from '@modules/system/components/TenantModuleBadgesCell'
 import { TenantModulesDrawer } from '@modules/system/components/TenantModulesDrawer'
 import { useTenantsManagement } from '@modules/system/hooks/useTenantsManagement'
 import type { TenantListItem } from '@modules/system/api/tenantsService'
@@ -86,9 +87,10 @@ export function TenantsPage() {
             render: (isActive: boolean) => <StatusTag isActive={isActive} />,
           },
           {
-            title: t('tenants.enabledModules'),
-            dataIndex: 'enabledModuleCount',
-            width: 140,
+            title: t('tenants.activeModules'),
+            key: 'activeModules',
+            width: 220,
+            render: (_, row) => <TenantModuleBadgesCell row={row} />,
           },
           {
             title: t('tenants.modules'),

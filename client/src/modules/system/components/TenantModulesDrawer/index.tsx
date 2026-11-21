@@ -67,7 +67,14 @@ export function TenantModulesDrawer({ tenant, saving, onClose, onSave }: TenantM
             render: (_, row) => (
               <Flex vertical gap={2}>
                 <span>{row.name}</span>
-                <Tag style={{ width: 'fit-content' }}>{row.code}</Tag>
+                <Flex gap={4} wrap>
+                  <Tag style={{ width: 'fit-content' }}>{row.code}</Tag>
+                  {isDraftExpired(row) ? (
+                    <Tag color="warning" style={{ width: 'fit-content' }}>
+                      {t('tenants.moduleExpired')}
+                    </Tag>
+                  ) : null}
+                </Flex>
               </Flex>
             ),
           },
@@ -116,6 +123,11 @@ export function TenantModulesDrawer({ tenant, saving, onClose, onSave }: TenantM
       />
     </Drawer>
   )
+}
+
+function isDraftExpired(row: TenantModuleDraftRow): boolean {
+  if (row.isCore || !row.isEnabled || !row.expiresAtUtc) return false
+  return !row.expiresAtUtc.isAfter(dayjs())
 }
 
 function toDraft(item: TenantModuleItem): TenantModuleDraftRow {
