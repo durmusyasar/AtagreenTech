@@ -8,5 +8,12 @@ internal sealed class ListTenantsQueryHandler(ITenantManagementAdmin admin)
     : IQueryHandler<ListTenantsQuery, TenantListResponse>
 {
     public Task<TenantListResponse> Handle(ListTenantsQuery request, CancellationToken cancellationToken) =>
-        admin.ListTenantsAsync(request.Page, request.PageSize, request.Search, cancellationToken);
+        admin.ListTenantsAsync(
+            request.Page,
+            request.PageSize,
+            request.Search,
+            request.SortBy,
+            request.SortDir,
+            cancellationToken
+        );
 }

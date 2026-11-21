@@ -51,10 +51,11 @@ export function AppLayout() {
   const toggleShowsCollapsed = isLg ? collapsed : !mobileNavOpen
 
   return (
-    <div className="relative flex min-h-screen max-w-[100vw] flex-col overflow-x-clip bg-canvas text-primary">
+    <div className="relative flex min-h-screen max-w-[100vw] flex-col overflow-x-clip bg-canvas font-sans text-primary">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-brand/[0.035] blur-3xl dark:bg-brand/[0.06]" />
-        <div className="absolute -right-16 bottom-10 h-80 w-80 rounded-full bg-brand/[0.025] blur-3xl dark:bg-brand/[0.04]" />
+        <div className="absolute -left-20 top-16 h-80 w-80 rounded-full bg-brand/[0.05] blur-3xl dark:bg-brand/[0.08]" />
+        <div className="absolute -right-24 top-1/3 h-96 w-96 rounded-full bg-brand/[0.03] blur-3xl dark:bg-brand/[0.05]" />
+        <div className="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-elevated/40 blur-3xl dark:bg-elevated/20" />
       </div>
 
       <AppNavbar
@@ -80,8 +81,8 @@ export function AppLayout() {
         />
 
         <div className="flex min-w-0 flex-1 flex-col overflow-x-clip bg-canvas">
-          <main className="app-shell-main min-w-0 flex-1 px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-            <div className="app-shell-rise mx-auto w-full max-w-[1200px]">
+          <main className="app-shell-main min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+            <div className="app-shell-rise mx-auto w-full max-w-[1180px]">
               <Outlet />
             </div>
           </main>

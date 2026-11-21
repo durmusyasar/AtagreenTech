@@ -8,6 +8,16 @@ export default {
   },
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          '"Plus Jakarta Sans"',
+          'ui-sans-serif',
+          'system-ui',
+          '-apple-system',
+          'Segoe UI',
+          'sans-serif',
+        ],
+      },
       colors: {
         canvas: 'rgb(var(--bg-canvas) / <alpha-value>)',
         surface: 'rgb(var(--bg-surface) / <alpha-value>)',

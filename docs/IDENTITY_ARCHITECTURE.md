@@ -153,6 +153,8 @@ Client’ta **Oturumlarım & Güvenlik** (`/account/security`) bu uçları kulla
   `ModuleLanguage`): EF aggregate değildir; SQL + uzunluk sabitleri / `nameof` için tutulur.
 - Master `TenantModuleSubscriptions` (#66/#67) yalnızca SQL (`MasterNavigationSchema`,
   `NavigationMenuCatalog`, Stock `ModuleSubscriptionChecker`); Domain’de EF entity yok.
+  Liste/çekmece sözleşmesi ve efektif aktiflik: `docs/TENANT_MODULE_SUBSCRIPTIONS.md`
+  (`activeModuleCount` / `activeModuleBadges` / `isEffectivelyActive`).
 
 ### 1.6 Parola özeti (`IPasswordHasher` / `Pbkdf2PasswordHasher`)
 

@@ -14,7 +14,7 @@ export function Footer({ className = '' }: FooterProps) {
     >
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 text-xs text-muted sm:flex-row">
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="font-medium text-secondary">Atagreen</span>
+          <span className="font-medium text-secondary">{t('brand.name')}</span>
           <span aria-hidden>•</span>
           <span>
             © {COPYRIGHT_YEAR} {t('footer.rights')}

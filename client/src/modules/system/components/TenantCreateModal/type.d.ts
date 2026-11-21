@@ -6,9 +6,3 @@ export interface TenantCreateModalProps {
   onClose: () => void
   onSubmit: (body: CreateTenantRequest) => void
 }
-
-export interface TenantCreateFormValues {
-  name: string
-  slug: string
-  adminEmail?: string
-}

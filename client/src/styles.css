@@ -4,41 +4,43 @@
 
 @layer base {
   :root {
-    /* Light Mode — canvas ↔ surface ayrışması (#68) */
-    --bg-canvas: 233 238 245; /* #E9EEF5 */
+    /* Light — soft SaaS canvas (#68) */
+    --bg-canvas: 244 247 251; /* #F4F7FB */
     --bg-surface: 255 255 255; /* #FFFFFF */
-    --bg-elevated: 241 245 249; /* #F1F5F9 */
-    --border-subtle: 203 213 225; /* #CBD5E1 */
+    --bg-elevated: 238 242 248; /* #EEF2F8 */
+    --border-subtle: 226 232 240; /* #E2E8F0 */
     --border-strong: 148 163 184; /* #94A3B8 */
 
     --text-primary: 15 23 42; /* #0F172A */
-    --text-secondary: 51 65 85; /* #334155 */
+    --text-secondary: 71 85 105; /* #475569 */
     --text-muted: 100 116 139; /* #64748B */
 
     --brand-primary: 22 163 74; /* #16A34A */
     --brand-hover: 21 128 61; /* #15803D */
     --brand-soft: 220 252 231; /* #DCFCE7 */
 
-    /* Ant Design / legacy bridge */
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     --primary-color: #16a34a;
   }
 
   .dark {
-    --bg-canvas: 6 10 18; /* #060A12 */
-    --bg-surface: 14 21 37; /* #0E1525 */
-    --bg-elevated: 24 35 58; /* #18233A */
-    --border-subtle: 38 51 77; /* #26334D */
-    --border-strong: 56 75 112; /* #384B70 */
+    /* Dark — cleaner depth, less muddy navy */
+    --bg-canvas: 7 10 18; /* #070A12 */
+    --bg-surface: 12 17 29; /* #0C111D */
+    --bg-elevated: 20 28 46; /* #141C2E */
+    --border-subtle: 32 42 64; /* #202A40 */
+    --border-strong: 58 74 110; /* #3A4A6E */
 
     --text-primary: 248 250 252; /* #F8FAFC */
     --text-secondary: 148 163 184; /* #94A3B8 */
     --text-muted: 100 116 139; /* #64748B */
 
-    --brand-primary: 34 197 94; /* #22C55E */
-    --brand-hover: 22 163 74; /* #16A34A */
-    --brand-soft: 20 83 45; /* #14532D */
+    --brand-primary: 52 211 153; /* #34D399 — biraz daha taze */
+    --brand-hover: 16 185 129; /* #10B981 */
+    --brand-soft: 6 78 59; /* #064E3B */
 
-    --primary-color: #22c55e;
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --primary-color: #34d399;
   }
 
   /*
@@ -66,11 +68,19 @@
   body {
     background-color: rgb(var(--bg-canvas));
     color: rgb(var(--text-primary));
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-family: var(--font-sans);
+    letter-spacing: -0.011em;
+    font-feature-settings: 'ss01' on, 'cv02' on, 'cv03' on, 'cv04' on;
     overflow-x: clip;
     transition:
       background-color 150ms ease,
       color 150ms ease;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.03em;
   }
 }
 
@@ -345,6 +355,327 @@
   @apply text-primary;
 }
 
+/* ConnectedListPage — 2026 SaaS panel */
+.list-page-header {
+  @apply flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between;
+}
+
+.list-page-panel {
+  @apply overflow-hidden rounded-[1.35rem] border border-subtle/80 bg-surface/95 dark:border-white/[0.06];
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.04) inset,
+    0 24px 60px -36px rgb(15 23 42 / 0.4);
+}
+
+.dark .list-page-panel {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.04) inset,
+    0 28px 70px -40px rgb(0 0 0 / 0.85);
+}
+
+.list-page-toolbar {
+  @apply flex flex-col gap-4 border-b border-subtle/70 px-5 py-4 dark:border-white/[0.06];
+  background: linear-gradient(
+    180deg,
+    rgb(var(--bg-elevated) / 0.35) 0%,
+    rgb(var(--bg-surface) / 0) 100%
+  );
+}
+
+.list-page-btn {
+  @apply inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl px-3.5 text-sm font-medium;
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease,
+    transform 120ms ease;
+}
+
+.list-page-btn:disabled {
+  @apply cursor-not-allowed opacity-45;
+}
+
+.list-page-btn--ghost {
+  @apply bg-elevated text-secondary hover:text-primary;
+  box-shadow: inset 0 0 0 1px rgb(var(--border-subtle) / 0.7);
+}
+
+.list-page-btn--ghost:hover:not(:disabled) {
+  background-color: rgb(var(--bg-elevated) / 0.95);
+  box-shadow: inset 0 0 0 1px rgb(var(--brand-primary) / 0.28);
+}
+
+.dark .list-page-btn--ghost {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+
+.list-page-btn--primary {
+  @apply bg-brand font-semibold text-white hover:bg-brand-hover;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.18) inset,
+    0 14px 32px -14px rgb(var(--brand-primary) / 0.95);
+}
+
+.list-page-btn--primary:hover:not(:disabled) {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.22) inset,
+    0 18px 36px -12px rgb(var(--brand-primary) / 1);
+}
+
+.list-page-btn--primary:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.list-page-btn--quiet {
+  @apply h-8 rounded-lg bg-transparent px-2.5 text-xs font-medium text-secondary hover:bg-elevated hover:text-primary;
+}
+
+.list-page-btn--quiet:disabled {
+  @apply hover:bg-transparent hover:text-secondary;
+}
+
+.list-page-count {
+  @apply inline-flex h-8 items-center rounded-full bg-elevated px-2.5 text-[11px] font-medium tabular-nums text-secondary;
+  box-shadow: inset 0 0 0 1px rgb(var(--border-subtle) / 0.55);
+}
+
+.dark .list-page-count {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+.list-page-table .ant-table {
+  background: transparent !important;
+}
+
+.list-page-table .ant-table-container {
+  border-inline: 0 !important;
+}
+
+.list-page-table .ant-table-thead > tr > th {
+  background: rgb(var(--bg-elevated) / 0.4) !important;
+  border-bottom: 1px solid rgb(var(--border-subtle) / 0.55) !important;
+  color: rgb(var(--text-muted)) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 12px 18px !important;
+}
+
+.dark .list-page-table .ant-table-thead > tr > th {
+  border-bottom-color: rgb(255 255 255 / 0.07) !important;
+}
+
+.list-page-table .ant-table-tbody > tr > td {
+  background: transparent !important;
+  border-bottom: 1px solid rgb(var(--border-subtle) / 0.4) !important;
+  padding: 13px 18px !important;
+}
+
+.dark .list-page-table .ant-table-tbody > tr > td {
+  border-bottom-color: rgb(255 255 255 / 0.05) !important;
+}
+
+.list-page-table .ant-table-tbody > tr:last-child > td {
+  border-bottom-color: transparent !important;
+}
+
+.list-page-table .ant-table-tbody > tr:hover > td {
+  background: rgb(var(--bg-elevated) / 0.4) !important;
+}
+
+.list-page-table .ant-table-column-sorter {
+  color: rgb(var(--text-muted));
+}
+
+.list-page-table .ant-pagination {
+  @apply m-0 flex items-center justify-end gap-1 px-5 py-3.5;
+  border-top: 1px solid rgb(var(--border-subtle) / 0.55);
+}
+
+.dark .list-page-table .ant-pagination {
+  border-top-color: rgb(255 255 255 / 0.07);
+}
+
+.list-page-table .ant-pagination .ant-pagination-item {
+  @apply rounded-lg border-0 bg-transparent;
+  min-width: 32px;
+}
+
+.list-page-table .ant-pagination .ant-pagination-item a {
+  color: rgb(var(--text-secondary));
+}
+
+.list-page-table .ant-pagination .ant-pagination-item-active {
+  background: rgb(var(--brand-primary) / 0.14) !important;
+  box-shadow: inset 0 0 0 1px rgb(var(--brand-primary) / 0.45);
+}
+
+.list-page-table .ant-pagination .ant-pagination-item-active a {
+  color: rgb(var(--brand-primary)) !important;
+  font-weight: 600;
+}
+
+.list-page-table .ant-select-selector {
+  @apply rounded-lg !important;
+  background: rgb(var(--bg-elevated)) !important;
+  border-color: rgb(var(--border-subtle) / 0.7) !important;
+}
+
+/* Kolon ayarları drawer — Linear/Notion yoğunluğu, tek yüzey */
+.list-column-drawer.ant-drawer .ant-drawer-content {
+  background: rgb(var(--bg-surface)) !important;
+}
+
+.list-column-drawer.ant-drawer .ant-drawer-header {
+  @apply border-0 px-5 pb-0 pt-5;
+  background: transparent;
+}
+
+.list-column-drawer.ant-drawer .ant-drawer-body {
+  @apply flex flex-col gap-0 p-0;
+  background: transparent;
+}
+
+.list-column-drawer.ant-drawer .ant-drawer-close {
+  @apply top-4 end-3 inline-flex h-9 w-9 items-center justify-center rounded-xl text-secondary transition-colors hover:bg-elevated hover:text-primary;
+}
+
+.list-column-shell {
+  @apply flex min-h-0 flex-1 flex-col;
+}
+
+.list-column-hero {
+  @apply space-y-3 px-5 pb-4 pt-1;
+}
+
+.list-column-stats {
+  @apply inline-flex items-center gap-2 rounded-full bg-elevated px-2.5 py-1 text-[11px] font-medium tabular-nums text-secondary;
+  box-shadow: inset 0 0 0 1px rgb(var(--border-subtle) / 0.5);
+}
+
+.dark .list-column-stats {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+.list-column-stats-dot {
+  @apply h-1.5 w-1.5 rounded-full bg-brand;
+}
+
+.list-column-list {
+  /* Preflight kapalı — tarayıcı ul padding-inline-start (~40px) sıfırlanır. */
+  @apply mx-3 mb-3 list-none overflow-hidden rounded-2xl p-0;
+  margin-block-start: 0;
+  background: rgb(var(--bg-elevated) / 0.55);
+  box-shadow: inset 0 0 0 1px rgb(var(--border-subtle) / 0.55);
+}
+
+.dark .list-column-list {
+  background: rgb(var(--bg-elevated) / 0.35);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+}
+
+.list-column-row {
+  @apply relative flex items-center gap-2 px-2 py-2 transition-[background-color,opacity,box-shadow] duration-150;
+}
+
+.list-column-row + .list-column-row {
+  box-shadow: inset 0 1px 0 0 rgb(var(--border-subtle) / 0.35);
+}
+
+.dark .list-column-row + .list-column-row {
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.05);
+}
+
+.list-column-row:hover {
+  background: rgb(var(--bg-surface) / 0.55);
+}
+
+.list-column-row--hidden .list-column-label {
+  @apply text-muted line-through decoration-muted/40;
+}
+
+.list-column-row--dragging {
+  @apply z-10 rounded-xl;
+  background: rgb(var(--bg-surface)) !important;
+  box-shadow:
+    0 0 0 1px rgb(var(--brand-primary) / 0.35),
+    0 16px 36px -18px rgb(var(--brand-primary) / 0.55);
+}
+
+.list-column-row--over {
+  box-shadow: inset 0 2px 0 0 rgb(var(--brand-primary) / 0.9) !important;
+}
+
+.list-column-index {
+  @apply w-4 shrink-0 text-center text-[10px] font-semibold tabular-nums text-muted;
+}
+
+.list-column-drag {
+  @apply inline-flex h-8 w-7 shrink-0 cursor-grab appearance-none items-center justify-center rounded-lg border-0 bg-transparent text-muted/80 transition-colors hover:bg-surface hover:text-secondary active:cursor-grabbing;
+}
+
+.list-column-label {
+  @apply min-w-0 flex-1 truncate text-[13px] font-medium tracking-tight text-primary;
+}
+
+.list-column-meta {
+  @apply flex shrink-0 items-center gap-1.5;
+}
+
+.list-column-width {
+  @apply inline-flex h-7 items-center gap-0.5 rounded-lg bg-surface px-1.5 text-[11px] text-muted opacity-70 transition-opacity;
+  box-shadow: inset 0 0 0 1px rgb(var(--border-subtle) / 0.45);
+}
+
+.list-column-row:hover .list-column-width,
+.list-column-width:focus-within {
+  @apply opacity-100;
+  box-shadow: inset 0 0 0 1px rgb(var(--brand-primary) / 0.35);
+}
+
+.dark .list-column-width {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+.list-column-width input {
+  @apply h-5 w-9 appearance-none border-0 bg-transparent p-0 text-right text-[12px] font-medium tabular-nums text-primary outline-none;
+}
+
+.list-column-width input::-webkit-outer-spin-button,
+.list-column-width input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.list-column-width input[type='number'] {
+  appearance: textfield;
+}
+
+.list-column-eye,
+.list-column-lock {
+  @apply inline-flex h-8 w-8 shrink-0 appearance-none items-center justify-center rounded-lg border-0 bg-transparent text-muted transition-colors hover:bg-surface hover:text-primary;
+}
+
+.list-column-eye[aria-checked='true'] {
+  @apply text-brand hover:text-brand-hover;
+}
+
+.list-column-eye:disabled,
+.list-column-lock {
+  @apply cursor-default opacity-70 hover:bg-transparent hover:text-muted;
+}
+
+.list-column-footer {
+  @apply mt-auto flex items-center justify-between gap-3 border-t border-subtle px-5 py-4 dark:border-white/[0.07];
+  background: rgb(var(--bg-surface) / 0.92);
+  backdrop-filter: blur(8px);
+}
+
 /* Auth metin link / ikincil aksiyon butonları */
 .auth-text-link {
   @apply bg-transparent text-xs font-medium text-secondary transition-colors hover:text-primary;
@@ -380,7 +711,11 @@
   .auth-checkbox-box,
   .auth-checkbox-mark,
   .auth-checkbox-label,
-  .auth-text-link {
+  .auth-text-link,
+  .list-page-btn,
+  .list-column-row,
+  .list-column-width,
+  .list-column-eye {
     transition: none;
   }
 }
